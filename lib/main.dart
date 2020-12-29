@@ -1,0 +1,214 @@
+import 'package:flutter/material.dart';
+import 'settings.dart';
+// import 'cameras.dart';
+import 'collapseImage.dart';
+// import 'package:flutter/widgets.dart';
+// Uncomment lines 7 and 10 to view the visual layout at runtime.
+// import 'package:flutter/rendering.dart' show debugPaintSizeEnabled;
+
+void main() {
+  // debugPaintSizeEnabled = true;
+  runApp(MaterialApp(
+      home: MyApp(),
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        backgroundColor: Colors.white,
+        primaryColor: Color.fromARGB(255, 50, 50, 50),
+        accentColor: Colors.cyan,
+        buttonColor: Colors.lightBlue,
+        unselectedWidgetColor: Colors.lightBlue,
+      )));
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // MediaQueryData _queryData = MediaQuery.of(context);
+    Size mediaSize = MediaQuery.of(context).size;
+    // double height = mediaSize.height;
+    double mainWidth = mediaSize.width * 0.4;
+    double mainHeight = mainWidth / 1280 * 1024;
+    double padding = 30;
+    double subWidth = mediaSize.width - mainWidth - padding;
+    double subHeight = mainHeight / 2;
+    double audioHeight = mainHeight - subHeight;
+
+    double textWidth = mediaSize.width * .6;
+    double settingsWidth = mediaSize.width - textWidth - padding;
+
+    Color color = Theme.of(context).buttonColor;
+
+    Widget buttonSection = SizedBox(
+        height: 50,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            _buildButtonColumn(
+                mainWidth / 4, color, Icons.not_interested, 'STOP'),
+            _buildButtonColumn(mainWidth / 4, color, Icons.circle, 'RECORD'),
+            _buildButtonColumn(mainWidth / 4, color, Icons.build, 'CALIBRATE'),
+            _buildButtonColumn(mainWidth / 4, color, Icons.folder, 'FILE NAME'),
+            _buildButtonColumn(mainWidth / 4, color, Icons.info, 'STATUS'),
+            SizedBox(
+                width: mainWidth,
+                child: Text(
+                  '<status text or error message will go here, maybe a loading bar>',
+                  style: TextStyle(color: color),
+                )),
+          ],
+        ));
+
+    Widget textSection = ListView(
+      reverse: true,
+      children: [
+        TextField(
+          autofocus: true,
+          maxLines: null,
+          style: TextStyle(color: color),
+        )
+      ],
+    );
+
+    return MaterialApp(
+      title: 'Behavior App',
+      theme: Theme.of(context),
+      home: Scaffold(
+        backgroundColor: Theme.of(context).backgroundColor,
+        body: Column(
+          children: [
+            buttonSection,
+            Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+              // IntrinsicWidth(
+              //     child: Column(children: [
+              // buttonSection,
+              // SizedBox(
+              //     width: mainWidth,
+              //     height: mainHeight,
+              //     child:
+              CollapsibleImage(
+                size: mainHeight,
+                src: 'images/image.png',
+                title: 'Top Camera',
+                axis: Axis.horizontal,
+              ),
+              // ),
+              // ])
+              // ),
+              // SizedBox(
+              //     width: subWidth,
+              //     child:
+              Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    // SizedBox(
+                    //   height: 50,
+                    //   child: Row(
+                    //       mainAxisAlignment: MainAxisAlignment.start,
+                    //       children: [
+                    //         _buildButtonColumn(
+                    //             mainWidth / 6, color, Icons.info, 'STATUS'),
+                    //         SizedBox(
+                    //             width: mainWidth,
+                    //             child: Text(
+                    //               '<status text or error message will go here, maybe a loading bar>',
+                    //               style: TextStyle(color: color),
+                    //             )),
+                    //       ]),
+                    // ),
+                    SizedBox(
+                      height: subHeight,
+                      width: subWidth,
+                      child: CollapsibleImageList(
+                          size: subHeight,
+                          axis: Axis.horizontal,
+                          images: sideCameras,
+                          titleFn: (i) => 'Side Camera ${i + 1}'),
+                    ),
+                    SizedBox(
+                        height: audioHeight,
+                        width: subWidth,
+                        child:
+                            // ListView(
+                            //   scrollDirection: Axis.horizontal,
+                            //   children: [
+                            CollapsibleImage(
+                          size: audioHeight,
+                          src: 'images/spect.png',
+                          title: 'Audio Spectrogram',
+                          axis: Axis.horizontal,
+                          fit: BoxFit.fill,
+                        )
+                        //   ],
+                        // ),
+                        ),
+                  ]),
+              // ),
+            ]),
+            SizedBox(
+                height: 20,
+                width: mediaSize.width - 20,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('SESSION NOTES', style: TextStyle(color: color)),
+                    Text('SETTINGS PANEL', style: TextStyle(color: color)),
+                  ],
+                )),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: textWidth,
+                  height: mediaSize.height - mainHeight - 85,
+                  child: textSection,
+                ),
+                SizedBox(
+                  width: settingsWidth,
+                  height: mediaSize.height - mainHeight - 85,
+                  child: Container(
+                    child: SettingsList(),
+                    width: settingsWidth,
+                    height: mediaSize.height - mainHeight - 85,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  SizedBox _buildButtonColumn(
+      double width, Color color, IconData icon, String label) {
+    return SizedBox(
+        width: width,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color),
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                  color: color,
+                ),
+              ),
+            ),
+          ],
+        ));
+  }
+}
+
+List<String> sideCameras = [
+  'images/image.png',
+  'images/image.png',
+  'images/image.png',
+  'images/image.png',
+];
