@@ -1,123 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
-
-class CollapsibleImageContainer extends StatefulWidget {
-  final List<Widget> children;
-  final Axis axis;
-  final Size size;
-  CollapsibleImageContainer(
-      {this.children, this.axis = Axis.horizontal, this.size});
-
-  @override
-  _CollapsibleImageContainerState createState() =>
-      _CollapsibleImageContainerState();
-}
-
-class _CollapsibleImageContainerState extends State<CollapsibleImageContainer> {
-  // List<bool> _expanded;
-  List<ValueNotifier<double>> _boxSizes;
-  List<double> _remainingSpace;
-
-  @override
-  void initState() {
-    super.initState();
-    // _expanded = List<bool>.filled(widget.children.length, false);
-    _boxSizes = List<ValueNotifier<double>>.filled(
-        widget.children.length, ValueNotifier<double>(0.0));
-    _remainingSpace = List<double>.filled(
-        widget.children.length,
-        widget.axis == Axis.horizontal
-            ? widget.size.width
-            : widget.size.height);
-
-    _boxSizes.asMap().forEach((index, notifier) {
-      notifier.addListener(() => _updateRemaining(index));
-    });
-  }
-
-  void _updateRemaining(int i) {
-    for (int j = i + 1; j < widget.children.length; j++) {
-      _remainingSpace[j] = _remainingSpace[j - 1] - _boxSizes[j - 1].value;
-    }
-    //remainingSpace[i+1] <- remainingSpace[i] - _boxSizes[i]
-    //widget.size(axis)
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    List<ValueListenableBuilder<double>> container = [
-      for (int i = 0; i < widget.children.length; i++)
-        ValueListenableBuilder<double>(
-          builder: (BuildContext context, double size, Widget child) {
-            return SizeTracker(
-                child: SizedBox(
-                  width: widget.axis == Axis.horizontal
-                      ? min(_boxSizes[i].value, _remainingSpace[i])
-                      : widget.size.width,
-                  height: widget.axis == Axis.vertical
-                      ? min(_boxSizes[i].value, _remainingSpace[i])
-                      : widget.size.height,
-                  child: widget.children[i],
-                ),
-                sizeValueNotifier: _boxSizes[i],
-                axis: widget.axis);
-          },
-          valueListenable: _boxSizes[i],
-          child: null,
-        )
-    ];
-
-    if (widget.axis == Axis.horizontal) {
-      //wrap within a row
-      return Row(
-        children: container,
-      );
-    } else {
-      return Column(
-        children: container,
-      );
-      //wrap within a column
-    }
-    //wrap within a sizedBox?
-
-    //return
-  }
-}
-
-class SizeTracker extends StatefulWidget {
-  final Widget child;
-  final Axis axis;
-  final ValueNotifier<double> sizeValueNotifier;
-  SizeTracker(
-      {this.child, this.sizeValueNotifier, this.axis = Axis.horizontal});
-
-  @override
-  _SizeTrackerState createState() => _SizeTrackerState();
-}
-
-class _SizeTrackerState extends State<SizeTracker> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _getSize();
-    });
-  }
-
-  _getSize() {
-    RenderBox renderBox = context.findRenderObject();
-    if (widget.axis == Axis.horizontal) {
-      widget.sizeValueNotifier.value = renderBox.size.width;
-    } else {
-      widget.sizeValueNotifier.value = renderBox.size.height;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return widget.child;
-  }
-}
 
 class CollapsibleImageList extends StatelessWidget {
   final double size;
@@ -130,6 +11,8 @@ class CollapsibleImageList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
+        // shrinkWrap: false,
+        shrinkWrap: true,
         scrollDirection: this.axis,
         itemCount: images.length,
         itemBuilder: (context, i) {

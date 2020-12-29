@@ -77,73 +77,41 @@ class MyApp extends StatelessWidget {
         body: Column(
           children: [
             buttonSection,
-            Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-              // IntrinsicWidth(
-              //     child: Column(children: [
-              // buttonSection,
-              // SizedBox(
-              //     width: mainWidth,
-              //     height: mainHeight,
-              //     child:
-              CollapsibleImage(
-                size: mainHeight,
-                src: 'images/image.png',
-                title: 'Top Camera',
-                axis: Axis.horizontal,
-              ),
-              // ),
-              // ])
-              // ),
-              // SizedBox(
-              //     width: subWidth,
-              //     child:
-              Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    // SizedBox(
-                    //   height: 50,
-                    //   child: Row(
-                    //       mainAxisAlignment: MainAxisAlignment.start,
-                    //       children: [
-                    //         _buildButtonColumn(
-                    //             mainWidth / 6, color, Icons.info, 'STATUS'),
-                    //         SizedBox(
-                    //             width: mainWidth,
-                    //             child: Text(
-                    //               '<status text or error message will go here, maybe a loading bar>',
-                    //               style: TextStyle(color: color),
-                    //             )),
-                    //       ]),
-                    // ),
-                    SizedBox(
-                      height: subHeight,
-                      width: subWidth,
-                      child: CollapsibleImageList(
-                          size: subHeight,
-                          axis: Axis.horizontal,
-                          images: sideCameras,
-                          titleFn: (i) => 'Side Camera ${i + 1}'),
-                    ),
-                    SizedBox(
-                        height: audioHeight,
-                        width: subWidth,
-                        child:
-                            // ListView(
-                            //   scrollDirection: Axis.horizontal,
-                            //   children: [
-                            CollapsibleImage(
-                          size: audioHeight,
-                          src: 'images/spect.png',
-                          title: 'Audio Spectrogram',
-                          axis: Axis.horizontal,
-                          fit: BoxFit.fill,
-                        )
-                        //   ],
-                        // ),
-                        ),
-                  ]),
-              // ),
-            ]),
+            SizedBox(
+              width: mediaSize.width,
+              height: mainHeight,
+              child: Row(children: [
+                SizedBox(width: padding / 4),
+                CollapsibleImage(
+                  size: mainHeight,
+                  src: 'images/image.png',
+                  title: 'Top Camera',
+                  axis: Axis.horizontal,
+                ),
+                SizedBox(width: padding / 2),
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                      SizedBox(
+                        height: subHeight,
+                        child: CollapsibleImageList(
+                            size: subHeight,
+                            axis: Axis.horizontal,
+                            images: sideCameras,
+                            titleFn: (i) => 'Side Camera ${i + 1}'),
+                      ),
+                      CollapsibleImage(
+                        size: audioHeight,
+                        src: 'images/spect.png',
+                        title: 'Audio Spectrogram',
+                        axis: Axis.horizontal,
+                        fit: BoxFit.fill,
+                      )
+                    ])),
+                SizedBox(width: padding / 4),
+              ]),
+            ),
             SizedBox(
                 height: 20,
                 width: mediaSize.width - 20,
