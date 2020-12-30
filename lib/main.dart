@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'settings.dart';
+import 'api.dart';
 // import 'cameras.dart';
 import 'collapseImage.dart';
 // import 'package:flutter/widgets.dart';
@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
     double mainWidth = mediaSize.width * 0.4;
     double mainHeight = mainWidth / 1280 * 1024;
     double padding = 30;
-    double subWidth = mediaSize.width - mainWidth - padding;
+    // double subWidth = mediaSize.width - mainWidth - padding;
     double subHeight = mainHeight / 2;
     double audioHeight = mainHeight - subHeight;
 
@@ -38,17 +38,23 @@ class MyApp extends StatelessWidget {
 
     Color color = Theme.of(context).buttonColor;
 
+    void Function() callback = () => debugPrint('registered tap');
+
     Widget buttonSection = SizedBox(
         height: 50,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             _buildButtonColumn(
-                mainWidth / 4, color, Icons.not_interested, 'STOP'),
-            _buildButtonColumn(mainWidth / 4, color, Icons.circle, 'RECORD'),
-            _buildButtonColumn(mainWidth / 4, color, Icons.build, 'CALIBRATE'),
-            _buildButtonColumn(mainWidth / 4, color, Icons.folder, 'FILE NAME'),
-            _buildButtonColumn(mainWidth / 4, color, Icons.info, 'STATUS'),
+                mainWidth / 4, color, Icons.not_interested, 'STOP', callback),
+            _buildButtonColumn(
+                mainWidth / 4, color, Icons.circle, 'RECORD', callback),
+            _buildButtonColumn(
+                mainWidth / 4, color, Icons.build, 'CALIBRATE', callback),
+            _buildButtonColumn(
+                mainWidth / 4, color, Icons.folder, 'FILE NAME', callback),
+            _buildButtonColumn(
+                mainWidth / 4, color, Icons.info, 'STATUS', callback),
             SizedBox(
                 width: mainWidth,
                 child: Text(
@@ -148,29 +154,30 @@ class MyApp extends StatelessWidget {
     );
   }
 
-  SizedBox _buildButtonColumn(
-      double width, Color color, IconData icon, String label) {
+  SizedBox _buildButtonColumn(double width, Color color, IconData icon,
+      String label, void Function() callback) {
     return SizedBox(
         width: width,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color),
-            Container(
-              margin: const EdgeInsets.only(top: 8),
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                  color: color,
-                ),
-              ),
-            ),
-          ],
-        ));
+        child: Center(
+            child: SizedBox(
+                width: width / 2,
+                child: InkWell(
+                    onTap: callback,
+                    child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(icon, color: color),
+                          Container(
+                              margin: const EdgeInsets.only(top: 8),
+                              child: Text(label,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: color,
+                                  )))
+                        ])))));
   }
 }
 
