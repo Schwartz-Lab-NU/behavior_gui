@@ -1,84 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
-// import 'dart:math';
-// import 'dart:developer';
-
-class ExpandableImageSizedBox extends StatefulWidget {
-  final List<ExpandableImage> children;
-  final Axis axis;
-  final Size size;
-  ExpandableImageSizedBox(
-      {this.children, this.axis = Axis.horizontal, this.size});
-
-  @override
-  _ExpandableImageSizedBoxState createState() =>
-      _ExpandableImageSizedBoxState();
-}
-
-class _ExpandableImageSizedBoxState extends State<ExpandableImageSizedBox> {
-  // List<ValueNotifier<double>> _boxSizes;
-  // List<ValueListenableBuilder<double>> _container;
-
-  @override
-  void initState() {
-    // super.initState();
-    // _boxSizes = widget.children.map((child) => child.currentSize).toList();
-    // _container = List<ValueListenableBuilder<double>>.filled(
-    //     widget.children.length,
-    //     ValueListenableBuilder<double>(
-    //       child: null,
-    //       valueListenable: null,
-    //       builder: null,
-    //     ));
-
-    // debugPrint('initialized state');
-    widget.children.forEach((child) {
-      child.setNotifier(this.getNotification);
-    });
-  }
-  // void Function(double, bool, Animation<double>) notify;
-
-  void getNotification(double fractionLabel, isExpanding, animation) {
-    debugPrint('got notification');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    List<Widget> _container;
-    for (int i = 0; i < widget.children.length; i++) {
-      // _container[i] = (ValueListenableBuilder<double>(
-      //   child: null,
-      //   valueListenable: _boxSizes[i],
-      //   builder: (BuildContext context, double size, Widget child) {
-      //     return;
-      //   },
-      // ));
-      _container.add(SizedBox(
-        height: widget.axis == Axis.horizontal ? widget.size.height : null,
-        width: widget.axis == Axis.horizontal ? null : widget.size.width,
-        child: widget.children[i],
-      ));
-    }
-
-    // debugPrint(
-    //     'rendering sizedbox: $_boxSizes, ${widget.size.width - _boxSizes.sublist(0, 0).fold(0, (a, b) => a + b.value)}, ${widget.size.width - _boxSizes.sublist(0, 1).fold(0, (a, b) => a + b.value)}');
-
-    if (widget.axis == Axis.horizontal) {
-      //wrap within a row
-      return Row(
-        children: _container,
-      );
-    } else {
-      return Column(
-        children: _container,
-      );
-      //wrap within a column
-    }
-    // //wrap within a sizedBox?
-
-    // //return
-  }
-}
 
 class ExpandableImageList extends StatelessWidget {
   final double size;
@@ -91,6 +11,8 @@ class ExpandableImageList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
+        // shrinkWrap: false,
+        shrinkWrap: true,
         scrollDirection: this.axis,
         itemCount: images.length,
         itemBuilder: (context, i) {

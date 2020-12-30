@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'settings.dart';
+import 'api.dart';
 // import 'cameras.dart';
 import 'collapseImage.dart';
 // import 'package:flutter/widgets.dart';
@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
     double mainWidth = mediaSize.width * 0.4;
     double mainHeight = mainWidth / 1280 * 1024;
     double padding = 30;
-    double subWidth = mediaSize.width - mainWidth - padding;
+    // double subWidth = mediaSize.width - mainWidth - padding;
     double subHeight = mainHeight / 2;
     double audioHeight = mainHeight - subHeight;
 
@@ -38,17 +38,23 @@ class MyApp extends StatelessWidget {
 
     Color color = Theme.of(context).buttonColor;
 
+    void Function() callback = () => debugPrint('registered tap');
+
     Widget buttonSection = SizedBox(
         height: 50,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             _buildButtonColumn(
-                mainWidth / 4, color, Icons.not_interested, 'STOP'),
-            _buildButtonColumn(mainWidth / 4, color, Icons.circle, 'RECORD'),
-            _buildButtonColumn(mainWidth / 4, color, Icons.build, 'CALIBRATE'),
-            _buildButtonColumn(mainWidth / 4, color, Icons.folder, 'FILE NAME'),
-            _buildButtonColumn(mainWidth / 4, color, Icons.info, 'STATUS'),
+                mainWidth / 4, color, Icons.not_interested, 'STOP', callback),
+            _buildButtonColumn(
+                mainWidth / 4, color, Icons.circle, 'RECORD', callback),
+            _buildButtonColumn(
+                mainWidth / 4, color, Icons.build, 'CALIBRATE', callback),
+            _buildButtonColumn(
+                mainWidth / 4, color, Icons.folder, 'FILE NAME', callback),
+            _buildButtonColumn(
+                mainWidth / 4, color, Icons.info, 'STATUS', callback),
             SizedBox(
                 width: mainWidth,
                 child: Text(
@@ -77,91 +83,41 @@ class MyApp extends StatelessWidget {
         body: Column(
           children: [
             buttonSection,
-            CollapsibleImageSizedBox(
-                axis: Axis.horizontal,
-                size: Size(mediaSize.width, mainHeight),
-                children: [
-                  CollapsibleImage(
-                    size: mainHeight,
-                    src: 'images/image.png',
-                    title: 'Top Camera',
-                    axis: Axis.horizontal,
-                  ),
-                  CollapsibleImage(
-                    size: audioHeight,
-                    src: 'images/spect.png',
-                    title: 'Audio Spectrogram',
-                    axis: Axis.horizontal,
-                    fit: BoxFit.fill,
-                  ),
-                ]),
-            // Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-            //   // IntrinsicWidth(
-            //   //     child: Column(children: [
-            //   // buttonSection,
-            //   // SizedBox(
-            //   //     width: mainWidth,
-            //   //     height: mainHeight,
-            //   //     child:
-            //   CollapsibleImage(
-            //     size: mainHeight,
-            //     src: 'images/image.png',
-            //     title: 'Top Camera',
-            //     axis: Axis.horizontal,
-            //   ),
-            //   // ),
-            //   // ])
-            //   // ),
-            //   // SizedBox(
-            //   //     width: subWidth,
-            //   //     child:
-            //   Column(
-            //       crossAxisAlignment: CrossAxisAlignment.start,
-            //       children: <Widget>[
-            //         // SizedBox(
-            //         //   height: 50,
-            //         //   child: Row(
-            //         //       mainAxisAlignment: MainAxisAlignment.start,
-            //         //       children: [
-            //         //         _buildButtonColumn(
-            //         //             mainWidth / 6, color, Icons.info, 'STATUS'),
-            //         //         SizedBox(
-            //         //             width: mainWidth,
-            //         //             child: Text(
-            //         //               '<status text or error message will go here, maybe a loading bar>',
-            //         //               style: TextStyle(color: color),
-            //         //             )),
-            //         //       ]),
-            //         // ),
-            //         SizedBox(
-            //           height: subHeight,
-            //           width: subWidth,
-            //           child: CollapsibleImageList(
-            //               size: subHeight,
-            //               axis: Axis.horizontal,
-            //               images: sideCameras,
-            //               titleFn: (i) => 'Side Camera ${i + 1}'),
-            //         ),
-            //         SizedBox(
-            //             height: audioHeight,
-            //             width: subWidth,
-            //             child:
-            //                 // ListView(
-            //                 //   scrollDirection: Axis.horizontal,
-            //                 //   children: [
-            //                 CollapsibleImage(
-            //               size: audioHeight,
-            //               src: 'images/spect.png',
-            //               title: 'Audio Spectrogram',
-            //               axis: Axis.horizontal,
-            //               fit: BoxFit.fill,
-            //             )
-            //             //   ],
-            //             // ),
-            //             ),
-            //       ]),
-            //   // ),
-            // ]),
+            SizedBox(
+              width: mediaSize.width,
+              height: mainHeight,
+              child: Row(children: [
+                SizedBox(width: padding / 4),
+                CollapsibleImage(
+                  size: mainHeight,
+                  src: 'images/image.png',
+                  title: 'Top Camera',
+                  axis: Axis.horizontal,
+                ),
+                SizedBox(width: padding / 2),
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                      SizedBox(
+                        height: subHeight,
+                        child: CollapsibleImageList(
+                            size: subHeight,
+                            axis: Axis.horizontal,
+                            images: sideCameras,
+                            titleFn: (i) => 'Side Camera ${i + 1}'),
+                      ),
+                      CollapsibleImage(
+                        size: audioHeight,
+                        src: 'images/spect.png',
+                        title: 'Audio Spectrogram',
+                        axis: Axis.horizontal,
+                        fit: BoxFit.fill,
+                      )
+                    ])),
+                SizedBox(width: padding / 4),
+              ]),
+            ),
             SizedBox(
                 height: 20,
                 width: mediaSize.width - 20,
@@ -198,29 +154,30 @@ class MyApp extends StatelessWidget {
     );
   }
 
-  SizedBox _buildButtonColumn(
-      double width, Color color, IconData icon, String label) {
+  SizedBox _buildButtonColumn(double width, Color color, IconData icon,
+      String label, void Function() callback) {
     return SizedBox(
         width: width,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color),
-            Container(
-              margin: const EdgeInsets.only(top: 8),
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                  color: color,
-                ),
-              ),
-            ),
-          ],
-        ));
+        child: Center(
+            child: SizedBox(
+                width: width / 2,
+                child: InkWell(
+                    onTap: callback,
+                    child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(icon, color: color),
+                          Container(
+                              margin: const EdgeInsets.only(top: 8),
+                              child: Text(label,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: color,
+                                  )))
+                        ])))));
   }
 }
 
