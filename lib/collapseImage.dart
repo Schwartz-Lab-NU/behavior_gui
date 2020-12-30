@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class ExpandableImageList extends StatelessWidget {
+class CollapsibleImageList extends StatelessWidget {
   final double size;
   final Axis axis;
   final List<String> images;
   final String Function(int) titleFn;
-  ExpandableImageList(
+  CollapsibleImageList(
       {this.size, this.images, this.titleFn, this.axis = Axis.horizontal});
 
   @override
@@ -16,7 +16,7 @@ class ExpandableImageList extends StatelessWidget {
         scrollDirection: this.axis,
         itemCount: images.length,
         itemBuilder: (context, i) {
-          return ExpandableImage(
+          return CollapsibleImage(
             title: this.titleFn(i),
             src: this.images[i],
             axis: this.axis,
@@ -26,111 +26,27 @@ class ExpandableImageList extends StatelessWidget {
   }
 }
 
-class ExpandableImage extends StatefulWidget {
+class CollapsibleImage extends StatefulWidget {
   // final Widget child;
   final String title;
   final String src;
   final double size;
   final Axis axis;
   final BoxFit fit;
-  // void Function(double, bool, Animation<double>) notify;
-  // final ValueNotifier<double> currentSize = ValueNotifier<double>(20);
-
-  ExpandableImage(
+  CollapsibleImage(
       {this.size,
       this.src,
       this.title,
       this.axis = Axis.horizontal,
-      this.fit = BoxFit.contain,
-      // this.notify
-      });
-
-  setNotifier(void Function(double, bool, Animation<double>) notifier) {
-    this
-  }
+      this.fit = BoxFit.contain});
 
   @override
-  _ExpandableImageState createState() => _ExpandableImageState();
+  _CollapsibleImageState createState() => _CollapsibleImageState();
 }
 
-class _ExpandableImageState extends State<ExpandableImage> {
-  // final bool isHorizontal = widget.axis == Axis.horizontal;
-  bool isHorizontal;
+class _CollapsibleImageState extends State<CollapsibleImage> {
   bool expanded = true;
-  // Image img;
-  ValueListenableBuilder<Animation<double>> expandable;
-  Container container;
-  RotatedBox underlay;
-  double aspectRatio;
-  ValueNotifier<Animation<double>> animation;
-  //  = ValueNotifier<Animation<double>>(Animation<double>());
-
-  @override
-  void initState() {
-    super.initState();
-    this.isHorizontal = widget.axis == Axis.horizontal;
-    this.expandable = ValueListenableBuilder<Animation<double>>(
-        child: Image.asset(
-          widget.src,
-          height: this.isHorizontal ? widget.size : null,
-          width: this.isHorizontal ? null : widget.size,
-          fit: widget.fit,
-        ),
-        valueListenable: this.animation,
-        builder:
-            (BuildContext context, Animation<double> animation, Widget child) {
-          return ExpandableWidget(
-              animation: this.animation,
-              expand: () => getExpanded(),
-              child: child);
-        });
-
-    this.container = Container(
-        width: this.isHorizontal ? 20 : widget.size,
-        height: this.isHorizontal ? widget.size : 20,
-        color: Theme.of(context).backgroundColor.withOpacity(0.6));
-
-    this.underlay = RotatedBox(
-        quarterTurns: this.isHorizontal ? -1 : 0,
-        child: Text(widget.title,
-            style: TextStyle(
-              // color: Theme.of(context).buttonColor
-              color: expanded
-                  ? Theme.of(context).primaryColor
-                  : Theme.of(context).buttonColor,
-            )));
-
-    _getAspectRatio(widget.src);
-  }
-
-  Future<void> _getAspectRatio(String src) async {
-    File image = new File(widget.src);
-    var decodedImage = await decodeImageFromList(image.readAsBytesSync());
-
-    setState(() {
-      aspectRatio:
-      decodedImage.width / decodedImage.height;
-    });
-  }
-
-  bool getExpanded() {
-    return this.expanded;
-  }
-
   void toggle() {
-    //inform the parent that we are triggering an animation
-    double fractionLabel;
-    if (this.isHorizontal) {
-      fractionLabel = 20 / (widget.size * this.aspectRatio);
-    } else {
-      fractionLabel = 20 / (widget.size / this.aspectRatio);
-    }
-    //  = 20 / this.aspectRatio;
-    widget.notify(
-      fractionLabel,
-      !this.expanded,
-      this.animation.value,
-    );
     setState(() {
       expanded = !expanded;
     });
@@ -138,40 +54,49 @@ class _ExpandableImageState extends State<ExpandableImage> {
 
   @override
   Widget build(BuildContext context) {
+    bool isHorizontal = widget.axis == Axis.horizontal;
+
     return InkWell(
         onTap: toggle,
         child: Stack(alignment: AlignmentDirectional.centerStart, children: [
-          // ExpandableWidget(expand: this.expanded, child: this.img),
-          // ValueListenableBuilder(valueListenable: this.animation, builder: ())
-          this.expandable,
-          this.container,
-          this.underlay,
+          ExpandedImage(
+              expand: expanded,
+              child: Image.asset(
+                widget.src,
+                height: isHorizontal ? widget.size : null,
+                width: isHorizontal ? null : widget.size,
+                fit: widget.fit,
+              )),
+          Container(
+              width: isHorizontal ? 20 : widget.size,
+              height: isHorizontal ? widget.size : 20,
+              color: Theme.of(context).backgroundColor.withOpacity(0.6)),
+          RotatedBox(
+              quarterTurns: isHorizontal ? -1 : 0,
+              child: Text(widget.title,
+                  style: TextStyle(
+                    // color: Theme.of(context).buttonColor
+                    color: expanded
+                        ? Theme.of(context).primaryColor
+                        : Theme.of(context).buttonColor,
+                  ))),
         ]));
   }
 }
 
-class ExpandableWidget extends StatefulWidget {
+class ExpandedImage extends StatefulWidget {
   final Widget child;
-  final Axis axis;
-  final bool Function() expand;
-  final bool forward;
-  final ValueNotifier<Animation<double>> animation;
-  ExpandableWidget(
-      {this.expand,
-      this.child,
-      this.axis = Axis.horizontal,
-      this.forward = true,
-      this.animation});
+  final bool expand;
+  ExpandedImage({this.expand, this.child});
 
   @override
-  _ExpandableWidgetState createState() => _ExpandableWidgetState();
+  _ExpandedImageState createState() => _ExpandedImageState();
 }
 
-class _ExpandableWidgetState extends State<ExpandableWidget>
+class _ExpandedImageState extends State<ExpandedImage>
     with SingleTickerProviderStateMixin {
   AnimationController expandController;
-  // ValueNotifier<Animation<double>> animation;
-  // Animation<double> animation;
+  Animation<double> animation;
 
   @override
   void initState() {
@@ -183,12 +108,12 @@ class _ExpandableWidgetState extends State<ExpandableWidget>
   void prepareAnimations() {
     expandController =
         AnimationController(vsync: this, duration: Duration(milliseconds: 500));
-    widget.animation.value =
+    animation =
         CurvedAnimation(parent: expandController, curve: Curves.fastOutSlowIn);
   }
 
   void _runExpandCheck() {
-    if (widget.expand()) {
+    if (widget.expand) {
       expandController.forward();
     } else {
       expandController.reverse();
@@ -196,7 +121,7 @@ class _ExpandableWidgetState extends State<ExpandableWidget>
   }
 
   @override
-  void didUpdateWidget(ExpandableWidget oldWidget) {
+  void didUpdateWidget(ExpandedImage oldWidget) {
     super.didUpdateWidget(oldWidget);
     _runExpandCheck();
   }
@@ -210,10 +135,10 @@ class _ExpandableWidgetState extends State<ExpandableWidget>
   @override
   Widget build(BuildContext context) {
     return SizeTransition(
-      sizeFactor: widget.animation.value,
+      sizeFactor: animation,
       child: widget.child,
-      axis: widget.axis,
-      axisAlignment: widget.forward ? 1.0 : -1.0,
+      axis: Axis.horizontal,
+      axisAlignment: 1.0,
     );
   }
 }
