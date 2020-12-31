@@ -1,0 +1,15 @@
+<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" crossorigin="anonymous"></script>
+<script type="text/javascript" charset="utf-8">
+    var socket = io();
+    socket.on('connect', function() {
+        socket.emit('get', 'allowed', data => {
+            console.log(data);
+            socket.emit('get','current', current => {
+                console.log(current);
+                socket.emit('post', {'frame rate': 20}, update => {
+                    console.log(update);
+                });
+            });
+        });
+    });
+</script>

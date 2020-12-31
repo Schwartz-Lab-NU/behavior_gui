@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'api.dart';
+import 'settingsPanel.dart';
 // import 'cameras.dart';
 import 'collapseImage.dart';
 // import 'package:flutter/widgets.dart';
