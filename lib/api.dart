@@ -12,12 +12,13 @@ const String hostname = 'http://localhost:5000';
 // enum RigStatusCategory { Video, Audio, Acquisition, Processing }
 
 class Allowable<T> {
-  final bool Function(T) allowed;
+  final bool Function(dynamic) allowed;
   final String Function() print;
   Allowable(this.allowed, this.print);
 
-  bool call(T) {
-    return this.allowed(T);
+  bool call(dynamic value) {
+    if (!(value is T)) return false;
+    return this.allowed(value);
   }
 
   String toString() {
@@ -26,23 +27,29 @@ class Allowable<T> {
 }
 
 class RigStatusValue<T> {
-  final Allowable<T> allowed;
-  final String category;
+  Allowable allowed;
+  String category;
   T current;
   String toString() =>
       '{Current value: $current, Allowed values: $allowed, Category: $category}';
 
-  RigStatusValue(this.allowed, this.category, this.current)
-      : assert(allowed(current));
+  RigStatusValue(this.allowed, this.category, this.current) {
+    if (!allowed(current)) {
+      throw 'Can\'t create status type with invalid current value';
+    }
+  }
 
   RigStatusValue.copy(RigStatusValue value)
       : allowed = value.allowed,
         category = value.category,
         current = value.current;
 
-  void set(T value) {
-    assert(this.allowed(value));
-    current = value;
+  void set(dynamic value) {
+    if (this.allowed(value)) {
+      current = value;
+    } else {
+      throw 'Unallowed status value';
+    }
   }
 }
 
@@ -51,8 +58,11 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
   get keys => _map.keys;
   RigStatusValue operator [](Object key) => _map[key];
   void operator []=(Object key, RigStatusValue value) {
-    assert(!_isDynamic);
-    _map[key] = value;
+    if (_isDynamic) {
+      throw 'Can\'t set dynamic RigStatusValue.';
+    } else {
+      _map[key] = value;
+    }
   }
 
   bool _isDynamic = false;
@@ -88,22 +98,21 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
       if (value['current'] is String) {
         Set<String> thisSet = Set<String>.from(value['allowedValues']);
         thisAllowable = Allowable<String>(
-            (String value) => thisSet.contains(value),
-            () => thisSet.toString());
+            (value) => thisSet.contains(value), () => thisSet.toString());
 
-        this[status] = RigStatusValue<String>(
+        this._map[status] = RigStatusValue<String>(
             thisAllowable, value['category'], value['current']);
       } else if (value['current'] is bool) {
         thisAllowable = Allowable<bool>(
-            (bool value) => true, () => [true, false].toString());
+            (value) => value is bool, () => [true, false].toString());
 
-        this[status] = RigStatusValue<bool>(
+        this._map[status] = RigStatusValue<bool>(
             thisAllowable, value['category'], value['current']);
       } else if (value['current'] is num) {
         if (value['allowedValues'] is List) {
           Set<num> thisSet = Set<num>.from(value['allowedValues']);
           thisAllowable = Allowable<num>(
-              (num value) => thisSet.contains(value), () => thisSet.toString());
+              (value) => thisSet.contains(value), () => thisSet.toString());
         } else if (value['allowedValues'] is Map &&
             value['allowedValues'].containsKey('min') &&
             value['allowedValues'].containsKey('max')) {
@@ -111,13 +120,13 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
           num thisMax = value['allowedValues']['max'];
 
           thisAllowable = Allowable<num>(
-              (num value) => (thisMin <= value) && (value <= thisMax),
+              (value) => (thisMin <= value) && (value <= thisMax),
               () => [thisMin, thisMax].toString());
         } else {
           throw 'Incomprehensible allowed status types';
         }
 
-        this[status] = RigStatusValue<num>(
+        this._map[status] = RigStatusValue<num>(
             thisAllowable, value['category'], value['current']);
       } else {
         throw 'Incomprehensible status type';
@@ -129,11 +138,10 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
 
   void _update(RigStatus update) {
     update.forEach((status, value) {
-      this[status].current = value;
+      this._map[status].current = value;
     });
     this._changeController.add(update);
   }
-
 }
 
 class RigStatus extends MapBase<String, dynamic> {
@@ -141,25 +149,27 @@ class RigStatus extends MapBase<String, dynamic> {
   get keys => _map.keys;
   dynamic operator [](Object key) => _map[key];
   void operator []=(Object type, dynamic value) {
-    assert(type is String); //don't understand why it wouldn't be...
-    //check that not dynamic
-    assert(!this._isDynamic);
-    //check that type is in keys
-    assert(_statuses.containsKey(type));
-    //check that value is allowed
-    assert(_statuses[type].allowed(value));
-
-    //allow update
-    _map[type] = value;
+    if ((type is String) &&
+        !this._isDynamic &&
+        _statuses.containsKey(type) &&
+        _statuses[type].allowed(value)) {
+      _map[type] = value;
+    } else {
+      throw 'Couldn\'t set RigStatus';
+    }
   }
 
   dynamic remove(Object key) {
-    assert(!_isDynamic);
+    if (_isDynamic) {
+      throw 'Can\'t remove values from dynamic rig status';
+    }
     return _map.remove(key);
   }
 
   void clear() {
-    assert(!_isDynamic);
+    if (_isDynamic) {
+      throw 'Can\'t remove values from dynamic rig status';
+    }
     _map.clear();
   }
 
@@ -183,8 +193,10 @@ class RigStatus extends MapBase<String, dynamic> {
     _statuses.onChange.listen(this._handleUpdates);
   }
 
+  RigStatus.fromJSON(Map<String, dynamic> json) : this._map = json;
+
   void _handleUpdates(RigStatus updates) {
-    this.addAll(updates);
+    this._map.addAll(updates);
   }
 
   static Future<RigStatus> apply(dynamic status) {
@@ -194,7 +206,6 @@ class RigStatus extends MapBase<String, dynamic> {
       throw 'Could not update rig status';
     }
   }
-
 
   static RigStatusValue getAllowed(String status) {
     if (_statuses.containsKey(status)) {
@@ -219,9 +230,7 @@ class RigStatus extends MapBase<String, dynamic> {
     //// [typeName2]: status2c,
     //// ...
     // }
-    json.forEach((status, current) {
-      _statuses[status].current = current;
-    });
+    _statuses._update(RigStatus.fromJSON(json));
     return RigStatus();
   }
 }
@@ -230,17 +239,23 @@ class RigStatusItem implements MapEntry<String, dynamic> {
   final String key;
   dynamic value;
   get type => this.key;
+  set type(dynamic value) => throw 'RigStatusItem keys may not be changed';
+  // set key(dynamic value) => throw 'RigStatusItem keys may not be changed';
   get category => RigStatus._statuses[key].category;
   String toString() => this.key;
 
-  RigStatusItem(this.key, this.value)
-      : assert(RigStatus._statuses.containsKey(key) &&
-            RigStatus._statuses[key].allowed(value));
+  RigStatusItem(this.key, value) {
+    if (RigStatus._statuses.containsKey(this.key) &&
+        RigStatus._statuses[this.key].allowed(value)) {
+      this.value = value;
+    } else {
+      throw 'Invalid key-value pair';
+    }
+  }
 
   Future<RigStatus> _post() async {
     return RigStatus._handleJSON(await Api._post(this));
   }
-
 }
 
 class Api {
@@ -284,4 +299,24 @@ void main() async {
   print('New static rig status: ');
   print(secondStatus);
 
+  print(RigStatus.getAllowed('recording'));
+  firstStatus['recording'] = true;
+  print('Trying to set status as: ');
+  print(firstStatus);
+
+  Future<RigStatus> futureStatus = RigStatus.apply(firstStatus);
+  print('Future: ');
+  print(futureStatus);
+
+  print('Waiting for future to complete');
+  RigStatus resolvedStatus = await futureStatus;
+  print('Old dynamic rig status: ');
+  print(dynamicStatus);
+  print('Resolved future rig status: ');
+  print(resolvedStatus);
+
+  print('Waiting 1 second...');
+  await Future.delayed(Duration(seconds: 1));
+  print('Old dynamic rig status: ');
+  print(dynamicStatus);
 }
