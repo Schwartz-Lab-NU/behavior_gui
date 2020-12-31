@@ -12,7 +12,7 @@ const String hostname = 'http://localhost:5000';
 // enum RigStatusCategory { Video, Audio, Acquisition, Processing }
 
 class Allowable<T> {
-  final bool Function(dynamic) allowed;
+  final bool Function(T) allowed;
   final String Function() print;
   Allowable(this.allowed, this.print);
 
@@ -27,7 +27,7 @@ class Allowable<T> {
 }
 
 class RigStatusValue<T> {
-  Allowable allowed;
+  Allowable<T> allowed;
   String category;
   T current;
   String toString() =>
@@ -98,13 +98,14 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
       if (value['current'] is String) {
         Set<String> thisSet = Set<String>.from(value['allowedValues']);
         thisAllowable = Allowable<String>(
-            (value) => thisSet.contains(value), () => thisSet.toString());
+            (String value) => thisSet.contains(value),
+            () => thisSet.toString());
 
         this._map[status] = RigStatusValue<String>(
             thisAllowable, value['category'], value['current']);
       } else if (value['current'] is bool) {
         thisAllowable = Allowable<bool>(
-            (value) => value is bool, () => [true, false].toString());
+            (bool value) => value is bool, () => [true, false].toString());
 
         this._map[status] = RigStatusValue<bool>(
             thisAllowable, value['category'], value['current']);
@@ -112,7 +113,7 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
         if (value['allowedValues'] is List) {
           Set<num> thisSet = Set<num>.from(value['allowedValues']);
           thisAllowable = Allowable<num>(
-              (value) => thisSet.contains(value), () => thisSet.toString());
+              (num value) => thisSet.contains(value), () => thisSet.toString());
         } else if (value['allowedValues'] is Map &&
             value['allowedValues'].containsKey('min') &&
             value['allowedValues'].containsKey('max')) {
@@ -120,7 +121,7 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
           num thisMax = value['allowedValues']['max'];
 
           thisAllowable = Allowable<num>(
-              (value) => (thisMin <= value) && (value <= thisMax),
+              (num value) => (thisMin <= value) && (value <= thisMax),
               () => [thisMin, thisMax].toString());
         } else {
           throw 'Incomprehensible allowed status types';
