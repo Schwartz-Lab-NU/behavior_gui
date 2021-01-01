@@ -266,7 +266,7 @@ class Api {
 
   static Future<Map<String, dynamic>> _post(dynamic status) async {
     Completer<Map<String, dynamic>> c = Completer<Map<String, dynamic>>();
-    socket.emitWithAck('post', jsonEncode(status), ack: (data) {
+    socket.emitWithAck('post', status, ack: (data) {
       c.complete(data);
     });
     return c.future;
@@ -300,7 +300,7 @@ void main() async {
   print('New static rig status: ');
   print(secondStatus);
 
-  print(RigStatus.getAllowed('recording'));
+  // print(RigStatus.getAllowed('recording'));
   firstStatus['recording'] = true;
   print('Trying to set status as: ');
   print(firstStatus);

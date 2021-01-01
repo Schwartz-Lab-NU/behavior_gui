@@ -34,12 +34,13 @@ def parse_request(request_type):
 
 @socketio.on('post')
 def parse_update(update):
-  print('Requested change: ' + update)
+  print('Requested change: ' + str(update))
   # the update is a dictionary of status:value pairs
 
   # 1) parse the request to make sure the requested value is allowed (this is also done client side, but just to be safe)
 
-  for k, v in json.loads(update).items():
+  # for k, v in json.loads(update).items():
+  for k, v in update.items():
     # 2a) if allowed, perform the update on the rig
 
     # 2b) update the status structure as necessary
