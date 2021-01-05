@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'settingsPanel.dart';
+import 'settings.dart';
 // import 'cameras.dart';
 import 'collapseImage.dart';
 // import 'package:flutter/widgets.dart';
@@ -16,7 +16,7 @@ void main() {
         primaryColor: Color.fromARGB(255, 50, 50, 50),
         accentColor: Colors.cyan,
         buttonColor: Colors.lightBlue,
-        unselectedWidgetColor: Colors.lightBlue,
+        unselectedWidgetColor: Colors.grey,
       )));
 }
 
@@ -38,31 +38,7 @@ class MyApp extends StatelessWidget {
 
     Color color = Theme.of(context).buttonColor;
 
-    void Function() callback = () => debugPrint('registered tap');
-
-    Widget buttonSection = SizedBox(
-        height: 50,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            _buildButtonColumn(
-                mainWidth / 4, color, Icons.not_interested, 'STOP', callback),
-            _buildButtonColumn(
-                mainWidth / 4, color, Icons.circle, 'RECORD', callback),
-            _buildButtonColumn(
-                mainWidth / 4, color, Icons.build, 'CALIBRATE', callback),
-            _buildButtonColumn(
-                mainWidth / 4, color, Icons.folder, 'FILE NAME', callback),
-            _buildButtonColumn(
-                mainWidth / 4, color, Icons.info, 'STATUS', callback),
-            SizedBox(
-                width: mainWidth,
-                child: Text(
-                  '<status text or error message will go here, maybe a loading bar>',
-                  style: TextStyle(color: color),
-                )),
-          ],
-        ));
+    // Widget buttonSection = ButtonSection(color, mainWidth);
 
     Widget textSection = ListView(
       reverse: true,
@@ -82,7 +58,8 @@ class MyApp extends StatelessWidget {
         backgroundColor: Theme.of(context).backgroundColor,
         body: Column(
           children: [
-            buttonSection,
+            // buttonSection,
+            StatusBar(color, mainWidth),
             SizedBox(
               width: mediaSize.width,
               height: mainHeight,
@@ -90,6 +67,7 @@ class MyApp extends StatelessWidget {
                 SizedBox(width: padding / 4),
                 CollapsibleImage(
                   size: mainHeight,
+                  streamId: 'video0.display',
                   src: 'images/image.png',
                   title: 'Top Camera',
                   axis: Axis.horizontal,
@@ -104,11 +82,13 @@ class MyApp extends StatelessWidget {
                         child: CollapsibleImageList(
                             size: subHeight,
                             axis: Axis.horizontal,
+                            streamId: streams,
                             images: sideCameras,
                             titleFn: (i) => 'Side Camera ${i + 1}'),
                       ),
                       CollapsibleImage(
                         size: audioHeight,
+                        streamId: 'audio.display',
                         src: 'images/spect.png',
                         title: 'Audio Spectrogram',
                         axis: Axis.horizontal,
@@ -153,32 +133,6 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
-
-  SizedBox _buildButtonColumn(double width, Color color, IconData icon,
-      String label, void Function() callback) {
-    return SizedBox(
-        width: width,
-        child: Center(
-            child: SizedBox(
-                width: width / 2,
-                child: InkWell(
-                    onTap: callback,
-                    child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(icon, color: color),
-                          Container(
-                              margin: const EdgeInsets.only(top: 8),
-                              child: Text(label,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    color: color,
-                                  )))
-                        ])))));
-  }
 }
 
 List<String> sideCameras = [
@@ -186,4 +140,11 @@ List<String> sideCameras = [
   'images/image.png',
   'images/image.png',
   'images/image.png',
+];
+
+List<String> streams = [
+  'video1.display',
+  'video2.display',
+  'video3.display',
+  'video4.display',
 ];

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'api.dart';
 
 class CollapsibleImageList extends StatelessWidget {
   final double size;
   final Axis axis;
   final List<String> images;
+  final List<String> streamId;
   final String Function(int) titleFn;
   CollapsibleImageList(
-      {this.size, this.images, this.titleFn, this.axis = Axis.horizontal});
+      {this.size,
+      this.images,
+      this.streamId,
+      this.titleFn,
+      this.axis = Axis.horizontal});
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +25,7 @@ class CollapsibleImageList extends StatelessWidget {
           return CollapsibleImage(
             title: this.titleFn(i),
             src: this.images[i],
+            streamId: this.streamId[i],
             axis: this.axis,
             size: this.size,
           );
@@ -29,12 +36,14 @@ class CollapsibleImageList extends StatelessWidget {
 class CollapsibleImage extends StatefulWidget {
   // final Widget child;
   final String title;
+  final String streamId;
   final String src;
   final double size;
   final Axis axis;
   final BoxFit fit;
   CollapsibleImage(
       {this.size,
+      this.streamId,
       this.src,
       this.title,
       this.axis = Axis.horizontal,
@@ -46,7 +55,12 @@ class CollapsibleImage extends StatefulWidget {
 
 class _CollapsibleImageState extends State<CollapsibleImage> {
   bool expanded = true;
+
   void toggle() {
+    RigStatus rigStatus = RigStatus.empty();
+    rigStatus[widget.streamId] = false;
+    RigStatus.apply(rigStatus);
+
     setState(() {
       expanded = !expanded;
     });

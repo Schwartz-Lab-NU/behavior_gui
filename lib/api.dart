@@ -3,18 +3,32 @@
 // import 'package:flutter/material.dart';
 // import 'package:http/http.dart' as http;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'dart:convert';
+// import 'dart:convert';
 import 'dart:async';
 import 'dart:collection';
+// import 'package:flutter/material.dart';
 
 const String hostname = 'http://localhost:5000';
 
 // enum RigStatusCategory { Video, Audio, Acquisition, Processing }
 
+class Range<T> {
+  T min;
+  T max;
+  Range(this.min, this.max);
+}
+
 class Allowable<T> {
   final bool Function(T) allowed;
   final String Function() print;
-  Allowable(this.allowed, this.print);
+  final Range<T> range;
+  final Set<T> values;
+
+  Allowable(this.allowed, this.print, {this.range, this.values}) {
+    if (!((range == null) ^ (values == null))) {
+      throw 'Must define exactly 1 of range or values set.';
+    }
+  }
 
   bool call(dynamic value) {
     if (!(value is T)) return false;
@@ -57,30 +71,26 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
   Map<String, RigStatusValue> _map = Map<String, RigStatusValue>();
   get keys => _map.keys;
   RigStatusValue operator [](Object key) => _map[key];
-  void operator []=(Object key, RigStatusValue value) {
-    if (_isDynamic) {
-      throw 'Can\'t set dynamic RigStatusValue.';
-    } else {
-      _map[key] = value;
-    }
-  }
+  void operator []=(Object key, RigStatusValue value) => _map[key] = value;
 
-  bool _isDynamic = false;
+  // bool _isDynamic = false;
+  RigStatusValues();
+}
 
+class DynamicRigStatusValues extends RigStatusValues {
+  bool initialized = false;
   final StreamController<RigStatus> _changeController =
       StreamController<RigStatus>();
   Stream<RigStatus> get onChange => _changeController.stream;
 
-  RigStatusValues();
+  @override
+  void operator []=(Object key, RigStatusValue value) =>
+      throw 'Can\'t set dynamic RigStatusValue.';
 
-  factory RigStatusValues.dynamic() {
-    RigStatusValues rigStatusValues = RigStatusValues();
-
-    rigStatusValues._isDynamic = true;
-
-    rigStatusValues._get();
-    Api.socket.on('broadcast', (data) => rigStatusValues._update(data));
-    return rigStatusValues;
+  DynamicRigStatusValues() : super() {
+    this._get();
+    Api._socket
+        .on('broadcast', (data) => this._update(RigStatus.fromJSON(data)));
   }
 
   void _get() async {
@@ -98,14 +108,15 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
       if (value['current'] is String) {
         Set<String> thisSet = Set<String>.from(value['allowedValues']);
         thisAllowable = Allowable<String>(
-            (String value) => thisSet.contains(value),
-            () => thisSet.toString());
+            (String value) => thisSet.contains(value), () => thisSet.toString(),
+            values: thisSet);
 
         this._map[status] = RigStatusValue<String>(
             thisAllowable, value['category'], value['current']);
       } else if (value['current'] is bool) {
         thisAllowable = Allowable<bool>(
-            (bool value) => value is bool, () => [true, false].toString());
+            (bool value) => value is bool, () => [true, false].toString(),
+            values: Set.from([true, false]));
 
         this._map[status] = RigStatusValue<bool>(
             thisAllowable, value['category'], value['current']);
@@ -113,7 +124,8 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
         if (value['allowedValues'] is List) {
           Set<num> thisSet = Set<num>.from(value['allowedValues']);
           thisAllowable = Allowable<num>(
-              (num value) => thisSet.contains(value), () => thisSet.toString());
+              (num value) => thisSet.contains(value), () => thisSet.toString(),
+              values: thisSet);
         } else if (value['allowedValues'] is Map &&
             value['allowedValues'].containsKey('min') &&
             value['allowedValues'].containsKey('max')) {
@@ -122,7 +134,8 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
 
           thisAllowable = Allowable<num>(
               (num value) => (thisMin <= value) && (value <= thisMax),
-              () => [thisMin, thisMax].toString());
+              () => [thisMin, thisMax].toString(),
+              range: Range<num>(thisMin, thisMax));
         } else {
           throw 'Incomprehensible allowed status types';
         }
@@ -135,9 +148,12 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
       newStatus[status] = value['current'];
     });
     this._changeController.add(newStatus);
+    initialized = true;
   }
 
   void _update(RigStatus update) {
+    // debugPrint('received broadcast event');
+    if (!initialized) return;
     update.forEach((status, value) {
       this._map[status].current = value;
     });
@@ -147,35 +163,47 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
 
 class RigStatus extends MapBase<String, dynamic> {
   Map<String, dynamic> _map;
+  // Iterable<RigStatusItem> get entries => Iterable.castFrom(_map.entries);
+
   get keys => _map.keys;
   dynamic operator [](Object key) => _map[key];
   void operator []=(Object type, dynamic value) {
     if ((type is String) &&
-        !this._isDynamic &&
         _statuses.containsKey(type) &&
         _statuses[type].allowed(value)) {
       _map[type] = value;
+      // this._changeController.add(true);//but only needed if dynamic??
     } else {
       throw 'Couldn\'t set RigStatus';
     }
   }
 
-  dynamic remove(Object key) {
-    if (_isDynamic) {
-      throw 'Can\'t remove values from dynamic rig status';
-    }
-    return _map.remove(key);
+  dynamic remove(Object key) => _map.remove(key);
+
+  void clear() => _map.clear();
+
+  bool operator ==(Object status) {
+    // return (status is RigStatus) &&
+    //     (status.keys == this._map.keys) &&
+    //     (status.values) == this.values;
+    // debugPrint('Testing one rig status against another...');
+    if (!(status is RigStatus)) return false;
+    return this.isSameStatus(status);
+    // status = status as RigStatus;
   }
 
-  void clear() {
-    if (_isDynamic) {
-      throw 'Can\'t remove values from dynamic rig status';
-    }
-    _map.clear();
+  bool isSameStatus(RigStatus status) {
+    if (status.length != this.length) return false;
+    return !status.entries.any((statusItem) {
+      return !this.containsKey(statusItem.key) ||
+          (this[statusItem.key] != statusItem.value);
+    });
   }
 
-  static final RigStatusValues _statuses = RigStatusValues.dynamic();
-  bool _isDynamic = false;
+  int get hashCode => keys.hashCode ^ values.hashCode;
+
+  static final DynamicRigStatusValues _statuses = DynamicRigStatusValues();
+  // bool _isDynamic = false;
 
   RigStatus()
       : this._map =
@@ -185,23 +213,12 @@ class RigStatus extends MapBase<String, dynamic> {
 
   RigStatus.empty() : this._map = Map<String, dynamic>();
 
-  RigStatus.dynamic()
-      : this._map =
-            _statuses.map<String, dynamic>((String type, RigStatusValue value) {
-          return RigStatusItem(type, value.current);
-        }) {
-    this._isDynamic = true;
-    _statuses.onChange.listen(this._handleUpdates);
-  }
-
   RigStatus.fromJSON(Map<String, dynamic> json) : this._map = json;
 
-  void _handleUpdates(RigStatus updates) {
-    this._map.addAll(updates);
-  }
-
   static Future<RigStatus> apply(dynamic status) {
-    if ((status is RigStatus) || status is RigStatusItem) {
+    //todo: at some point we should remove any applied changes that match the current state?
+    if (((status is RigStatus) && !(status is DynamicRigStatus)) ||
+        status is RigStatusItem) {
       return status._post();
     } else {
       throw 'Could not update rig status';
@@ -236,6 +253,31 @@ class RigStatus extends MapBase<String, dynamic> {
   }
 }
 
+class DynamicRigStatus extends RigStatus {
+  final StreamController<bool> _changeController = StreamController<bool>();
+  Stream<bool> get onChange => _changeController.stream;
+
+  @override
+  void operator []=(Object key, dynamic value) =>
+      throw 'Couldn\'t set RigStatus';
+
+  @override
+  dynamic remove(Object key) =>
+      throw 'Can\'t remove values from dynamic rig status';
+
+  @override
+  void clear() => throw 'Can\'t remove values from dynamic rig status';
+
+  DynamicRigStatus() : super() {
+    RigStatus._statuses.onChange.listen(this._handleUpdates);
+  }
+
+  void _handleUpdates(RigStatus updates) {
+    this._map.addAll(updates);
+    this._changeController.add(true);
+  }
+}
+
 class RigStatusItem implements MapEntry<String, dynamic> {
   final String key;
   dynamic value;
@@ -260,13 +302,26 @@ class RigStatusItem implements MapEntry<String, dynamic> {
 }
 
 class Api {
-  static final IO.Socket socket = IO.io(hostname, <String, dynamic>{
+  static final IO.Socket _socket = IO.io(hostname, <String, dynamic>{
     'transports': ['websocket']
   });
 
+  static final StreamController<String> _changeController =
+      StreamController<String>();
+  static bool _hasSetupMessage = false;
+
+  static Stream<String> get onMessage {
+    if (!Api._hasSetupMessage) {
+      Api._socket
+          .on('message', (message) => Api._changeController.add(message));
+      Api._hasSetupMessage = true;
+    }
+    return _changeController.stream;
+  }
+
   static Future<Map<String, dynamic>> _post(dynamic status) async {
     Completer<Map<String, dynamic>> c = Completer<Map<String, dynamic>>();
-    socket.emitWithAck('post', status, ack: (data) {
+    _socket.emitWithAck('post', status, ack: (data) {
       c.complete(data);
     });
     return c.future;
@@ -274,7 +329,7 @@ class Api {
 
   static Future<Map<String, dynamic>> _get(dynamic status) async {
     Completer<Map<String, dynamic>> c = Completer<Map<String, dynamic>>();
-    socket.emitWithAck('get', status.toString(), ack: (data) {
+    _socket.emitWithAck('get', status.toString(), ack: (data) {
       c.complete(data);
     });
     return c.future;
@@ -283,7 +338,7 @@ class Api {
 
 void main() async {
   RigStatus firstStatus = RigStatus();
-  RigStatus dynamicStatus = RigStatus.dynamic();
+  RigStatus dynamicStatus = DynamicRigStatus();
   print('Static rig status: ');
   print(firstStatus);
   print('Dynamic rig status: ');
@@ -301,7 +356,7 @@ void main() async {
   print(secondStatus);
 
   // print(RigStatus.getAllowed('recording'));
-  firstStatus['recording'] = true;
+  firstStatus['recording'] = !dynamicStatus['recording'];
   print('Trying to set status as: ');
   print(firstStatus);
 
@@ -311,6 +366,8 @@ void main() async {
 
   print('Waiting for future to complete');
   RigStatus resolvedStatus = await futureStatus;
+  print('Testing dynamic status vs new status: ');
+  print(dynamicStatus == resolvedStatus);
   print('Old dynamic rig status: ');
   print(dynamicStatus);
   print('Resolved future rig status: ');
@@ -320,4 +377,6 @@ void main() async {
   await Future.delayed(Duration(seconds: 1));
   print('Old dynamic rig status: ');
   print(dynamicStatus);
+  print('Re-testing dynamic status vs new status: ');
+  print(dynamicStatus == resolvedStatus);
 }
