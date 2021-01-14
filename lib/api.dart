@@ -42,12 +42,13 @@ class Allowable<T> {
 
 class RigStatusValue<T> {
   Allowable<T> allowed;
+  bool mutable;
   String category;
   T current;
   String toString() =>
       '{Current value: $current, Allowed values: $allowed, Category: $category}';
 
-  RigStatusValue(this.allowed, this.category, this.current) {
+  RigStatusValue(this.allowed, this.mutable, this.category, this.current) {
     if (!allowed(current)) {
       throw 'Can\'t create status type with invalid current value';
     }
@@ -55,10 +56,12 @@ class RigStatusValue<T> {
 
   RigStatusValue.copy(RigStatusValue value)
       : allowed = value.allowed,
+        mutable = value.mutable,
         category = value.category,
         current = value.current;
 
   void set(dynamic value) {
+    // if (this.allowed(value) && this.mutable) {
     if (this.allowed(value)) {
       current = value;
     } else {
@@ -111,15 +114,15 @@ class DynamicRigStatusValues extends RigStatusValues {
             (String value) => thisSet.contains(value), () => thisSet.toString(),
             values: thisSet);
 
-        this._map[status] = RigStatusValue<String>(
-            thisAllowable, value['category'], value['current']);
+        this._map[status] = RigStatusValue<String>(thisAllowable,
+            value['mutable'], value['category'], value['current']);
       } else if (value['current'] is bool) {
         thisAllowable = Allowable<bool>(
             (bool value) => value is bool, () => [true, false].toString(),
             values: Set.from([true, false]));
 
-        this._map[status] = RigStatusValue<bool>(
-            thisAllowable, value['category'], value['current']);
+        this._map[status] = RigStatusValue<bool>(thisAllowable,
+            value['mutable'], value['category'], value['current']);
       } else if (value['current'] is num) {
         if (value['allowedValues'] is List) {
           Set<num> thisSet = Set<num>.from(value['allowedValues']);
@@ -140,8 +143,8 @@ class DynamicRigStatusValues extends RigStatusValues {
           throw 'Incomprehensible allowed status types';
         }
 
-        this._map[status] = RigStatusValue<num>(
-            thisAllowable, value['category'], value['current']);
+        this._map[status] = RigStatusValue<num>(thisAllowable, value['mutable'],
+            value['category'], value['current']);
       } else {
         throw 'Incomprehensible status type';
       }
@@ -162,16 +165,16 @@ class DynamicRigStatusValues extends RigStatusValues {
 }
 
 class RigStatus extends MapBase<String, dynamic> {
-  Map<String, dynamic> _map;
+  Map<String, List<dynamic>> _map;
   // Iterable<RigStatusItem> get entries => Iterable.castFrom(_map.entries);
 
   get keys => _map.keys;
-  dynamic operator [](Object key) => _map[key];
+  dynamic operator [](Object key) => _map[key][0];
   void operator []=(Object type, dynamic value) {
     if ((type is String) &&
         _statuses.containsKey(type) &&
         _statuses[type].allowed(value)) {
-      _map[type] = value;
+      _map[type][0] = value;
       // this._changeController.add(true);//but only needed if dynamic??
     } else {
       throw 'Couldn\'t set RigStatus';
