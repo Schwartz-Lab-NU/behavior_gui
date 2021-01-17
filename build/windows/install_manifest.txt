@@ -1,0 +1,10 @@
+C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/Debug/data/icudtl.dat
+C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/Debug/flutter_windows.dll
+C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/Debug/data/flutter_assets/AssetManifest.json
+C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/Debug/data/flutter_assets/FontManifest.json
+C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/Debug/data/flutter_assets/fonts/MaterialIcons-Regular.otf
+C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/Debug/data/flutter_assets/images/image.png
+C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/Debug/data/flutter_assets/images/spect.png
+C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/Debug/data/flutter_assets/kernel_blob.bin
+C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/Debug/data/flutter_assets/NOTICES
+C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/Debug/data/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf

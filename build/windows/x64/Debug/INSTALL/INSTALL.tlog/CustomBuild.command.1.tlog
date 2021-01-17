@@ -1,0 +1,10 @@
+^C:\USERS\SCHWARTZLAB\PYCHARMPROJECTS\BAHAVIOR_RIG\BEHAVIOR_GUI\BUILD\WINDOWS\CMAKEFILES\0C5C46CE6F22982A453A7AE973D0EDC1\INSTALL_FORCE.RULE
+setlocal
+cd .
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

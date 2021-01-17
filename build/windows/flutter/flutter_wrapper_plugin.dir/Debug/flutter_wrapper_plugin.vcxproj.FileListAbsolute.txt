@@ -1,0 +1,2 @@
+C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\flutter\Debug\flutter_wrapper_plugin.pdb
+C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\flutter\flutter_wrapper_plugin.dir\Debug\flutter_wrapper_plugin.pdb

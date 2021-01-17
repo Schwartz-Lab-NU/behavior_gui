@@ -1,0 +1,28 @@
+^C:\USERS\SCHWARTZLAB\PYCHARMPROJECTS\BAHAVIOR_RIG\BEHAVIOR_GUI\BUILD\WINDOWS\CMAKEFILES\3A7123E8B5D134F8B6F9D9B7BE4B7E62\FLUTTER_WINDOWS.DLL.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E env FLUTTER_ROOT=C:\Users\SchwartzLab\flutter PROJECT_DIR=C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui FLUTTER_ROOT=C:\Users\SchwartzLab\flutter FLUTTER_EPHEMERAL_DIR=C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\windows\flutter\ephemeral PROJECT_DIR=C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui FLUTTER_TARGET=C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\./lib/main.dart DART_OBFUSCATION=false TRACK_WIDGET_CREATION=true TREE_SHAKE_ICONS=false PACKAGE_CONFIG=C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\.dart_tool\package_config.json C:/Users/SchwartzLab/flutter/packages/flutter_tools/bin/tool_backend.bat windows-x64 Debug
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\SCHWARTZLAB\PYCHARMPROJECTS\BAHAVIOR_RIG\BEHAVIOR_GUI\BUILD\WINDOWS\CMAKEFILES\350A25350AC520C3B2E8372C37F12801\FLUTTER_ASSEMBLE.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\SCHWARTZLAB\PYCHARMPROJECTS\BAHAVIOR_RIG\BEHAVIOR_GUI\WINDOWS\FLUTTER\CMAKELISTS.TXT
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/windows -BC:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows --check-stamp-file C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/flutter/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

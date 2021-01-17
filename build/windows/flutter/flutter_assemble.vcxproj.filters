@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\CMakeFiles\3a7123e8b5d134f8b6f9d9b7be4b7e62\flutter_windows.dll.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\CMakeFiles\350a25350ac520c3b2e8372c37f12801\flutter_assemble.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\windows\flutter\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\flutter\CMakeFiles\flutter_assemble" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{3F0530A9-302A-39FC-9843-A867012B6423}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
