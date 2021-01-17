@@ -5,6 +5,6 @@ C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/flu
 C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/flutter/CMakeFiles/flutter_wrapper_app.dir
 C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/flutter/CMakeFiles/flutter_assemble.dir
 C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/flutter/CMakeFiles/INSTALL.dir
-C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/CMakeFiles/behavior_app.dir
+C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/CMakeFiles/behavior_gui.dir
 C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/CMakeFiles/INSTALL.dir
 C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/CMakeFiles/ALL_BUILD.dir

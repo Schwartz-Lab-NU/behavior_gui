@@ -1,3 +1,6 @@
+# from gevent import monkey
+# monkey.patch_all()
+
 from flask import Flask, render_template,Response
 from flask_socketio import SocketIO, emit
 import json
@@ -15,37 +18,36 @@ import AcquisitionGroup
 # eventlet.monkey_patch()
 # from gevent import monkey
 # monkey.patch_all()
+# from gevent.pywsgi import WSGIServer
 
-bgthread = Thread()
-
-app = Flask(__name__)
+appMain = Flask(__name__)
+appSocket = Flask(__name__)
 # app.debug = True #seems to break nidaq
-# socketio = SocketIO(app, cors_allows_origins='*', async_mode='eventlet')
-socketio = SocketIO(app, cors_allows_origins='*', async_mode='gevent')
+
+# socketio = SocketIO(app, cors_allowed_origins='*', async_mode='gevent')
+socketio = SocketIO(appSocket, cors_allowed_origins='*', async_mode='eventlet')
 ag= AcquisitionGroup.AcquisitionGroup(frame_rate=30,audio_settings=audio_settings)
-ag.start(isDisplayed=True)
+# ag.start(isDisplayed=False)
 #ag.run()
 
-@app.route('/')
+@appMain.route('/')
 def hello_world():
   return 'hello world'  # just a placeholder, for testing
   # return render_template('index.html')
 
-@app.route('/video/<int:cam_id>')
+@appMain.route('/video/<int:cam_id>')
 def generate_frame(cam_id):
-  print('got request for video ', cam_id)
-  # if not ag.running:
-  #   print('not running')
-  #   # Thread(target=ag.run).start()
-  #   ag.run()
-  #   socketio.start_background_task(ag.run)
-  #TODO: if not ag.cameras[cam_id].running, we can't call display()?
+  print('got request for video ', cam_id, 'run status: ', ag.cameras[cam_id].running, ag.running)
+  #NOTE: camera.running is true after ag.start(), ag.running is true after ag.run()
+  if ag.cameras[cam_id].data is None:
+    ag.cameras[cam_id].data = True #TODO: this is kind of weird, maybe add a new setter
+
   if ag.running:
     return Response(ag.cameras[cam_id].display(), mimetype='multipart/x-mixed-replace; boundary=frame')
   else:
     return Response(status = 503) #service unavailable
 
-@app.route('/audio')
+@appMain.route('/audio')
 def generate_spectrogram():
   return Response(ag.nidaq.display(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
@@ -93,22 +95,30 @@ def parse_update(update):
     if k == 'calibration':
       # threading.Thread(target=doCalibration, args=(v,)).start()
       # socketio.start_background_task(doCalibration, (v,))
-      bgthread = Thread(target=doCalibration, args=(v,)).start()
+
+      # bgthread = Thread(target=doCalibration, args=(v,)).start() TODO: THIS WILL NOT WORK
+      doCalibration(v)
+      testDefs.initialStatus['calibration']['current'] = 'calibrated'
     elif 'display' in k: # e.g. k="audio.display"
       #add/remove client to display list for the particular stream
       #only if we change between no clients displaying vs. any clients displaying will we actually change the display status
       testDefs.initialStatus[k]['current'] = v
-    elif k == 'initialization':
+    elif k == 'initialization': #TODO: actually parse request, right now just toggling
       # pass
       if not ag.running:
+        ag.stop() #shouldn't be needed
+        ag.start()
         ag.run()
         print('exited ag.run')
+        testDefs.initialStatus[k]['current'] = 'initialized'
       else:
-        print("it's running")
-
-    # 2b) update the status structure as necessary
-    #NOTE: this might not be how we want to handle every status... maybe the update failed
-    testDefs.initialStatus[k]['current'] = v
+        ag.stop()
+        print("was running")
+        testDefs.initialStatus[k]['current'] = 'deinitialized'
+    else:
+      # 2b) update the status structure as necessary
+      #NOTE: this might not be how we want to handle every status... maybe the update failed
+      testDefs.initialStatus[k]['current'] = v
 
     # an update of one status may affect another: below is just an example
     # testDefs.initialStatus['initialization']['current'] = 'initialized'
@@ -129,16 +139,19 @@ def parse_update(update):
 
 def doCalibration(calibration_type):  # pretend to perform the calibration
   time.sleep(3)
-  testDefs.initialStatus['calibration']['current'] = 'calibrated'
-  print('emitting done calibration status')
-  socketio.emit('message', 'done calibration')
-  socketio.emit('broadcast', {k: v['current']
-                              for k, v in testDefs.initialStatus.items()})
-  print('emitted done calibration status')
+  # print('emitting done calibration status')
+  # socketio.emit('message', 'done calibration')
+  # socketio.emit('broadcast', {k: v['current']
+  #                             for k, v in testDefs.initialStatus.items()})
+  # print('emitted done calibration status')
 
 
 if __name__ == '__main__':
-  socketio.run(app) #could set the port here manually like in main.py
+  Thread(target=socketio.run, args=(appSocket,), kwargs={'port':5001}).start()
+  # socketio.run(appSocket, port=5001) #could set the port here manually like in main.py
+
+  appMain.run(host='localhost', port=5000, debug=False, use_reloader=False)
+
   #localhost == 127.0.0.1
 
   #default port = 5000
