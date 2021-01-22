@@ -29,7 +29,7 @@
 .packages
 .pub-cache/
 .pub/
-./build/
+build/
 
 # Web related
 lib/generated_plugin_registrant.dart
@@ -40,9 +40,11 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
-./windows/
-./web/
-./ios/
-./android/
+windows/
+web/
+ios/
+android/
 
 .packages
+
+test_stream/*
