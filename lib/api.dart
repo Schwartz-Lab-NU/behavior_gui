@@ -1,14 +1,19 @@
 // import 'dart:io';
 
 // import 'package:flutter/material.dart';
-// import 'package:http/http.dart' as http;
+import 'dart:typed_data';
+
+// import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-// import 'dart:convert';
+import 'dart:convert';
 import 'dart:async';
 import 'dart:collection';
+import 'dart:ui';
 // import 'package:flutter/material.dart';
 
-const String hostname = 'http://localhost:5001';
+const String socketHostname = 'http://localhost:5001';
+const String mainHostname = 'http://localhost:5000';
 
 // enum RigStatusCategory { Video, Audio, Acquisition, Processing }
 
@@ -80,7 +85,7 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
 class DynamicRigStatusValues extends RigStatusValues {
   bool initialized = false;
   final StreamController<RigStatus> _changeController =
-      StreamController<RigStatus>();
+      StreamController<RigStatus>.broadcast();
   Stream<RigStatus> get onChange => _changeController.stream;
 
   @override
@@ -167,7 +172,7 @@ class RigStatus extends MapBase<String, dynamic> {
   Map<String, dynamic> _map;
   // Iterable<RigStatusItem> get entries => Iterable.castFrom(_map.entries);
 
-    String toString() {
+  String toString() {
     return this._map.toString();
   }
 
@@ -260,7 +265,8 @@ class RigStatus extends MapBase<String, dynamic> {
 }
 
 class DynamicRigStatus extends RigStatus {
-  final StreamController<bool> _changeController = StreamController<bool>();
+  final StreamController<bool> _changeController =
+      StreamController<bool>.broadcast();
   Stream<bool> get onChange => _changeController.stream;
 
   @override
@@ -308,12 +314,12 @@ class RigStatusItem implements MapEntry<String, dynamic> {
 }
 
 class Api {
-  static final IO.Socket _socket = IO.io(hostname, <String, dynamic>{
+  static final IO.Socket _socket = IO.io(socketHostname, <String, dynamic>{
     'transports': ['websocket']
   });
 
   static final StreamController<String> _changeController =
-      StreamController<String>();
+      StreamController<String>.broadcast();
   static bool _hasSetupMessage = false;
 
   static Stream<String> get onMessage {
@@ -340,49 +346,74 @@ class Api {
     });
     return c.future;
   }
+
+  static Future<http.StreamedResponse> video(int id) async {
+    http.MultipartRequest request =
+        new http.MultipartRequest('GET', Uri.parse('$mainHostname/video/$id'));
+    return request.send();
+  }
 }
 
 void main() async {
   RigStatus firstStatus = RigStatus();
-  RigStatus dynamicStatus = DynamicRigStatus();
-  print('Static rig status: ');
-  print(firstStatus);
-  print('Dynamic rig status: ');
-  print(dynamicStatus);
+  // RigStatus dynamicStatus = DynamicRigStatus();
+  // print('Static rig status: ');
+  // print(firstStatus);
+  // print('Dynamic rig status: ');
+  // print(dynamicStatus);
 
-  print('Waiting 1 second...');
+  // print('Waiting 1 second...');
   await Future.delayed(Duration(seconds: 1));
 
-  print('Old static rig status: ');
-  print(firstStatus);
-  print('Old dynamic rig status: ');
-  print(dynamicStatus);
-  RigStatus secondStatus = RigStatus();
-  print('New static rig status: ');
-  print(secondStatus);
+  // print('Old static rig status: ');
+  // print(firstStatus);
+  // print('Old dynamic rig status: ');
+  // print(dynamicStatus);
+  // RigStatus secondStatus = RigStatus();
+  // print('New static rig status: ');
+  // print(secondStatus);
 
-  // print(RigStatus.getAllowed('recording'));
-  firstStatus['recording'] = !dynamicStatus['recording'];
-  print('Trying to set status as: ');
-  print(firstStatus);
+  // // print(RigStatus.getAllowed('recording'));
+  // firstStatus['recording'] = !dynamicStatus['recording'];
+  // print('Trying to set status as: ');
+  // print(firstStatus);
 
-  Future<RigStatus> futureStatus = RigStatus.apply(firstStatus);
-  print('Future: ');
-  print(futureStatus);
+  // Future<RigStatus> futureStatus = RigStatus.apply(firstStatus);
+  // print('Future: ');
+  // print(futureStatus);
 
-  print('Waiting for future to complete');
-  RigStatus resolvedStatus = await futureStatus;
-  print('Testing dynamic status vs new status: ');
-  print(dynamicStatus == resolvedStatus);
-  print('Old dynamic rig status: ');
-  print(dynamicStatus);
-  print('Resolved future rig status: ');
-  print(resolvedStatus);
+  // print('Waiting for future to complete');
+  // RigStatus resolvedStatus = await futureStatus;
+  // print('Testing dynamic status vs new status: ');
+  // print(dynamicStatus == resolvedStatus);
+  // print('Old dynamic rig status: ');
+  // print(dynamicStatus);
+  // print('Resolved future rig status: ');
+  // print(resolvedStatus);
 
-  print('Waiting 1 second...');
-  await Future.delayed(Duration(seconds: 1));
-  print('Old dynamic rig status: ');
-  print(dynamicStatus);
-  print('Re-testing dynamic status vs new status: ');
-  print(dynamicStatus == resolvedStatus);
+  // print('Waiting 1 second...');
+  // await Future.delayed(Duration(seconds: 1));
+  // print('Old dynamic rig status: ');
+  // print(dynamicStatus);
+  // print('Re-testing dynamic status vs new status: ');
+  // print(dynamicStatus == resolvedStatus);
+
+  // print('testing video stream');
+  // firstStatus['initialization'] = 'initialized';
+  // await RigStatus.apply(firstStatus);
+  // var data = await Api.video(0);
+  // print('got stream with status: ');
+  // print(data.statusCode);
+  // print('printing stream values: ');
+
+  // int i = 0;
+
+  // data.stream.forEach((chunk) {
+  //   if ((chunk.length == 65543) && (i == 0)) {
+  //     i = 1;
+  //     getImage(chunk);
+  //   }
+  //   print(
+  //       'Chunk length: ${chunk.length}, first 2: ${chunk[0]}, ${chunk[1]}, last 2: ${chunk.reversed.toList()[1]}, ${chunk.reversed.toList()[0]}');
+  // });
 }

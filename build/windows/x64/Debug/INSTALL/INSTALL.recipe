@@ -2,19 +2,19 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\x64\Debug\ZERO_CHECK</FullPath>
+      <FullPath>E:\behavior_app\behavior_app\build\windows\x64\Debug\ZERO_CHECK</FullPath>
     </ProjectOutput>
     <ProjectOutput>
-      <FullPath>C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\flutter\x64\Debug\flutter_assemble</FullPath>
+      <FullPath>E:\behavior_app\behavior_app\build\windows\flutter\x64\Debug\flutter_assemble</FullPath>
     </ProjectOutput>
     <ProjectOutput>
-      <FullPath>C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\runner\Debug\behavior_gui.exe</FullPath>
+      <FullPath>E:\behavior_app\behavior_app\build\windows\runner\Debug\behavior_app.exe</FullPath>
     </ProjectOutput>
     <ProjectOutput>
-      <FullPath>C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\x64\Debug\ALL_BUILD</FullPath>
+      <FullPath>E:\behavior_app\behavior_app\build\windows\x64\Debug\ALL_BUILD</FullPath>
     </ProjectOutput>
     <ProjectOutput>
-      <FullPath>C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\x64\Debug\INSTALL</FullPath>
+      <FullPath>E:\behavior_app\behavior_app\build\windows\x64\Debug\INSTALL</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />

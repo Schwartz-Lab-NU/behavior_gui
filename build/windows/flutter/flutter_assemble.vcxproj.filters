@@ -1,20 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CustomBuild Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\CMakeFiles\3a7123e8b5d134f8b6f9d9b7be4b7e62\flutter_windows.dll.rule">
+    <CustomBuild Include="E:\behavior_app\behavior_app\build\windows\CMakeFiles\878e974cc10fd5c5daac832297f3e953\flutter_windows.dll.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
-    <CustomBuild Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\CMakeFiles\350a25350ac520c3b2e8372c37f12801\flutter_assemble.rule">
+    <CustomBuild Include="E:\behavior_app\behavior_app\build\windows\CMakeFiles\2bd8f18d02aa28dda7b297a968871389\flutter_assemble.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
-    <CustomBuild Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\windows\flutter\CMakeLists.txt" />
+    <CustomBuild Include="E:\behavior_app\behavior_app\windows\flutter\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\flutter\CMakeFiles\flutter_assemble" />
+    <None Include="E:\behavior_app\behavior_app\build\windows\flutter\CMakeFiles\flutter_assemble" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CMake Rules">
-      <UniqueIdentifier>{3F0530A9-302A-39FC-9843-A867012B6423}</UniqueIdentifier>
+      <UniqueIdentifier>{EA82F2E4-D412-35C3-AA71-7E02FE14021A}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

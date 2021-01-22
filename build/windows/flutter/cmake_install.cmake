@@ -1,8 +1,8 @@
-# Install script for directory: C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/windows/flutter
+# Install script for directory: E:/behavior_app/behavior_app/windows/flutter
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "$<TARGET_FILE_DIR:behavior_gui>")
+  set(CMAKE_INSTALL_PREFIX "$<TARGET_FILE_DIR:behavior_app>")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 

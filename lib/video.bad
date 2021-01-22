@@ -1,0 +1,222 @@
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'dart:ui';
+
+import 'package:flutter/material.dart';
+import 'api.dart';
+
+class GrayscaleFrame extends ui.Image {
+  final Uint32List _frameBytes;
+  GrayscaleFrame(List<int> _intList)
+      : _frameBytes = Uint32List.fromList(_intList), super();
+
+  @override
+  int get height => 256;
+
+  @override
+  int get width => 256;
+
+  @override
+  Future<ByteData> toByteData(
+      {ImageByteFormat format: ImageByteFormat.rawRgba}) {
+    switch (format) {
+      case ImageByteFormat.rawRgba:
+        {
+          // return Future.value(ByteData.view(_frameBytes.buffer));
+        }
+        break;
+      case ImageByteFormat.rawUnmodified:
+        {
+          // return Future.value(ByteData.view(_frameBytes.buffer));
+          throw 'Expected rgba request but got grayscale';
+        }
+        break;
+      case ImageByteFormat.png:
+        {
+          throw 'Cannot do png';
+        }
+        break;
+    }
+    return Future.value(ByteData.view(_frameBytes.buffer));
+  }
+}
+
+class StreamVideo extends Object {
+  final int streamId;
+  Uint8List bmp;
+  StreamVideo(this.streamId) {
+    bmp = Uint8List(66614); //TODO: placeholders
+    bmp.setRange(0, 54, [
+      66, 77, //BM
+      54, 4, 1, 0, //256x256 uint8 image + 54 byte header +4*256byte palette
+      0, 0, 0, 0, //reserved
+      54, 4, 0, 0, //offset to beginning of bitmap
+      40, 0, 0, 0, //size of `infoheader` = 40bytes
+      0, 1, 0, 0, //width of image = 256 pixels
+      0, 1, 0, 0, //height of image = 256 pixels
+      1, 0, //number of z planes == 1
+      8, 0, //bits per pixel == 8
+      0, 0, 0, 0, //compression type == none
+      0, 0, 1, 0, //compressed size = 256px x 256px x 8bits/px
+      196, 14, 0, 0, //horizontal resolution... pixels/meter
+      196, 14, 0, 0, //vertical resolution... pixels/meter
+      0, 1, 0, 0, //number of colors used == 256
+      0, 1, 0, 0 //number of important colors, 0 = all (or 8?)
+    ]);
+    for (int i = 0; i < 256; i++) {
+      bmp.fillRange(54 + 4 * i, 54 + 4 * (i + 1), i); //defines a gray ramp
+    }
+  }
+
+  @override
+  int get hashCode => streamId;
+
+  @override
+  bool operator ==(Object other) =>
+      (other is StreamVideo) && (other.streamId == streamId);
+}
+
+class VideoStreamCompleter extends ImageStreamCompleter {
+  static Map<int, VideoStreamCompleter> _streams = {};
+  final StreamVideo stream;
+  factory VideoStreamCompleter(StreamVideo stream) {
+    //first check if we already have a completer
+    if (_streams.containsKey(stream.streamId)) return _streams[stream.streamId];
+
+    VideoStreamCompleter out = VideoStreamCompleter._newStream(stream);
+    out._init();
+
+    return out;
+  }
+  VideoStreamCompleter._newStream(this.stream) {
+    _streams[this.stream.streamId] = this;
+  }
+
+  void _init() {
+    Api.video(stream.streamId).then((response) {
+      if (response.statusCode == 200) {
+        response.stream.listen(parseIncomingFrames);
+      }
+    });
+  }
+
+  void parseIncomingFrames(List<int> frame) async {
+    // debugPrint(frame.length.toString());
+    // if (frame.length == 65536) {
+    //   //note we sometimes get size ==7 or 65536
+
+    //   // Uint8List bmp = Uint8List.fromList(stream.bmp);
+    //   // bmp.setRange(7, 65543, frame);
+    //   Uint8List bmp = Uint8List(262144);
+    //   // bmp.fillRange(0, 262144, 128);
+    //   int j = 0;
+    //   for (int i = 0; i < 65536; i++) {
+    //     bmp.fillRange(j, j + 4, frame[i]);
+    //     j += 4;
+    //   }
+
+    //   ImmutableBuffer buff = await ImmutableBuffer.fromUint8List(bmp);
+    //   FrameInfo frameinfo = await ImageDescriptor.raw(buff,
+    //           width: 256, height: 256, pixelFormat: PixelFormat.bgra8888)
+    //       .instantiateCodec()
+    //       .then((codec) => codec.getNextFrame());
+    //   debugPrint('got frame info');
+    //   setImage(ImageInfo(image: frameinfo.image));
+    // }
+
+    setImage(ImageInfo(image: GrayscaleFrame(frame)));
+  }
+}
+
+class VideoProvider extends ImageProvider<StreamVideo> {
+  final int streamId;
+  VideoProvider(this.streamId);
+
+  VideoStreamCompleter load(StreamVideo stream, DecoderCallback decode) {
+    //Converts a key into an ImageStreamCompleter, and begins fetching the image.
+    return VideoStreamCompleter(stream);
+    //
+  }
+
+  Future<StreamVideo> obtainKey(ImageConfiguration configuration) {
+    //Converts an ImageProvider's settings plus an ImageConfiguration to a key that describes the precise image to load.
+    return Future.value(StreamVideo(streamId));
+  }
+}
+
+class StreamImage extends StatefulWidget {
+  const StreamImage({
+    Key key,
+    @required this.videoProvider,
+  })  : assert(videoProvider != null),
+        super(key: key);
+
+  final VideoProvider videoProvider;
+
+  @override
+  _StreamImageState createState() => _StreamImageState();
+}
+
+class _StreamImageState extends State<StreamImage> {
+  ImageStream _imageStream;
+  ImageInfo _imageInfo;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // We call _getImage here because createLocalImageConfiguration() needs to
+    // be called again if the dependencies changed, in case the changes relate
+    // to the DefaultAssetBundle, MediaQuery, etc, which that method uses.
+    _getImage();
+  }
+
+  @override
+  void didUpdateWidget(StreamImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.videoProvider != oldWidget.videoProvider) _getImage();
+  }
+
+  void _getImage() {
+    final ImageStream oldImageStream = _imageStream;
+    _imageStream =
+        widget.videoProvider.resolve(createLocalImageConfiguration(context));
+    if (_imageStream.key != oldImageStream?.key) {
+      // If the keys are the same, then we got the same image back, and so we don't
+      // need to update the listeners. If the key changed, though, we must make sure
+      // to switch our listeners to the new image stream.
+      final ImageStreamListener listener = ImageStreamListener(_updateImage);
+      oldImageStream?.removeListener(listener);
+      _imageStream.addListener(listener);
+    }
+  }
+
+  void _updateImage(ImageInfo imageInfo, bool synchronousCall) {
+    debugPrint('triggered updated image');
+    setState(() {
+      // Trigger a build whenever the image changes.
+      _imageInfo = imageInfo;
+    });
+    printim(imageInfo);
+    // debugPrint(await imageInfo.image.toByteData())
+  }
+
+  void printim(ImageInfo im) async {
+    var bd = await im.image.toByteData();
+    debugPrint('pixel value: ' + bd.getUint8(131584).toString());
+  }
+
+  @override
+  void dispose() {
+    _imageStream.removeListener(ImageStreamListener(_updateImage));
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    debugPrint('rebuilding image');
+    return RawImage(
+      image: _imageInfo?.image, // this is a dart:ui Image object
+      scale: _imageInfo?.scale ?? 3.0,
+    );
+  }
+}

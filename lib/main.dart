@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'settings.dart';
 // import 'cameras.dart';
 import 'collapseImage.dart';
+// import 'video2.dart';
+import 'api.dart';
 // import 'package:flutter/widgets.dart';
 // Uncomment lines 7 and 10 to view the visual layout at runtime.
 // import 'package:flutter/rendering.dart' show debugPaintSizeEnabled;
 
-void main() {
+void main() async {
+  DynamicRigStatus();
+  await Future.delayed(Duration(milliseconds: 500));
   // debugPaintSizeEnabled = true;
   runApp(MaterialApp(
       home: MyApp(),
@@ -65,10 +69,11 @@ class MyApp extends StatelessWidget {
               height: mainHeight,
               child: Row(children: [
                 SizedBox(width: padding / 4),
+                // StreamingImage(0),
                 CollapsibleImage(
                   size: mainHeight,
                   streamId: 'video0.display',
-                  src: 'http://localhost:5000/video/0',
+                  src: 0,
                   title: 'Top Camera',
                   axis: Axis.horizontal,
                 ),
@@ -89,7 +94,7 @@ class MyApp extends StatelessWidget {
                       CollapsibleImage(
                         size: audioHeight,
                         streamId: 'audio.display',
-                        src: 'http://localhost:5000/video/0',
+                        src: 0,
                         title: 'Audio Spectrogram',
                         axis: Axis.horizontal,
                         fit: BoxFit.fill,
@@ -135,11 +140,12 @@ class MyApp extends StatelessWidget {
   }
 }
 
-List<String> sideCameras = [
+List<int> sideCameras = [
+  1, 2, 3
 
-  'http://localhost:5000/video/1',
-  'http://localhost:5000/video/2',
-  'http://localhost:5000/video/3',
+  // 'http://localhost:5000/video/1',
+  // 'http://localhost:5000/video/2',
+  // 'http://localhost:5000/video/3',
   // 'http://localhost:5000/video/4',
 ];
 

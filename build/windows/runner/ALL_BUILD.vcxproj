@@ -18,7 +18,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{E6769293-283F-3C45-9C0A-BFB022DA2469}</ProjectGuid>
+    <ProjectGuid>{CC5DEC5D-916E-371B-B9BB-3FEC22BDBA24}</ProjectGuid>
     <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
     <Keyword>Win32Proj</Keyword>
     <Platform>x64</Platform>
@@ -85,11 +85,11 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\windows\runner\CMakeLists.txt">
+    <CustomBuild Include="E:\behavior_app\behavior_app\windows\runner\CMakeLists.txt">
       <StdOutEncoding>UTF-8</StdOutEncoding>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/windows/runner/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule E:/behavior_app/behavior_app/windows/runner/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/windows -BC:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows --check-stamp-file C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/CMakeFiles/generate.stamp
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SE:/behavior_app/behavior_app/windows -BE:/behavior_app/behavior_app/build/windows --check-stamp-file E:/behavior_app/behavior_app/build/windows/runner/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -98,11 +98,11 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\runner\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">E:\behavior_app\behavior_app\build\windows\runner\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Building Custom Rule C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/windows/runner/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Building Custom Rule E:/behavior_app/behavior_app/windows/runner/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/windows -BC:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows --check-stamp-file C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/CMakeFiles/generate.stamp
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SE:/behavior_app/behavior_app/windows -BE:/behavior_app/behavior_app/build/windows --check-stamp-file E:/behavior_app/behavior_app/build/windows/runner/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -111,11 +111,11 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\runner\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">E:\behavior_app\behavior_app\build\windows\runner\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/windows/runner/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule E:/behavior_app/behavior_app/windows/runner/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/windows -BC:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows --check-stamp-file C:/Users/SchwartzLab/PycharmProjects/bahavior_rig/behavior_gui/build/windows/runner/CMakeFiles/generate.stamp
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SE:/behavior_app/behavior_app/windows -BE:/behavior_app/behavior_app/build/windows --check-stamp-file E:/behavior_app/behavior_app/build/windows/runner/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -124,22 +124,22 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\runner\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">E:\behavior_app\behavior_app\build\windows\runner\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\ZERO_CHECK.vcxproj">
-      <Project>{5F746669-90E2-309E-832B-5F15AAAA4634}</Project>
+    <ProjectReference Include="E:\behavior_app\behavior_app\build\windows\ZERO_CHECK.vcxproj">
+      <Project>{E4878476-B3F6-3C17-8503-47FDDCBE5A73}</Project>
       <Name>ZERO_CHECK</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\runner\behavior_gui.vcxproj">
-      <Project>{3FB5A89B-A17E-3A13-8FC8-60FDFDF0E8CC}</Project>
-      <Name>behavior_gui</Name>
+    <ProjectReference Include="E:\behavior_app\behavior_app\build\windows\runner\behavior_app.vcxproj">
+      <Project>{A6FA8AB4-9811-3438-B1CA-8B2DD292A772}</Project>
+      <Name>behavior_app</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

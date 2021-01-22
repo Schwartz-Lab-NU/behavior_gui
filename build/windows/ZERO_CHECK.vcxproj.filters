@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CustomBuild Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\CMakeFiles\0c5c46ce6f22982a453a7ae973d0edc1\generate.stamp.rule">
+    <CustomBuild Include="E:\behavior_app\behavior_app\build\windows\CMakeFiles\033a3e996f41343e25fddb23668e8c97\generate.stamp.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CMake Rules">
-      <UniqueIdentifier>{3F0530A9-302A-39FC-9843-A867012B6423}</UniqueIdentifier>
+      <UniqueIdentifier>{EA82F2E4-D412-35C3-AA71-7E02FE14021A}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

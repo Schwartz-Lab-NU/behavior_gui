@@ -1,25 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\windows\flutter\ephemeral\cpp_client_wrapper\core_implementations.cc">
+    <ClCompile Include="E:\behavior_app\behavior_app\windows\flutter\ephemeral\cpp_client_wrapper\core_implementations.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\windows\flutter\ephemeral\cpp_client_wrapper\standard_codec.cc">
+    <ClCompile Include="E:\behavior_app\behavior_app\windows\flutter\ephemeral\cpp_client_wrapper\standard_codec.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\windows\flutter\ephemeral\cpp_client_wrapper\plugin_registrar.cc">
+    <ClCompile Include="E:\behavior_app\behavior_app\windows\flutter\ephemeral\cpp_client_wrapper\plugin_registrar.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\windows\flutter\CMakeLists.txt" />
+    <CustomBuild Include="E:\behavior_app\behavior_app\windows\flutter\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CMake Rules">
-      <UniqueIdentifier>{3F0530A9-302A-39FC-9843-A867012B6423}</UniqueIdentifier>
+      <UniqueIdentifier>{EA82F2E4-D412-35C3-AA71-7E02FE14021A}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{C8FBE289-CC1B-32BA-83D9-50B488434065}</UniqueIdentifier>
+      <UniqueIdentifier>{71717E21-EB47-35A3-98C5-9853B55B9EA9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

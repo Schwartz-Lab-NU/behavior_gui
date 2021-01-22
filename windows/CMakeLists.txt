@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
-project(behavior_gui LANGUAGES CXX)
+project(behavior_app LANGUAGES CXX)
 
-set(BINARY_NAME "behavior_gui")
+set(BINARY_NAME "behavior_app")
 
 cmake_policy(SET CMP0063 NEW)
 

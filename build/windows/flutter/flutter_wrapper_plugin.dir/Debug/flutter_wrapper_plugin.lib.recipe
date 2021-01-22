@@ -2,10 +2,10 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\x64\Debug\ZERO_CHECK</FullPath>
+      <FullPath>E:\behavior_app\behavior_app\build\windows\x64\Debug\ZERO_CHECK</FullPath>
     </ProjectOutput>
     <ProjectOutput>
-      <FullPath>C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\behavior_gui\build\windows\flutter\x64\Debug\flutter_assemble</FullPath>
+      <FullPath>E:\behavior_app\behavior_app\build\windows\flutter\x64\Debug\flutter_assemble</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />

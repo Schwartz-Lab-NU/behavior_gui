@@ -3,9 +3,9 @@ initialStatus = {  # just an example
         'allowedValues': ['uninitialized', 'initialized', 'deinitialized'],
         'category': 'Acquisition',
         'current': 'uninitialized',
-        #TODO:
-        #'callback': ag.functionthatWrapsaroundRun(str),
-        #'mutable': True,
+        # TODO:
+        # 'callback': ag.functionthatWrapsaroundRun(str),
+        # 'mutable': True,
     },
     'calibration': {
         'allowedValues': ['uncalibrated', 'calibrated', 'intrinsic', 'extrinsic', 'calibrating intrinsic', 'calibrating extrinsic'],
@@ -27,7 +27,17 @@ initialStatus = {  # just an example
         'category': 'Acquisition',
         'current': False,
     },
-    'video0.display': { #reflects ag.Cameras[0].isDisplaying? or whatever
+    'camera0.width': {
+        'allowedValues': [1280],
+        'category': 'Video',
+        'current': 1280
+    },
+    'camera0.height': {
+        'allowedValues': [1024],
+        'category': 'Video',
+        'current': 1024
+    },
+    'video0.display': {  # reflects ag.Cameras[0].isDisplaying? or whatever
         'category': 'Acqusition',
         'current': False,
     },
