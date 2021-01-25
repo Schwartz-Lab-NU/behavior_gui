@@ -73,7 +73,7 @@ class MyApp extends StatelessWidget {
                 CollapsibleImage(
                   size: mainHeight,
                   streamId: 'video0.display',
-                  src: 0,
+                  src: 'http://localhost:5000/video/0/stream.m3u8',
                   title: 'Top Camera',
                   axis: Axis.horizontal,
                 ),
@@ -94,7 +94,7 @@ class MyApp extends StatelessWidget {
                       CollapsibleImage(
                         size: audioHeight,
                         streamId: 'audio.display',
-                        src: 0,
+                        src: 'http://localhost:5000/video/0/stream.m3u8',
                         title: 'Audio Spectrogram',
                         axis: Axis.horizontal,
                         fit: BoxFit.fill,
@@ -140,18 +140,16 @@ class MyApp extends StatelessWidget {
   }
 }
 
-List<int> sideCameras = [
-  1, 2, 3
-
-  // 'http://localhost:5000/video/1',
-  // 'http://localhost:5000/video/2',
-  // 'http://localhost:5000/video/3',
-  // 'http://localhost:5000/video/4',
+List<String> sideCameras = [
+  'http://localhost:5000/video/1/stream.m3u8',
+  'http://localhost:5000/video/2/stream.m3u8',
+  'http://localhost:5000/video/3/stream.m3u8',
+  // 'http://localhost:5000/video/4/stream.m3u8',
 ];
 
 List<String> streams = [
   'video1.display',
   'video2.display',
   'video3.display',
-  'video4.display',
+  // 'video4.display',
 ];

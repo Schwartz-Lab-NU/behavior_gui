@@ -27,6 +27,8 @@ dependencies:
 #  socket_io_client: ^0.9.12
   socket_io_client: 2.0.0-beta.2 #beta.2 should work with acks
   video_player_web_hls: ^0.1.8
+  # video_player_web_hls:
+    # path: ./video_player_web_hls-0.1.8-custom
   video_player: ^1.0.1
   
 
