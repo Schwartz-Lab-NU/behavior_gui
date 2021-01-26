@@ -45,7 +45,16 @@ web/
 ios/
 android/
 
+.vscode
+.vs
+.dart_tool
+
+.pycache
+
 .packages
+.metadata
+pubspec.lock
+
 
 test_stream/*
 video_player_web_hls-0.1.8-custom/
