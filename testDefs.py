@@ -5,60 +5,75 @@ initialStatus = {  # just an example
         'current': 'uninitialized',
         # TODO:
         # 'callback': ag.functionthatWrapsaroundRun(str),
-        # 'mutable': True,
+        'mutable': True,
+    },
+    'notes': {
+        'allowedValues': [],  # allows anything
+        'category': 'Acquisition',
+        'current': '',  # string
+        'mutable': True,
+    },
+    'rootfilename': {
+        'allowedValues': [],
+        'category': 'Acquisition',
+        'current': '',
+        'mutable': True,
     },
     'calibration': {
         'allowedValues': ['uncalibrated', 'calibrated', 'intrinsic', 'extrinsic', 'calibrating intrinsic', 'calibrating extrinsic'],
         'category': 'Video',
         'current': 'uncalibrated',
+        'mutable': True,
     },
     'sample frequency': {
         'allowedValues': {'min': int(1e4), 'max': int(1e6)},
         'category': 'Audio',
         'current': int(3e5),
-        # 'mutable': False,
+        'mutable': False,
     },
     'frame rate': {
         'allowedValues': [10, 15, 20, 25, 30],
         'category': 'Video',
         'current': 15,
+        'mutable': False,
     },
     'recording': {
         'category': 'Acquisition',
         'current': False,
+        'mutable': True,
     },
-    'camera0.width': {
-        'allowedValues': [1280],
-        'category': 'Video',
-        'current': 1280
+    'log scaling': {
+        'category': 'Audio',
+        'current': True,
+        'mutable': True,
     },
-    'camera0.height': {
-        'allowedValues': [1024],
-        'category': 'Video',
-        'current': 1024
+    'minimum frequency': {
+        'category': 'Audio',
+        'current': int(1e4),
+        'allowedValues': {'min': int(1e2), 'max': int(4e4)},
+        'mutable': True,
     },
-    'video0.display': {  # reflects ag.Cameras[0].isDisplaying? or whatever
-        'category': 'Acqusition',
-        'current': False,
+    'maximum frequency': {
+        'category': 'Audio',
+        'current': int(5e4),
+        'allowedValues': {'min': int(5e4), 'max': int(1.5e5)},
+        'mutable': True,
     },
-    'video1.display': {
-        'category': 'Acqusition',
-        'current': False,
-    },
-    'video2.display': {
-        'category': 'Acqusition',
-        'current': False,
-    },
-    'video3.display': {
-        'category': 'Acqusition',
-        'current': False,
-    },
-    'video4.display': {
-        'category': 'Acqusition',
-        'current': False,
-    },
-    'audio.display': {
-        'category': 'Acqusition',
-        'current': False,
+    'frequency resolution': {
+        'category': 'Audio',
+        'current': int(1e2),
+        'allowedValues': [int(1e2), int(2e2), int(5e2), int(1e3)],
+        'mutable': True,
     }
+    # 'video0 displaying': {
+    #     'category': 'Video',
+    #     'current': False,
+    #     'mutable': True,
+    #     #request displaying = True
+    #         #if requesting true, start a thread that calls 'predisplay'
+    #         #thread will periodically call predisplay and then emit annotation data to server
+
+    #     #request displaying = False
+    #         #close thread
+    # }
 }

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'settings.dart';
 // import 'cameras.dart';
-import 'collapseImage.dart';
+// import 'collapseImage.dart';
 // import 'video2.dart';
 import 'api.dart';
+import 'videoSection.dart';
 // import 'package:flutter/widgets.dart';
 // Uncomment lines 7 and 10 to view the visual layout at runtime.
 // import 'package:flutter/rendering.dart' show debugPaintSizeEnabled;
 
-void main() async {
-  DynamicRigStatus();
-  await Future.delayed(Duration(milliseconds: 500));
+void main() {
   // debugPaintSizeEnabled = true;
+  DynamicRigStatusValues();
   runApp(MaterialApp(
       home: MyApp(),
       theme: ThemeData(
@@ -24,7 +24,94 @@ void main() async {
       )));
 }
 
+// class VideoStream extends StatefulWidget {
+//   VideoStream(this.src, {@required this.width, @required this.height});
+//   final String src;
+//   final double width;
+//   final double height;
+
+//   @override
+//   _VideoStreamState createState() => _VideoStreamState();
+// }
+
+// class _VideoStreamState extends State<VideoStream> {
+
 class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+        initialData: false,
+        future: DynamicRigStatusValues.initialized.future,
+        builder: (context, snapshot) {
+          if (DynamicRigStatusValues.initialized.isCompleted) {
+            // debugPrint('loaded RSV');
+            return LoadedApp();
+          } else {
+            // debugPrint('failed to load RSV: ' +
+            //     DynamicRigStatusValues.initialized.isCompleted.toString());
+            return Scaffold(
+                body: Center(
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 20),
+                  Text('Connecting to python engine...',
+                      style: TextStyle(
+                          color: Theme.of(context).accentColor, fontSize: 12))
+                ])));
+          }
+        });
+  }
+}
+
+class LoadedApp extends StatefulWidget {
+  LoadedApp();
+
+  @override
+  _LoadedAppState createState() => _LoadedAppState();
+}
+
+class _LoadedAppState extends State<LoadedApp> {
+  int _updateCount = 0;
+  DynamicRigStatus _rigStatus = DynamicRigStatus();
+  bool _isInitialized;
+  final TextEditingController _text = TextEditingController();
+
+  @override
+  void initState() {
+    // debugPrint('initing loaded app, init status: ' +
+    //     _rigStatus['initialization'].toString());
+    _isInitialized = _rigStatus['initialization'] == 'initialized';
+    DynamicRigStatus.onChange.listen((event) => _handleStateChange());
+    super.initState();
+  }
+
+  void _handleStateChange() {
+    // debugPrint('got statusChange');
+    setState(() {
+      _updateCount += 1;
+      _isInitialized = _rigStatus['initialization'] == 'initialized';
+    });
+  }
+
+  void _toggleRecord(String rootfilename) {
+    //we want to update the state of the status list and the notes when the record button is pushed
+
+    RigStatus rigStatus = RigStatus.empty();
+    rigStatus['recording'] = !_rigStatus['recording'];
+    rigStatus['notes'] = _text.text;
+    rigStatus['rootfilename'] = rootfilename;
+    RigStatus.apply(rigStatus);
+    _text.text = '';
+  }
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     // MediaQueryData _queryData = MediaQuery.of(context);
@@ -48,12 +135,16 @@ class MyApp extends StatelessWidget {
       reverse: true,
       children: [
         TextField(
+          controller: _text,
           autofocus: true,
           maxLines: null,
           style: TextStyle(color: color),
         )
       ],
     );
+
+    // debugPrint(
+    //     'rebuilding main app, _isInitialized = ' + _isInitialized.toString());
 
     return MaterialApp(
       title: 'Behavior App',
@@ -63,48 +154,11 @@ class MyApp extends StatelessWidget {
         body: Column(
           children: [
             // buttonSection,
-            StatusBar(color, mainWidth),
+            StatusBar(color, mainWidth, recordCallback: _toggleRecord),
+            VideoSection(_isInitialized, mediaSize.width, mainHeight, padding,
+                subHeight, audioHeight),
             SizedBox(
-              width: mediaSize.width,
-              height: mainHeight,
-              child: Row(children: [
-                SizedBox(width: padding / 4),
-                // StreamingImage(0),
-                CollapsibleImage(
-                  size: mainHeight,
-                  streamId: 'video0.display',
-                  src: 'http://localhost:5000/video/0/stream.m3u8',
-                  title: 'Top Camera',
-                  axis: Axis.horizontal,
-                ),
-                SizedBox(width: padding / 2),
-                Expanded(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                      SizedBox(
-                        height: subHeight,
-                        child: CollapsibleImageList(
-                            size: subHeight,
-                            axis: Axis.horizontal,
-                            streamId: streams,
-                            images: sideCameras,
-                            titleFn: (i) => 'Side Camera ${i + 1}'),
-                      ),
-                      CollapsibleImage(
-                        size: audioHeight,
-                        streamId: 'audio.display',
-                        src: 'http://localhost:5000/video/0/stream.m3u8',
-                        title: 'Audio Spectrogram',
-                        axis: Axis.horizontal,
-                        fit: BoxFit.fill,
-                      )
-                    ])),
-                SizedBox(width: padding / 4),
-              ]),
-            ),
-            SizedBox(
-                height: 20,
+                height: 30,
                 width: mediaSize.width - 20,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -113,43 +167,31 @@ class MyApp extends StatelessWidget {
                     Text('SETTINGS PANEL', style: TextStyle(color: color)),
                   ],
                 )),
-            Row(
+            Expanded(
+                child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(
                   width: textWidth,
-                  height: mediaSize.height - mainHeight - 85,
+                  // height: mediaSize.height - mainHeight - 85,
                   child: textSection,
                 ),
                 SizedBox(
                   width: settingsWidth,
-                  height: mediaSize.height - mainHeight - 85,
-                  child: Container(
-                    child: SettingsList(),
-                    width: settingsWidth,
-                    height: mediaSize.height - mainHeight - 85,
-                  ),
+                  // height: mediaSize.height - mainHeight - 85,
+                  // child: Container(
+                  child: SettingsList(),
+                  // width: settingsWidth,
+                  // height: mediaSize.height - mainHeight - 85,
+                  // ),
                 ),
               ],
-            ),
+            )),
+            SizedBox(height: 10),
           ],
         ),
       ),
     );
   }
 }
-
-List<String> sideCameras = [
-  'http://localhost:5000/video/1/stream.m3u8',
-  'http://localhost:5000/video/2/stream.m3u8',
-  'http://localhost:5000/video/3/stream.m3u8',
-  // 'http://localhost:5000/video/4/stream.m3u8',
-];
-
-List<String> streams = [
-  'video1.display',
-  'video2.display',
-  'video3.display',
-  // 'video4.display',
-];

@@ -24,6 +24,8 @@ log.setLevel(logging.ERROR)  # hides the flask request messages
 
 frame_rate = 15
 
+ran_ffmpeg = False
+
 
 @app.route('/')
 def hello_world():
@@ -35,7 +37,8 @@ def kill_server():
   print('doing shutdown')
   status['initialization']['current'] = 'deinitialized'
   time.sleep(3)
-  finish_ffmpeg()
+  if ran_ffmpeg:
+    finish_ffmpeg()
   os._exit(0)
   return
 
@@ -62,10 +65,12 @@ def do_ffmpeg(imarray):
                   g=int(frame_rate*split_time), sc_threshold=0, vcodec='h264',
                   tune='zerolatency', preset='ultrafast')
           .overwrite_output()
-          # .run_async(pipe_stdin=True)
-          .global_args('-loglevel', 'error')
-          .run_async(pipe_stdin=True, quiet=True)  # bug~need low logs if quiet
+          .run_async(pipe_stdin=True)
+          # .global_args('-loglevel', 'error')
+          # .run_async(pipe_stdin=True, quiet=True)  # bug~need low logs if quiet
           )
+
+  ran_ffmpeg = True
 
   while status['initialization']['current'] == 'initialized':
     file.stdin.write(imarray.tobytes())
@@ -85,7 +90,8 @@ def finish_ffmpeg():
       .run()
 
 
-def gen_noise():
+def gen_fake_frames():
+  print('creating fake frames')
   i = 0
   im_array = np.ones((1024, 1280), dtype=np.uint8) * 255
 
@@ -106,6 +112,9 @@ def gen_noise():
     i += 1
 
   next(fhandle, None)  # be sure to close the handle
+
+
+bgthread = Thread(target=gen_fake_frames)
 
 
 @app.after_request
@@ -130,7 +139,6 @@ def add_header(response):
 @app.route('/video/<int:cam_id>/<string:file_name>')
 @cross_origin()
 def stream(cam_id, file_name):
-
   # print('requested file: ', file_name)
   # if 'm3u8' not in file_name:
   #   print('requested file: ', file_name)

@@ -5,45 +5,182 @@ import 'dart:async';
 // ValueNotifier<_rigStatus> __rigStatusNotifier = ValueNotifier(Dynamic_rigStatus());
 DynamicRigStatus _rigStatus = DynamicRigStatus();
 
-class SettingsList extends StatelessWidget {
+class SettingsList extends StatefulWidget {
+  _SettingsListState createState() => _SettingsListState();
+}
+
+class _SettingsListState extends State<SettingsList> {
+  // DynamicRigStatus _rigStatus = DynamicRigStatus();
+  DynamicRigStatusValues _rigStatusValues = DynamicRigStatusValues();
+  List<String> _ignoreList = [
+    'initialization',
+    'recording',
+    'calibration',
+    'rootfilename',
+    'notes'
+  ];
+  Map<String, List<String>> _categories = {};
+  Map<String, TextEditingController> _text = {}; //=TextEditingController();
+  int _numUpdates = 0;
+
+  @override
+  void initState() {
+    _handleStateChange();
+    DynamicRigStatusValues.onChange.listen((event) => _handleStateChange());
+    super.initState();
+  }
+
+  void _handleStateChange() {
+    if (_numUpdates == 0) {
+      debugPrint('setting RSVs');
+      // Map<String, List<String>> categories = {};
+      // Map<String, TextEditingController> text;
+
+      _rigStatusValues.forEach((key, value) {
+        //exclude: initialized, recording, calibration, filename, notes?
+        if (!_ignoreList.contains(key)) {
+          //value.category is owner
+          if (!_categories.containsKey(value.category)) {
+            _categories[value.category] = [];
+          }
+          _categories[value.category].add(key);
+
+          if (value.allowed.range != null) {
+            _text[key] = TextEditingController();
+          }
+        }
+      });
+      _numUpdates = 1;
+      // _categories = categories;
+      // _text = text;
+    } else {
+      setState(() {
+        _numUpdates = _numUpdates + 1;
+      });
+    }
+  }
+
+  void updateRig(String status, dynamic value) {
+    RigStatus newStatus = RigStatus.empty();
+    newStatus[status] = value;
+    debugPrint('attempting to change $status to $value');
+    RigStatus.apply(newStatus);
+  }
+
   @override
   Widget build(BuildContext context) {
+    List<String> keys = _categories.keys.toList();
     return ListView.builder(
-      itemCount: settings.length,
+      itemCount: _categories.length,
       itemBuilder: (context, i) {
         return ExpansionTile(
             // backgroundColor: Colors.black,
-            title: Text(settings[i].title,
+            title: Text(keys[i],
                 style: TextStyle(color: Theme.of(context).buttonColor)),
             children: <Widget>[
-              Column(children: _buildListChildren(settings[i], context))
+              Column(
+                  children: _categories[keys[i]].map((item) {
+                RigStatusValue status = _rigStatusValues[item];
+                String currentString = status.current.toString();
+                Widget child;
+                if (status is RigStatusValue<bool>) {
+                  child = Switch(
+                    activeColor: Theme.of(context).buttonColor,
+                    inactiveThumbColor: Theme.of(context).buttonColor,
+                    inactiveTrackColor: Theme.of(context).unselectedWidgetColor,
+                    value: status.current,
+                    onChanged: (newValue) => updateRig(item, newValue),
+                  );
+                } else if (status.allowed.values != null) {
+                  child = DropdownButtonHideUnderline(
+                      child: DropdownButton(
+                          value: status.current,
+                          onChanged: status.mutable
+                              ? (newValue) => updateRig(item, newValue)
+                              : null,
+                          // iconSize: status.mutable ? 20 : 0,
+                          // icon: status.mutable
+                          //     ? Icon(Icons.arrow_drop_down,
+                          //         color: Theme.of(context).buttonColor)
+                          //     : null,
+                          icon: null,
+                          iconSize: 0,
+                          items: status.allowed.values
+                              .map<DropdownMenuItem>((dynamic value) {
+                            return DropdownMenuItem(
+                                value: value,
+                                child: Text(value.toString(),
+                                    textAlign: TextAlign.right,
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: status.mutable
+                                            ? Theme.of(context).buttonColor
+                                            : Theme.of(context)
+                                                .unselectedWidgetColor)));
+                          }).toList()));
+                } else {
+                  child = SizedBox(
+                      width: 100,
+                      child: TextField(
+                          textAlign: TextAlign.right,
+                          controller: _text[item],
+                          enabled: status.mutable,
+                          onSubmitted: (newValue) {
+                            if (status.current is double) {
+                              updateRig(item, double.parse(newValue));
+                            } else {
+                              updateRig(item, int.parse(newValue));
+                            }
+                            _text[item].text = '';
+                          },
+                          decoration: InputDecoration(
+                              hintText: status.current.toString(),
+                              hintStyle: TextStyle(
+                                  fontSize: 12,
+                                  color: status.mutable
+                                      ? Theme.of(context).buttonColor
+                                      : Theme.of(context)
+                                          .unselectedWidgetColor)),
+                          style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w400,
+                              color: status.mutable
+                                  ? Theme.of(context).buttonColor
+                                  : Theme.of(context).unselectedWidgetColor)));
+                }
+
+                return Tooltip(
+                    message:
+                        '${status.mutable ? "Mutable" : "Immutable"}. Allowed values: ${status.allowed.toString()}',
+                    preferBelow: false,
+                    verticalOffset: -15,
+                    child: ListTile(
+                        title: Row(children: [
+                          Expanded(
+                              child: Text(
+                                  '${item[0].toUpperCase()}${item.substring(1)}',
+                                  style: TextStyle(
+                                      color: Theme.of(context).primaryColor))),
+                          child,
+                        ]),
+                        leading: Icon(icons[keys[i]],
+                            color: Theme.of(context).primaryColor)));
+                // trailing: child);
+                // );
+              }).toList())
             ]);
       },
     );
   }
-
-  _buildListChildren(Setting setting, BuildContext context) {
-    List<Widget> contents = [];
-    for (String content in setting.contents) {
-      contents.add(ListTile(
-        title: Text(
-          content,
-          style: TextStyle(color: Theme.of(context).primaryColor),
-        ),
-        leading: Icon(setting.icon, color: Theme.of(context).primaryColor),
-      ));
-    }
-    return contents;
-  }
 }
 
-class Setting {
-  final String title;
-  List<String> contents = [];
-  final IconData icon;
+// class Setting {
+//   final String title;
+//   List<String> contents = [];
+//   final IconData icon;
 
-  Setting(this.title, this.contents, this.icon);
-}
+//   Setting(this.title, this.contents, this.icon);
+// }
 
 SizedBox _buildButtonColumn(double width, bool enabled, Color color,
     IconData icon, String label, void Function(dynamic) callback) {
@@ -215,8 +352,9 @@ SizedBox _buildInputColumn(
 class StatusBar extends StatefulWidget {
   final Color color;
   final double width;
+  final void Function(String) recordCallback;
 
-  StatusBar(this.color, this.width);
+  StatusBar(this.color, this.width, {this.recordCallback});
 
   @override
   _StatusBarState createState() => _StatusBarState();
@@ -227,11 +365,13 @@ class _StatusBarState extends State<StatusBar>
   DateTime _lastUpdate = DateTime.now();
   // bool _expanded;
   String _lastMessage = '';
-  StreamSubscription<bool> statusSub;
+  StreamSubscription<void> statusSub;
   StreamSubscription<String> messageSub;
 
   AnimationController _expandController;
   Animation<double> _animation;
+
+  TextEditingController _text = TextEditingController();
 
   @override
   void initState() {
@@ -239,7 +379,7 @@ class _StatusBarState extends State<StatusBar>
     // _expanded = _rigStatus['initialization'] == 'initialized';
 
     _prepareAnimations();
-    statusSub = _rigStatus.onChange.listen((didChange) {
+    statusSub = DynamicRigStatus.onChange.listen((didChange) {
       if (_rigStatus['initialization'] == 'initialized') {
         _expandController.forward();
       } else {
@@ -271,11 +411,11 @@ class _StatusBarState extends State<StatusBar>
     super.dispose();
   }
 
-  void _toggleRecord() {
-    RigStatus rigStatus = RigStatus.empty();
-    rigStatus['recording'] = !_rigStatus['recording'];
-    RigStatus.apply(rigStatus);
-  }
+  // void _toggleRecord() {
+  //   RigStatus rigStatus = RigStatus.empty();
+  //   rigStatus['recording'] = !_rigStatus['recording'];
+  //   RigStatus.apply(rigStatus);
+  // }
 
   void _toggleInit() {
     RigStatus rigStatus = RigStatus.empty();
@@ -314,6 +454,41 @@ class _StatusBarState extends State<StatusBar>
         CurvedAnimation(parent: _expandController, curve: Curves.fastOutSlowIn);
   }
 
+  void _showDialog(BuildContext context, doRecording) async {
+    String oldText = _text.text;
+    await showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: Row(children: [
+              Expanded(
+                  child: TextField(
+                      controller: _text,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                          labelText: 'Input root file name',
+                          hintText: 'e.g., 01012021_mouse666')))
+            ]),
+            actions: [
+              FlatButton(
+                  child: Text('CANCEL'),
+                  onPressed: () {
+                    _text.text = oldText;
+                    Navigator.pop(context);
+                  }),
+              FlatButton(
+                  child: Text(doRecording ? 'RECORD' : 'APPLY'),
+                  onPressed: () {
+                    if (doRecording) {
+                      widget.recordCallback(_text.text);
+                    }
+                    Navigator.pop(context);
+                  }),
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     debugPrint('rebuilding status bar');
@@ -345,14 +520,14 @@ class _StatusBarState extends State<StatusBar>
     bool isRecording = _rigStatus['recording'] == true;
     if (isRecording) {
       recordButton = _buildButtonColumn(widget.width / 4, true, widget.color,
-          Icons.pause, 'PAUSE', (arg) => _toggleRecord());
+          Icons.pause, 'PAUSE', (data) => widget.recordCallback(_text.text));
       inactive = Theme.of(context).unselectedWidgetColor;
     } else {
       inactive = calibration.contains('calibrating')
           ? Theme.of(context).unselectedWidgetColor
           : widget.color;
       recordButton = _buildButtonColumn(widget.width / 4, true, inactive,
-          Icons.circle, 'RECORD', (arg) => _toggleRecord());
+          Icons.circle, 'RECORD', (data) => _showDialog(context, true));
     }
 
     children = [
@@ -368,17 +543,19 @@ class _StatusBarState extends State<StatusBar>
               Icons.build,
               ['CALIBRATE', intrinsic, extrinsic],
               (i) => _toggleCalibrate(i)),
-      isRecording
-          ? _buildButtonColumn(widget.width / 4, false, inactive, Icons.folder,
-              'FILE NAME', callback)
-          : _buildInputColumn(
-              widget.width / 4,
-              !isRecording,
-              inactive,
-              Theme.of(context).backgroundColor,
-              Icons.folder,
-              ['FILE NAME', '/path/to/root/\$file', 'Input root file name:'],
-              callback),
+      // isRecording
+      //     ? _buildButtonColumn(widget.width / 4, false, inactive, Icons.folder,
+      //         'FILE NAME', (data) => _showDialog(context))
+      //     : _buildInputColumn(
+      //         widget.width / 4,
+      //         !isRecording,
+      //         inactive,
+      //         Theme.of(context).backgroundColor,
+      //         Icons.folder,
+      //         ['FILE NAME', '/path/to/root/\$file', 'Input root file name:'],
+      //         callback),
+      _buildButtonColumn(widget.width / 4, !isRecording, inactive, Icons.folder,
+          'FILE NAME', (data) => _showDialog(context, false)),
       _buildButtonColumn(widget.width / 4, false, widget.color, Icons.info,
           'STATUS', callback),
       SizedBox(
@@ -414,10 +591,17 @@ class _StatusBarState extends State<StatusBar>
 }
 
 //build this dynamically from current rig status
-List<Setting> settings = [
-  Setting('Acquisition', ['nCameras', 'nMicrophones'], Icons.work),
-  Setting(
-      'Video', ['Frame Capture Rate', 'Frame Display Rate'], Icons.videocam),
-  Setting('Audio', ['Sensitivity', 'Gain'], Icons.mic),
-  Setting('Post-Processing', ['waitTime', 'nWorkers'], Icons.computer)
-];
+// List<Setting> settings = [
+//   Setting('Acquisition', ['nCameras', 'nMicrophones'], Icons.work),
+//   Setting(
+//       'Video', ['Frame Capture Rate', 'Frame Display Rate'], Icons.videocam),
+//   Setting('Audio', ['Sensitivity', 'Gain'], Icons.mic),
+//   Setting('Post-Processing', ['waitTime', 'nWorkers'], Icons.computer)
+// ];
+
+Map<String, IconData> icons = {
+  'Acquisition': Icons.work,
+  'Video': Icons.videocam,
+  'Audio': Icons.mic,
+  // 'Post-Processing': Icons.computer
+};

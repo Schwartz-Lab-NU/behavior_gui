@@ -1,15 +1,15 @@
 // import 'dart:io';
 
 // import 'package:flutter/material.dart';
-import 'dart:typed_data';
+// import 'dart:typed_data';
 
 // import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'dart:convert';
+// import 'dart:convert';
 import 'dart:async';
 import 'dart:collection';
-import 'dart:ui';
+// import 'dart:ui';
 // import 'package:flutter/material.dart';
 
 const String socketHostname = 'http://localhost:5001';
@@ -46,13 +46,14 @@ class Allowable<T> {
 }
 
 class RigStatusValue<T> {
-  Allowable<T> allowed;
-  String category;
+  final Allowable<T> allowed;
+  final String category;
   T current;
+  bool mutable;
   String toString() =>
-      '{Current value: $current, Allowed values: $allowed, Category: $category}';
+      '${mutable ? "Mutable" : "Immutable"} rig status value: {Current value: $current, Allowed values: $allowed, Category: $category}';
 
-  RigStatusValue(this.allowed, this.category, this.current) {
+  RigStatusValue(this.allowed, this.category, this.current, this.mutable) {
     if (!allowed(current)) {
       throw 'Can\'t create status type with invalid current value';
     }
@@ -61,15 +62,18 @@ class RigStatusValue<T> {
   RigStatusValue.copy(RigStatusValue value)
       : allowed = value.allowed,
         category = value.category,
-        current = value.current;
+        current = value.current,
+        mutable = value.mutable;
 
   void set(dynamic value) {
-    if (this.allowed(value)) {
+    if (this.mutable && this.allowed(value)) {
       current = value;
     } else {
-      throw 'Unallowed status value';
+      throw 'Cannot change rig status value.';
     }
   }
+
+  // void
 }
 
 class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
@@ -83,22 +87,33 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
 }
 
 class DynamicRigStatusValues extends RigStatusValues {
-  bool initialized = false;
-  final StreamController<RigStatus> _changeController =
+  // bool initialized = false;
+
+  static final StreamController<RigStatus> _changeController =
       StreamController<RigStatus>.broadcast();
-  Stream<RigStatus> get onChange => _changeController.stream;
+  static Stream<RigStatus> get onChange => _changeController.stream;
+  static Completer<void> initialized = Completer();
+  static DynamicRigStatusValues _instance;
+
+  // static Map<String, RigStatusValue> __map = RigStatusValues()._map;
 
   @override
   void operator []=(Object key, RigStatusValue value) =>
       throw 'Can\'t set dynamic RigStatusValue.';
 
-  DynamicRigStatusValues() : super() {
-    this._get();
-    Api._socket
-        .on('broadcast', (data) => this._update(RigStatus.fromJSON(data)));
+  factory DynamicRigStatusValues() {
+    if (_instance == null) {
+      _instance = DynamicRigStatusValues._singleton();
+    }
+    return _instance;
   }
 
-  void _get() async {
+  DynamicRigStatusValues._singleton() : super() {
+    _get();
+    Api._socket.on('broadcast', (data) => _update(data));
+  }
+
+  static void _get() async {
     //each json result has following form:
     // {
     //// typeName1: {'allowedValues': [status1a, status1b, ...], 'category': RigStatusCategory, 'current': status1b},
@@ -107,26 +122,32 @@ class DynamicRigStatusValues extends RigStatusValues {
     // }
     // debugPrint('requesting allowed settings dictionary');
     final Map<String, dynamic> json = await Api._get('allowed');
-    // debugPrint('got allowed settings dictionary');
     RigStatus newStatus = RigStatus.empty();
+
     json.forEach((status, value) {
       Allowable thisAllowable;
 
       if (value['current'] is String) {
         Set<String> thisSet = Set<String>.from(value['allowedValues']);
-        thisAllowable = Allowable<String>(
-            (String value) => thisSet.contains(value), () => thisSet.toString(),
-            values: thisSet);
-
-        this._map[status] = RigStatusValue<String>(
-            thisAllowable, value['category'], value['current']);
+        if (thisSet.isEmpty) {
+          thisAllowable = Allowable<String>(
+              (String value) => true, () => 'Any string',
+              values: Set.from(['']));
+        } else {
+          thisAllowable = Allowable<String>(
+              (String value) => thisSet.contains(value),
+              () => thisSet.toString(),
+              values: thisSet);
+        }
+        _instance._map[status] = RigStatusValue<String>(thisAllowable,
+            value['category'], value['current'], value['mutable']);
       } else if (value['current'] is bool) {
         thisAllowable = Allowable<bool>(
-            (bool value) => value is bool, () => [true, false].toString(),
+            (bool value) => value is bool, () => '{True, False}',
             values: Set.from([true, false]));
 
-        this._map[status] = RigStatusValue<bool>(
-            thisAllowable, value['category'], value['current']);
+        _instance._map[status] = RigStatusValue<bool>(thisAllowable,
+            value['category'], value['current'], value['mutable']);
       } else if (value['current'] is num) {
         if (value['allowedValues'] is List) {
           Set<num> thisSet = Set<num>.from(value['allowedValues']);
@@ -141,30 +162,40 @@ class DynamicRigStatusValues extends RigStatusValues {
 
           thisAllowable = Allowable<num>(
               (num value) => (thisMin <= value) && (value <= thisMax),
-              () => [thisMin, thisMax].toString(),
+              () => '$thisMin to $thisMax',
               range: Range<num>(thisMin, thisMax));
         } else {
           throw 'Incomprehensible allowed status types';
         }
 
-        this._map[status] = RigStatusValue<num>(
-            thisAllowable, value['category'], value['current']);
+        _instance._map[status] = RigStatusValue<num>(thisAllowable,
+            value['category'], value['current'], value['mutable']);
       } else {
         throw 'Incomprehensible status type';
       }
       newStatus[status] = value['current'];
     });
-    this._changeController.add(newStatus);
-    initialized = true;
+    _changeController.add(newStatus);
+    initialized.complete();
   }
 
-  void _update(RigStatus update) {
+  static void _update(Map<String, dynamic> update) {
+    //each json result has following form:
+    // {
+    //// [typeName1]: {'current':[status1a], 'mutable':[isMutable1a]},
+    //// [typeName2]: {'current':[status2c], 'mutable':[isMutable2c]},
+    //// ...
+    // }
+
     // debugPrint('received broadcast event');
-    if (!initialized) return;
+    RigStatus newRigStatus = RigStatus.empty();
+    if (!initialized.isCompleted) return;
     update.forEach((status, value) {
-      this._map[status].current = value;
+      newRigStatus[status] = value['current'];
+      _instance._map[status].current = value['current'];
+      _instance._map[status].mutable = value['mutable'];
     });
-    this._changeController.add(update);
+    _changeController.add(newRigStatus);
   }
 }
 
@@ -215,8 +246,9 @@ class RigStatus extends MapBase<String, dynamic> {
 
   static final DynamicRigStatusValues _statuses = DynamicRigStatusValues();
   // bool _isDynamic = false;
+  static final Completer initialized = DynamicRigStatusValues.initialized;
 
-  RigStatus()
+  RigStatus.current()
       : this._map =
             _statuses.map<String, dynamic>((String type, RigStatusValue value) {
           return RigStatusItem(type, value.current);
@@ -248,26 +280,27 @@ class RigStatus extends MapBase<String, dynamic> {
     return RigStatus._handleJSON(await Api._post(this));
   }
 
-  static Future<RigStatus> get() async {
+  static Future<RigStatus> _get() async {
     return RigStatus._handleJSON(await Api._get('current'));
   }
 
   static RigStatus _handleJSON(Map<String, dynamic> json) {
     //each json result has following form:
     // {
-    //// [typeName1]: status1a,
-    //// [typeName2]: status2c,
+    //// [typeName1]: {'current':[status1a], 'mutable':[isMutable1a]},
+    //// [typeName2]: {'current':[status2c], 'mutable':[isMutable2c]},
     //// ...
     // }
-    _statuses._update(RigStatus.fromJSON(json));
-    return RigStatus();
+    DynamicRigStatusValues._update(json);
+    return RigStatus.current();
   }
 }
 
 class DynamicRigStatus extends RigStatus {
-  final StreamController<bool> _changeController =
-      StreamController<bool>.broadcast();
-  Stream<bool> get onChange => _changeController.stream;
+  static final StreamController<void> _changeController =
+      StreamController<void>.broadcast();
+  static Stream<void> get onChange => _changeController.stream;
+  static DynamicRigStatus _instance;
 
   @override
   void operator []=(Object key, dynamic value) =>
@@ -280,13 +313,20 @@ class DynamicRigStatus extends RigStatus {
   @override
   void clear() => throw 'Can\'t remove values from dynamic rig status';
 
-  DynamicRigStatus() : super() {
-    RigStatus._statuses.onChange.listen(this._handleUpdates);
+  factory DynamicRigStatus() {
+    if (_instance == null) {
+      _instance = DynamicRigStatus._singleton();
+    }
+    return _instance;
   }
 
-  void _handleUpdates(RigStatus updates) {
-    this._map.addAll(updates);
-    this._changeController.add(true);
+  DynamicRigStatus._singleton() : super.current() {
+    DynamicRigStatusValues.onChange.listen(_handleUpdates);
+  }
+
+  static void _handleUpdates(RigStatus updates) {
+    _instance._map.addAll(updates);
+    _changeController.add(null);
   }
 }
 
@@ -355,7 +395,7 @@ class Api {
 }
 
 void main() async {
-  RigStatus firstStatus = RigStatus();
+  RigStatus firstStatus = RigStatus.current();
   // RigStatus dynamicStatus = DynamicRigStatus();
   // print('Static rig status: ');
   // print(firstStatus);

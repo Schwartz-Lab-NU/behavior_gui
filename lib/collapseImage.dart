@@ -4,18 +4,18 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 // import 'api.dart';
 // import 'video2.dart';
-import 'video3.dart';
+import 'video.dart';
 
 class CollapsibleImageList extends StatelessWidget {
   final double size;
   final Axis axis;
   final List<String> images;
-  final List<String> streamId;
   final String Function(int) titleFn;
+  final bool visible;
   CollapsibleImageList(
       {this.size,
+      this.visible = true,
       this.images,
-      this.streamId,
       this.titleFn,
       this.axis = Axis.horizontal});
 
@@ -30,7 +30,7 @@ class CollapsibleImageList extends StatelessWidget {
           return CollapsibleImage(
             title: this.titleFn(i),
             src: this.images[i],
-            streamId: this.streamId[i],
+            visible: this.visible,
             axis: this.axis,
             size: this.size,
           );
@@ -41,15 +41,15 @@ class CollapsibleImageList extends StatelessWidget {
 class CollapsibleImage extends StatefulWidget {
   // final Widget child;
   final String title;
-  final String streamId;
   final String src;
   final double size;
   final Axis axis;
   final BoxFit fit;
+  final bool visible;
   CollapsibleImage(
       {this.size,
-      this.streamId,
       this.src,
+      this.visible = true,
       this.title,
       this.axis = Axis.horizontal,
       this.fit = BoxFit.contain});
@@ -63,7 +63,7 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
 
   void toggle() {
     // RigStatus rigStatus = RigStatus.empty();
-    // rigStatus[widget.streamId] = false;
+    // rigStatus['video# displaying'] = expanded;
     // RigStatus.apply(rigStatus);
 
     setState(() {
@@ -73,7 +73,6 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('building collapsible image');
     // debugPrint(bmp[32694].toString());
     bool isHorizontal = widget.axis == Axis.horizontal;
 
@@ -97,7 +96,8 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
               //   videoProvider: VideoProvider(0),
               // ),
               // child: Image(image: VideoProvider(0)),
-              child: VideoStream(widget.src,
+              isHorizontal: isHorizontal,
+              child: VideoStream(widget.src, expanded && widget.visible,
                   height: isHorizontal ? widget.size : null,
                   width: isHorizontal ? null : widget.size)
               //
@@ -122,7 +122,17 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
 class ExpandedImage extends StatefulWidget {
   final Widget child;
   final bool expand;
-  ExpandedImage({this.expand, this.child});
+  final bool isHorizontal;
+  final int duration;
+  final int delayForward;
+  final int delayReverse;
+  ExpandedImage(
+      {this.expand,
+      this.child,
+      this.isHorizontal = true,
+      this.duration = 500,
+      this.delayForward = 0,
+      this.delayReverse = 0});
 
   @override
   _ExpandedImageState createState() => _ExpandedImageState();
@@ -141,10 +151,15 @@ class _ExpandedImageState extends State<ExpandedImage>
   }
 
   void prepareAnimations() {
-    expandController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
-    animation =
-        CurvedAnimation(parent: expandController, curve: Curves.fastOutSlowIn);
+    int duration = widget.duration + widget.delayForward + widget.delayReverse;
+    // double delay = widget.delay / duration;
+    expandController = AnimationController(
+        vsync: this, duration: Duration(milliseconds: duration));
+    animation = CurvedAnimation(
+        parent: expandController,
+        curve: Interval(widget.delayForward / duration,
+            1.0 - widget.delayReverse / duration,
+            curve: Curves.fastOutSlowIn));
   }
 
   void _runExpandCheck() {
@@ -172,7 +187,7 @@ class _ExpandedImageState extends State<ExpandedImage>
     return SizeTransition(
       sizeFactor: animation,
       child: widget.child,
-      axis: Axis.horizontal,
+      axis: widget.isHorizontal ? Axis.horizontal : Axis.vertical,
       axisAlignment: 1.0,
     );
   }
@@ -190,7 +205,6 @@ void main() async {
               body: CollapsibleImage(
     //
     size: 500,
-    streamId: 'video0.display',
     src: 'http://localhost:5000/video/0/stream.m3u8',
     title: 'Top Camera',
     axis: Axis.horizontal,
