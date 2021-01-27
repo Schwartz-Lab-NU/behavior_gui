@@ -45,10 +45,15 @@ web/
 ios/
 android/
 
+.vscode
+.vs
+.dart_tool
+
+.pycache
+
 .packages
 .metadata
 pubspec.lock
-__pycache__
 
 test_stream/*
 video_player_web_hls-0.1.8-custom/

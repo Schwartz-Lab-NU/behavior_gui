@@ -5,9 +5,14 @@ import testDefs
 global status
 global ag
 
+global printToGUI  # TODO: should be defined in socketApp.py??
+# will look something like: socketio.emit("message", f"message content string")
+
+global annotationsToGUI  # TODO: should be defined in socketApp.py??
+# will look something like socketio.emit("annotation", {"streamId":0, "data": [ {"rectangle":[(p0x, p0y), ..., (p3x, p3y)]}, ... ]})
+
 status = testDefs.initialStatus
 #ag = AcquisitionGroup.AcquisitionGroup(frame_rate=30,audio_settings=audio_settings)
-
 
 class FakeAcqGroup:
   def __init__(self):
