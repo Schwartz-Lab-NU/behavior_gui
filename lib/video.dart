@@ -1,14 +1,18 @@
 import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
+// import 'package:vector_math/vector_math.dart';
 // import 'dart:io';
 
 class VideoStream extends StatefulWidget {
-  VideoStream(this.src, this.visible,
-      {@required this.width, @required this.height, this.seekTo});
+  VideoStream(
+    this.src,
+    this.visible, {
+    @required this.size,
+    this.seekTo,
+  });
   final String src;
   final bool visible;
-  final double width;
-  final double height;
+  final Size size;
   final int
       seekTo; //optional, start this many seconds relative to video start (for debugging)
 
@@ -20,12 +24,18 @@ class _VideoStreamState extends State<VideoStream> {
   VideoPlayerController _controller;
   Future<void> _initializeVideoPlayerFuture;
   Size _size;
+  Size _baseSize;
+  Matrix4 _rescale = Matrix4.identity();
 
   @override
   void initState() {
-    //default 1.25 AR? TODO: just get the size from the DynamicRigStatus
-    _size = Size(widget.width == null ? widget.height * 1.25 : widget.width,
-        widget.height == null ? widget.width / 1.25 : widget.height);
+    //default 1.25 AR? TODO: just get the size from the DynamicRigStatus?
+    _size = Size(
+        widget.size.width == 0 ? widget.size.height * 1.25 : widget.size.width,
+        widget.size.height == 0
+            ? widget.size.width / 1.25
+            : widget.size.height);
+    _baseSize = _size;
 
     _initializeVideoPlayerFuture = initController();
     super.initState();
@@ -33,25 +43,42 @@ class _VideoStreamState extends State<VideoStream> {
 
   Future<void> initController() {
     _controller = VideoPlayerController.network(widget.src);
+
     return _controller.initialize().then((_) {
-      _size = Size(
-          widget.width == null
-              ? _controller.value.aspectRatio * widget.height
-              : widget.width,
-          widget.height == null
-              ? widget.width / _controller.value.aspectRatio
-              : widget.height); //TODO: wrap in setState? probably not
+      Size baseSize;
+      Size size = Size(
+          widget.size.width == 0
+              ? _controller.value.aspectRatio * widget.size.height
+              : widget.size.width,
+          widget.size.height == 0
+              ? widget.size.width / _controller.value.aspectRatio
+              : widget.size.height);
+      Matrix4 rescale = Matrix4.identity();
+      if ((widget.size.width != 0) & (widget.size.height != 0)) {
+        double widgetAR = widget.size.width / widget.size.height;
+        if (widgetAR > _controller.value.aspectRatio) {
+          rescale[0] = widgetAR / _controller.value.aspectRatio;
+          baseSize = Size(_controller.value.aspectRatio * widget.size.height,
+              widget.size.height);
+        } else {
+          rescale[5] = _controller.value.aspectRatio / widgetAR;
+          baseSize = Size(widget.size.width,
+              widget.size.width / _controller.value.aspectRatio);
+        }
+      } else {
+        baseSize = size;
+      }
+
+      setState(() {
+        _rescale = rescale;
+        _size = size;
+        _baseSize = baseSize;
+      });
       if (widget.seekTo != null) {
         _controller
             .seekTo(Duration(seconds: widget.seekTo)); //TODO: only for testing
       }
       _controller.play();
-      // debugPrint('Got video: ' + _controller.value.toString());
-      // _initializeVideoPlayerFuture = _controller.initialize().then((_) {
-      // });
-      // _controller.addListener(() {
-      //   debugPrint('controller changed');
-      // });
     });
   }
 
@@ -97,39 +124,34 @@ class _VideoStreamState extends State<VideoStream> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done &&
               widget.visible) {
-            return SizedBox(
-              // aspectRatio: _controller.value.aspectRatio,
-              width: _size.width,
-              height: _size.height,
-              child: Stack(
-                alignment: AlignmentDirectional.centerStart,
-                children: [
-                  VideoPlayer(_controller),
-                  // Container(
-                  //     width: _controller.value.size.width,
-                  //     height: _controller.value.size.height,
-                  //     color: Colors.cyan.withOpacity(.3),
-                  //     child: Expanded(
-                  //         child: Text(
-                  //       'testing',
-                  //       style: TextStyle(color: Colors.white),
-                  //     ))),
-                  CustomPaint(
-                    // size: _controller.value.size,
-                    size: Size(1280, 1024),
-                    painter: Annotater(),
-                  )
-                ],
-              ),
+            Widget child = Stack(
+              alignment: AlignmentDirectional.centerStart,
+              children: [
+                Container(
+                    width: _baseSize.width,
+                    height: _baseSize.height,
+                    child: Transform(
+                        transform: _rescale, child: VideoPlayer(_controller))),
+                CustomPaint(
+                  size: Size(1280, 1024), //TODO: what to set this to?
+                  painter: Annotater(),
+                )
+              ],
             );
-          } else if (widget.visible) {
+
             return SizedBox(
-                width: _size.width,
-                height: _size.height,
-                child: Center(child: CircularProgressIndicator()));
+                width: _size.width, height: _size.height, child: child);
+          } else if (widget.visible) {
+            Widget child = Center(child: CircularProgressIndicator());
+
+            return SizedBox(
+                width: _size.width, height: _size.height, child: child);
           } else {
             return SizedBox(
-                width: _size.width, height: _size.height, child: Container());
+                //TODO: can we capture the last frame to display here??
+                width: _size.width,
+                height: _size.height,
+                child: Container());
           }
         });
   }
@@ -156,18 +178,13 @@ class Annotater extends CustomPainter {
 void main() {
   runApp(MaterialApp(
       home: Scaffold(
-          body: GridView.count(crossAxisCount: 2, children: [
-    VideoStream('http://localhost:5000/video/0/stream.m3u8', true,
-        width: 200, height: null),
-    VideoStream('http://localhost:5000/video/1/stream.m3u8', true,
-        width: 200, height: null),
-    VideoStream('http://localhost:5000/video/2/stream.m3u8', true,
-        width: 200, height: null),
-    VideoStream('http://localhost:5000/video/3/stream.m3u8', true,
-        width: 200, height: null),
-    VideoStream('http://localhost:5000/video/4/stream.m3u8', true,
-        width: 200, height: null),
-    VideoStream('http://localhost:5000/video/5/stream.m3u8', true,
-        width: 200, height: null),
-  ]))));
+          body: SizedBox(
+              width: 800,
+              height: 300,
+              child: DecoratedBox(
+                decoration: BoxDecoration(color: Colors.red),
+                child: VideoStream(
+                    'http://localhost:5000/video/0/stream.m3u8', true,
+                    size: Size(800, 300)),
+              )))));
 }

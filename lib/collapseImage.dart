@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'video.dart';
 
 class CollapsibleImageList extends StatelessWidget {
-  final double size;
+  final Size size;
   final Axis axis;
   final List<String> images;
   final String Function(int) titleFn;
@@ -42,17 +42,15 @@ class CollapsibleImage extends StatefulWidget {
   // final Widget child;
   final String title;
   final String src;
-  final double size;
+  final Size size;
   final Axis axis;
-  final BoxFit fit;
   final bool visible;
   CollapsibleImage(
       {this.size,
       this.src,
       this.visible = true,
       this.title,
-      this.axis = Axis.horizontal,
-      this.fit = BoxFit.contain});
+      this.axis = Axis.horizontal});
 
   @override
   _CollapsibleImageState createState() => _CollapsibleImageState();
@@ -98,13 +96,12 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
               // child: Image(image: VideoProvider(0)),
               isHorizontal: isHorizontal,
               child: VideoStream(widget.src, expanded && widget.visible,
-                  height: isHorizontal ? widget.size : null,
-                  width: isHorizontal ? null : widget.size)
+                  size: widget.size)
               //
               ),
           Container(
-              width: isHorizontal ? 20 : widget.size,
-              height: isHorizontal ? widget.size : 20,
+              width: isHorizontal ? 20 : widget.size.width,
+              height: isHorizontal ? widget.size.height : 20,
               color: Theme.of(context).backgroundColor.withOpacity(0.6)),
           RotatedBox(
               quarterTurns: isHorizontal ? -1 : 0,
@@ -202,14 +199,17 @@ void main() async {
       MaterialApp(
           //
           home: Scaffold(
-              body: CollapsibleImage(
-    //
-    size: 500,
-    src: 'http://localhost:5000/video/0/stream.m3u8',
-    title: 'Top Camera',
-    axis: Axis.horizontal,
-  ) //
+              body: SizedBox(
+                  width: 800,
+                  height: 300,
+                  child: CollapsibleImage(
+                    //
+                    size: Size(800, 300),
+                    src: 'http://localhost:5000/video/0/stream.m3u8',
+                    title: 'Top Camera',
+                    axis: Axis.horizontal,
+                  ) //
+                  ) //
               ) //
-          ) //
-      );
+          ));
 }

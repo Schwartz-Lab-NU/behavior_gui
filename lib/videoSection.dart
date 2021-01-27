@@ -35,7 +35,7 @@ class VideoSection extends StatelessWidget {
             // StreamingImage(0),
             CollapsibleImage(
               visible: visible,
-              size: height,
+              size: Size(0, height),
               src: 'http://localhost:5000/video/0/stream.m3u8',
               title: 'Top Camera',
               axis: Axis.horizontal,
@@ -49,19 +49,22 @@ class VideoSection extends StatelessWidget {
                     height: heightUpper,
                     child: CollapsibleImageList(
                         visible: visible,
-                        size: heightUpper,
+                        size: Size(0, heightUpper),
                         axis: Axis.horizontal,
                         images: sideCameras,
                         titleFn: (i) => 'Side Camera ${i + 1}'),
                   ),
-                  CollapsibleImage(
-                    visible: visible,
-                    size: heightLower,
-                    src: 'http://localhost:5000/video/0/stream.m3u8',
-                    title: 'Audio Spectrogram',
-                    axis: Axis.horizontal,
-                    fit: BoxFit.fill,
-                  )
+                  LayoutBuilder(
+                      builder: //TODO: should we rebuild this whenever video0 is collapsed/expanded?
+                          (BuildContext context, BoxConstraints constraints) {
+                    return CollapsibleImage(
+                      visible: visible,
+                      size: Size(constraints.maxWidth, heightLower),
+                      src: 'http://localhost:5000/video/0/stream.m3u8',
+                      title: 'Audio Spectrogram',
+                      axis: Axis.horizontal,
+                    );
+                  }),
                 ])),
             SizedBox(width: padding / 4),
           ]),
@@ -82,3 +85,10 @@ List<String> sideCameras = [
 //   'video3.display',
 //   // 'video4.display',
 // ];
+
+void main() {
+  runApp(MaterialApp(
+      home: Scaffold(
+    body: VideoSection(true, 1800, 500, 10, 250, 250),
+  )));
+}
