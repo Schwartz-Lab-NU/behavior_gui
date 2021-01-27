@@ -57,3 +57,4 @@ video_player_web_hls-0.1.8-custom/
 .vscode
 integration_test
 pubspec.lock
+test/

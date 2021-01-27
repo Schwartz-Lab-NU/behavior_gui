@@ -30,6 +30,7 @@ dependencies:
   # video_player_web_hls:
     # path: ./video_player_web_hls-0.1.8-custom
   video_player: ^1.0.1
+  sprintf: ^4.0.0
   
 
   # The following adds the Cupertino Icons font to your application.

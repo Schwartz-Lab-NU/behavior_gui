@@ -1,7 +1,9 @@
 import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
+import 'package:sprintf/sprintf.dart';
 // import 'package:vector_math/vector_math.dart';
 // import 'dart:io';
+import 'dart:math';
 
 class VideoStream extends StatefulWidget {
   VideoStream(
@@ -120,6 +122,7 @@ class _VideoStreamState extends State<VideoStream> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
+        //TODO: change this to streambuilder??
         future: _initializeVideoPlayerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done &&
@@ -133,8 +136,10 @@ class _VideoStreamState extends State<VideoStream> {
                     child: Transform(
                         transform: _rescale, child: VideoPlayer(_controller))),
                 CustomPaint(
+                  //TODO: container can be the child of the custompaint class, with the Annotater as foregroundPainter
                   size: Size(1280, 1024), //TODO: what to set this to?
-                  painter: Annotater(),
+                  painter: Annotater(
+                      (widget.size.width != 0) & (widget.size.height != 0)),
                 )
               ],
             );
@@ -158,21 +163,77 @@ class _VideoStreamState extends State<VideoStream> {
 }
 
 class Annotater extends CustomPainter {
+  final bool addAxes;
+  Annotater(this.addAxes) : super();
+
   @override
   void paint(Canvas canvas, Size size) {
     Paint marker = Paint();
     marker.color = Colors.white;
     marker.style = PaintingStyle.stroke;
+    TextStyle style = TextStyle(color: Colors.white, fontSize: 10);
 
-    canvas.drawLine(Offset(0, 0), Offset(size.width, size.height), marker);
-    canvas.drawCircle(
-        Offset(size.width / 2, size.height / 2), size.width / 4, marker);
+    // canvas.drawLine(Offset(0, 0), Offset(size.width, size.height), marker);
+    // canvas.drawCircle(
+    //     Offset(size.width / 2, size.height / 2), size.width / 4, marker);
+    const double readRate = 2;
+    double fMin = 10;
+    double fMax = 1000;
+    const bool isLogScaled = true;
+
+    debugPrint('adding axes? $addAxes');
+    if (addAxes) {
+      //x axis will go from -1/readRate to 0
+      for (int i = 1; i < 10; i++) {
+        double x = size.width / 10 * i;
+        canvas.drawLine(
+            Offset(x, size.height), Offset(x, size.height - 8), marker);
+        canvas.drawLine(Offset(x, 0), Offset(x, 8), marker);
+        TextSpan span = TextSpan(
+            style: style,
+            text: sprintf('-%0.02fs', [(1 - (i / 10)) / readRate]));
+        TextPainter tp =
+            TextPainter(text: span, textDirection: TextDirection.ltr);
+        tp.layout();
+        tp.paint(canvas, Offset(x - 2 - tp.width, size.height - tp.height));
+        tp.paint(canvas, Offset(x - 2 - tp.width, 0));
+      }
+
+      //y axis will go from fMin to fMax
+      //if logscaled...
+      // go from 10^(log10(fMin)) to 10^(log10(fMax))
+      if (isLogScaled) {
+        fMin = log(fMin) * log10e;
+        fMax = log(fMax) * log10e;
+      }
+      double fRange = fMax - fMin;
+      for (int i = 1; i <= 5; i++) {
+        double y = size.height / 5 * i;
+        // canvas.drawLine(Offset(0, y), Offset(8, y), marker);
+        canvas.drawLine(
+            Offset(size.width, y), Offset(size.width - 8, y), marker);
+        double freq = fMin + i / 5 * fRange;
+        if (isLogScaled) {
+          freq = pow(10, freq);
+        }
+        TextSpan span =
+            TextSpan(style: style, text: sprintf('%0.01fkHz', [freq]));
+        TextPainter tp = TextPainter(
+            text: span,
+            textDirection: TextDirection.ltr,
+            textAlign: TextAlign.right);
+        tp.layout();
+        tp.paint(canvas, Offset(size.width - tp.width, y - tp.height - 2));
+      }
+    }
   }
 
   bool shouldRepaint(CustomPainter old) {
     //TODO: we should update when we've received new data?
     return false;
   }
+
+  bool shouldRebuildSemantics(CustomPainter old) => false;
 }
 
 void main() {
