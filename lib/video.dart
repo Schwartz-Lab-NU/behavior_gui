@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:sprintf/sprintf.dart';
@@ -24,10 +26,13 @@ class VideoStream extends StatefulWidget {
 
 class _VideoStreamState extends State<VideoStream> {
   VideoPlayerController _controller;
-  Future<void> _initializeVideoPlayerFuture;
+  // Future<void> _initializeVideoPlayerFuture;
+  // StreamController<bool> _isDisplaying = StreamController<bool>();
+  bool _isDisplaying = false;
   Size _size;
   Size _baseSize;
   Matrix4 _rescale = Matrix4.identity();
+  Annotater _annotater;
 
   @override
   void initState() {
@@ -38,49 +43,64 @@ class _VideoStreamState extends State<VideoStream> {
             ? widget.size.width / 1.25
             : widget.size.height);
     _baseSize = _size;
-
-    _initializeVideoPlayerFuture = initController();
+    _annotater =
+        Annotater((widget.size.width != 0) & (widget.size.height != 0));
+    // _initializeVideoPlayerFuture = initController();
+    initController();
     super.initState();
   }
 
-  Future<void> initController() {
-    _controller = VideoPlayerController.network(widget.src);
+  void initController() {
+    VideoPlayerController controller =
+        VideoPlayerController.network(widget.src);
 
-    return _controller.initialize().then((_) {
+    controller.initialize().then((_) {
+      debugPrint('initialized controller: ${controller.value}');
       Size baseSize;
       Size size = Size(
           widget.size.width == 0
-              ? _controller.value.aspectRatio * widget.size.height
+              ? controller.value.aspectRatio * widget.size.height
               : widget.size.width,
           widget.size.height == 0
-              ? widget.size.width / _controller.value.aspectRatio
+              ? widget.size.width / controller.value.aspectRatio
               : widget.size.height);
       Matrix4 rescale = Matrix4.identity();
       if ((widget.size.width != 0) & (widget.size.height != 0)) {
         double widgetAR = widget.size.width / widget.size.height;
-        if (widgetAR > _controller.value.aspectRatio) {
-          rescale[0] = widgetAR / _controller.value.aspectRatio;
-          baseSize = Size(_controller.value.aspectRatio * widget.size.height,
+        if (widgetAR > controller.value.aspectRatio) {
+          rescale[0] = widgetAR / controller.value.aspectRatio;
+          baseSize = Size(controller.value.aspectRatio * widget.size.height,
               widget.size.height);
+          // rescale[12] = -widget.size.width / 2 + _baseSize.width / 2;
         } else {
-          rescale[5] = _controller.value.aspectRatio / widgetAR;
+          // rescale[5] = controller.value.aspectRatio / widgetAR;
           baseSize = Size(widget.size.width,
-              widget.size.width / _controller.value.aspectRatio);
+              widget.size.width / controller.value.aspectRatio);
         }
       } else {
         baseSize = size;
+      }
+      if (widget.seekTo != null) {
+        controller.seekTo(Duration(seconds: widget.seekTo)).then((_) {
+          controller.play().then((_) {
+            debugPrint('controller did play? $controller');
+          });
+        }); //TODO: only for testing
+      } else {
+        controller.play().then((_) {
+          debugPrint('controller did play? $controller');
+        });
       }
 
       setState(() {
         _rescale = rescale;
         _size = size;
         _baseSize = baseSize;
+        _isDisplaying = true;
+        _controller = controller;
       });
-      if (widget.seekTo != null) {
-        _controller
-            .seekTo(Duration(seconds: widget.seekTo)); //TODO: only for testing
-      }
-      _controller.play();
+
+      // _controller.play();
     });
   }
 
@@ -92,18 +112,22 @@ class _VideoStreamState extends State<VideoStream> {
 
   @override
   void didUpdateWidget(VideoStream oldStream) {
-    debugPrint((oldStream.visible == widget.visible).toString());
     if (oldStream.visible != widget.visible) {
       //we changed the visibility status
       if (widget.visible) {
-        setState(() {
-          _initializeVideoPlayerFuture = initController();
-        });
+        // setState(() {
+        // _initializeVideoPlayerFuture = initController();
+        // });
+        initController();
       } else {
+        // setState(() {
+        // _controller.dispose();
+        // _controller = null;
+        // });
         setState(() {
-          _controller.dispose();
-          _controller = null;
+          _isDisplaying = false;
         });
+        _controller.dispose();
       }
     }
     //TODO: if widget size changes, we also want to update but without tearing down the controller
@@ -121,44 +145,24 @@ class _VideoStreamState extends State<VideoStream> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        //TODO: change this to streambuilder??
-        future: _initializeVideoPlayerFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done &&
-              widget.visible) {
-            Widget child = Stack(
-              alignment: AlignmentDirectional.centerStart,
-              children: [
-                Container(
-                    width: _baseSize.width,
-                    height: _baseSize.height,
-                    child: Transform(
-                        transform: _rescale, child: VideoPlayer(_controller))),
-                CustomPaint(
-                  //TODO: container can be the child of the custompaint class, with the Annotater as foregroundPainter
-                  size: Size(1280, 1024), //TODO: what to set this to?
-                  painter: Annotater(
-                      (widget.size.width != 0) & (widget.size.height != 0)),
-                )
-              ],
-            );
-
-            return SizedBox(
-                width: _size.width, height: _size.height, child: child);
-          } else if (widget.visible) {
-            Widget child = Center(child: CircularProgressIndicator());
-
-            return SizedBox(
-                width: _size.width, height: _size.height, child: child);
-          } else {
-            return SizedBox(
-                //TODO: can we capture the last frame to display here??
-                width: _size.width,
-                height: _size.height,
-                child: Container());
-          }
-        });
+    Widget child;
+    if (_isDisplaying) {
+      child = CustomPaint(
+          size: Size(1280, 1024), //TODO: what to set this to?
+          foregroundPainter: _annotater,
+          child: Container(
+              width: _baseSize.width,
+              height: _baseSize.height,
+              child: Transform(
+                  origin: Offset(_size.width / 2, _size.height / 2),
+                  transform: _rescale,
+                  child: VideoPlayer(_controller))));
+    } else if (widget.visible) {
+      child = Center(child: CircularProgressIndicator());
+    } else {
+      child = Container();
+    }
+    return SizedBox(width: _size.width, height: _size.height, child: child);
   }
 }
 
@@ -168,6 +172,8 @@ class Annotater extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    debugPrint('repainting');
+
     Paint marker = Paint();
     marker.color = Colors.white;
     marker.style = PaintingStyle.stroke;
@@ -181,7 +187,6 @@ class Annotater extends CustomPainter {
     double fMax = 1000;
     const bool isLogScaled = true;
 
-    debugPrint('adding axes? $addAxes');
     if (addAxes) {
       //x axis will go from -1/readRate to 0
       for (int i = 1; i < 10; i++) {

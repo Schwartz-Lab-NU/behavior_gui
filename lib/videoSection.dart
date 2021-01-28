@@ -60,7 +60,7 @@ class VideoSection extends StatelessWidget {
                     return CollapsibleImage(
                       visible: visible,
                       size: Size(constraints.maxWidth, heightLower),
-                      src: 'http://localhost:5000/video/0/stream.m3u8',
+                      src: 'http://localhost:5000/video/4/stream.m3u8',
                       title: 'Audio Spectrogram',
                       axis: Axis.horizontal,
                     );
