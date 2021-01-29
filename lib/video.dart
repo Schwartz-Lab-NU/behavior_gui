@@ -1,5 +1,6 @@
-import 'dart:async';
+// import 'dart:async';
 
+import 'package:behavior_app/api.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:sprintf/sprintf.dart';
@@ -43,8 +44,28 @@ class _VideoStreamState extends State<VideoStream> {
             ? widget.size.width / 1.25
             : widget.size.height);
     _baseSize = _size;
-    _annotater =
-        Annotater((widget.size.width != 0) & (widget.size.height != 0));
+
+    if ((widget.size.width != 0) & (widget.size.height != 0)) {
+      ValueNotifier changedAudioSettings = ValueNotifier(null);
+      DynamicRigStatus drs = DynamicRigStatus();
+
+      Function updateAudio = (_) {
+        debugPrint('updating audio settings for axes');
+        changedAudioSettings.value = {
+          'fMin': drs['minimum frequency'],
+          'fMax': drs['maximum frequency'],
+          'isLogScaled': drs['log scaling'],
+          'readRate': drs['read rate']
+        };
+      };
+      updateAudio(null);
+      DynamicRigStatus.onChange.listen(updateAudio);
+
+      _annotater = Annotater(listenable: changedAudioSettings);
+    } else {
+      _annotater = Annotater();
+    }
+
     // _initializeVideoPlayerFuture = initController();
     initController();
     super.initState();
@@ -167,8 +188,9 @@ class _VideoStreamState extends State<VideoStream> {
 }
 
 class Annotater extends CustomPainter {
-  final bool addAxes;
-  Annotater(this.addAxes) : super();
+  // final bool addAxes;
+  final ValueNotifier listenable;
+  Annotater({this.listenable}) : super(repaint: listenable);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -182,12 +204,9 @@ class Annotater extends CustomPainter {
     // canvas.drawLine(Offset(0, 0), Offset(size.width, size.height), marker);
     // canvas.drawCircle(
     //     Offset(size.width / 2, size.height / 2), size.width / 4, marker);
-    const double readRate = 2;
-    double fMin = 10;
-    double fMax = 1000;
-    const bool isLogScaled = true;
 
-    if (addAxes) {
+    if (listenable != null) {
+      debugPrint('listenable: ${listenable.value}');
       //x axis will go from -1/readRate to 0
       for (int i = 1; i < 10; i++) {
         double x = size.width / 10 * i;
@@ -196,7 +215,8 @@ class Annotater extends CustomPainter {
         canvas.drawLine(Offset(x, 0), Offset(x, 8), marker);
         TextSpan span = TextSpan(
             style: style,
-            text: sprintf('-%0.02fs', [(1 - (i / 10)) / readRate]));
+            text: sprintf(
+                '-%0.02fs', [(1 - (i / 10)) / listenable.value['readRate']]));
         TextPainter tp =
             TextPainter(text: span, textDirection: TextDirection.ltr);
         tp.layout();
@@ -204,10 +224,12 @@ class Annotater extends CustomPainter {
         tp.paint(canvas, Offset(x - 2 - tp.width, 0));
       }
 
-      //y axis will go from fMin to fMax
+      double fMin = listenable.value['fMin'] / 1000;
+      double fMax = listenable.value['fMax'] / 1000;
+      //y axis will go from listenable.value['fMin'] to listenable.value['fMax']
       //if logscaled...
-      // go from 10^(log10(fMin)) to 10^(log10(fMax))
-      if (isLogScaled) {
+      // go from 10^(log10(listenable.value['fMin'])) to 10^(log10(listenable.value['fMax']))
+      if (listenable.value['isLogScaled']) {
         fMin = log(fMin) * log10e;
         fMax = log(fMax) * log10e;
       }
@@ -218,7 +240,7 @@ class Annotater extends CustomPainter {
         canvas.drawLine(
             Offset(size.width, y), Offset(size.width - 8, y), marker);
         double freq = fMin + i / 5 * fRange;
-        if (isLogScaled) {
+        if (listenable.value['isLogScaled']) {
           freq = pow(10, freq);
         }
         TextSpan span =
@@ -230,6 +252,17 @@ class Annotater extends CustomPainter {
         tp.layout();
         tp.paint(canvas, Offset(size.width - tp.width, y - tp.height - 2));
       }
+
+      canvas.drawLine(Offset(size.width, 0), Offset(size.width - 8, 8), marker);
+      TextSpan span = TextSpan(
+          style: style,
+          text: sprintf('0s,%0.01fkHz', [listenable.value['fMin'] / 1000]));
+      TextPainter tp = TextPainter(
+          text: span,
+          textDirection: TextDirection.ltr,
+          textAlign: TextAlign.right);
+      tp.layout();
+      tp.paint(canvas, Offset(size.width - tp.width - 9, 9));
     }
   }
 

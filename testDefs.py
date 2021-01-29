@@ -64,6 +64,12 @@ initialStatus = {  # just an example
         'current': int(1e2),
         'allowedValues': [int(1e2), int(2e2), int(5e2), int(1e3)],
         'mutable': True,
+    },
+    'read rate': {
+        'category': 'Audio',
+        'current': 1,
+        'allowedValues': {'min': 1, 'max': 5},
+        'mutable': False,
     }
     # 'video0 displaying': {
     #     'category': 'Video',
