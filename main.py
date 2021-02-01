@@ -1,4 +1,6 @@
-from setup import status, ag
+from setup import ag, status
+import initialStatus
+import callbacks
 from socketApp import socketio, app as sock
 from httpServer import app as server
 from threading import Thread

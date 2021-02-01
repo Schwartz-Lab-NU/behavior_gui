@@ -3,8 +3,6 @@ initialStatus = {  # just an example
         'allowedValues': ['uninitialized', 'initialized', 'deinitialized'],
         'category': 'Acquisition',
         'current': 'uninitialized',
-        # TODO:
-        # 'callback': ag.functionthatWrapsaroundRun(str),
         'mutable': True,
     },
     'notes': {
@@ -20,7 +18,7 @@ initialStatus = {  # just an example
         'mutable': True,
     },
     'calibration': {
-        'allowedValues': ['uncalibrated', 'calibrated', 'intrinsic', 'extrinsic', 'calibrating intrinsic', 'calibrating extrinsic'],
+        'allowedValues': ['uncalibrated', 'calibrating', 'calibrated'],
         'category': 'Video',
         'current': 'uncalibrated',
         'mutable': True,

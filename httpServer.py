@@ -2,7 +2,6 @@ from flask import Flask, Response, request, send_from_directory, render_template
 
 import time
 from threading import Thread
-import testDefs
 
 import os
 import numpy as np
