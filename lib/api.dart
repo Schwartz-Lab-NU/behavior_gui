@@ -120,7 +120,6 @@ class DynamicRigStatusValues extends RigStatusValues {
     //// typeName2: ...
     //// ...
     // }
-    // debugPrint('requesting allowed settings dictionary');
     final Map<String, dynamic> json = await Api._get('allowed');
     RigStatus newStatus = RigStatus.empty();
 
@@ -185,9 +184,7 @@ class DynamicRigStatusValues extends RigStatusValues {
     //// [typeName1]: {'current':[status1a], 'mutable':[isMutable1a]},
     //// [typeName2]: {'current':[status2c], 'mutable':[isMutable2c]},
     //// ...
-    // }
 
-    // debugPrint('received broadcast event');
     RigStatus newRigStatus = RigStatus.empty();
     if (!initialized.isCompleted) return;
     update.forEach((status, value) {
@@ -208,7 +205,7 @@ class RigStatus extends MapBase<String, dynamic> {
   }
 
   get keys => _map.keys;
-  dynamic operator [](Object key) => _map[key];
+  RigStatusItem operator [](Object key) => RigStatusItem(key, _map[key]);
   void operator []=(Object type, dynamic value) {
     if ((type is String) &&
         _statuses.containsKey(type) &&
@@ -225,13 +222,8 @@ class RigStatus extends MapBase<String, dynamic> {
   void clear() => _map.clear();
 
   bool operator ==(Object status) {
-    // return (status is RigStatus) &&
-    //     (status.keys == this._map.keys) &&
-    //     (status.values) == this.values;
-    // debugPrint('Testing one rig status against another...');
     if (!(status is RigStatus)) return false;
     return this.isSameStatus(status);
-    // status = status as RigStatus;
   }
 
   bool isSameStatus(RigStatus status) {
@@ -257,6 +249,8 @@ class RigStatus extends MapBase<String, dynamic> {
   RigStatus.empty() : this._map = Map<String, dynamic>();
 
   RigStatus.fromJSON(Map<String, dynamic> json) : this._map = json;
+
+  Map<String, dynamic> toJSON() => _map;
 
   static Future<RigStatus> apply(dynamic status) {
     //todo: at some point we should remove any applied changes that match the current state?
@@ -325,7 +319,10 @@ class DynamicRigStatus extends RigStatus {
   }
 
   static void _handleUpdates(RigStatus updates) {
-    _instance._map.addAll(updates);
+    updates.forEach((key, value) {
+      _instance._map[key] = value.value;
+    });
+    // _instance._map.addAll(updates);
     _changeController.add(null);
   }
 }
@@ -336,7 +333,8 @@ class RigStatusItem implements MapEntry<String, dynamic> {
   get type => this.key;
   set type(dynamic value) => throw 'RigStatusItem keys may not be changed';
   // set key(dynamic value) => throw 'RigStatusItem keys may not be changed';
-  get category => RigStatus._statuses[key].category;
+  String get category => RigStatus._statuses[key].category;
+  bool get mutable => RigStatus._statuses[key].mutable;
   String toString() => this.key;
 
   RigStatusItem(this.key, value) {
@@ -347,7 +345,6 @@ class RigStatusItem implements MapEntry<String, dynamic> {
       throw 'Invalid key-value pair';
     }
   }
-
   Future<RigStatus> _post() async {
     return RigStatus._handleJSON(await Api._post(this));
   }
@@ -373,7 +370,7 @@ class Api {
 
   static Future<Map<String, dynamic>> _post(dynamic status) async {
     Completer<Map<String, dynamic>> c = Completer<Map<String, dynamic>>();
-    _socket.emitWithAck('post', status, ack: (data) {
+    _socket.emitWithAck('post', status.toJSON(), ack: (data) {
       c.complete(data);
     });
     return c.future;

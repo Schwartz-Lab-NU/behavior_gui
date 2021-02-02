@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
 import 'settings.dart';
-// import 'cameras.dart';
-// import 'collapseImage.dart';
-// import 'video2.dart';
 import 'api.dart';
 import 'videoSection.dart';
-// import 'package:flutter/widgets.dart';
 // Uncomment lines 7 and 10 to view the visual layout at runtime.
 // import 'package:flutter/rendering.dart' show debugPaintSizeEnabled;
 
 void main() {
-  // debugPaintSizeEnabled = true;
   DynamicRigStatusValues();
   runApp(MaterialApp(
       home: MyApp(),
@@ -23,19 +18,6 @@ void main() {
         unselectedWidgetColor: Colors.grey,
       )));
 }
-
-// class VideoStream extends StatefulWidget {
-//   VideoStream(this.src, {@required this.width, @required this.height});
-//   final String src;
-//   final double width;
-//   final double height;
-
-//   @override
-//   _VideoStreamState createState() => _VideoStreamState();
-// }
-
-// class _VideoStreamState extends State<VideoStream> {
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -44,11 +26,8 @@ class MyApp extends StatelessWidget {
         future: DynamicRigStatusValues.initialized.future,
         builder: (context, snapshot) {
           if (DynamicRigStatusValues.initialized.isCompleted) {
-            // debugPrint('loaded RSV');
             return LoadedApp();
           } else {
-            // debugPrint('failed to load RSV: ' +
-            //     DynamicRigStatusValues.initialized.isCompleted.toString());
             return Scaffold(
                 body: Center(
                     child: Column(
@@ -80,18 +59,15 @@ class _LoadedAppState extends State<LoadedApp> {
 
   @override
   void initState() {
-    // debugPrint('initing loaded app, init status: ' +
-    //     _rigStatus['initialization'].toString());
-    _isInitialized = _rigStatus['initialization'] == 'initialized';
+    _isInitialized = _rigStatus['initialization'].value == 'initialized';
     DynamicRigStatus.onChange.listen((event) => _handleStateChange());
     super.initState();
   }
 
   void _handleStateChange() {
-    // debugPrint('got statusChange');
     setState(() {
       _updateCount += 1;
-      _isInitialized = _rigStatus['initialization'] == 'initialized';
+      _isInitialized = _rigStatus['initialization'].value == 'initialized';
     });
   }
 
@@ -99,7 +75,7 @@ class _LoadedAppState extends State<LoadedApp> {
     //we want to update the state of the status list and the notes when the record button is pushed
 
     RigStatus rigStatus = RigStatus.empty();
-    rigStatus['recording'] = !_rigStatus['recording'];
+    rigStatus['recording'] = (!_rigStatus['recording'].value);
     rigStatus['notes'] = _text.text;
     rigStatus['rootfilename'] = rootfilename;
     RigStatus.apply(rigStatus);
@@ -143,8 +119,6 @@ class _LoadedAppState extends State<LoadedApp> {
       ],
     );
 
-    // debugPrint(
-    //     'rebuilding main app, _isInitialized = ' + _isInitialized.toString());
 
     return MaterialApp(
       title: 'Behavior App',
@@ -153,8 +127,7 @@ class _LoadedAppState extends State<LoadedApp> {
         backgroundColor: Theme.of(context).backgroundColor,
         body: Column(
           children: [
-            // buttonSection,
-            StatusBar(color, mainWidth, recordCallback: _toggleRecord),
+            StatusBar(mainWidth, recordCallback: _toggleRecord),
             VideoSection(_isInitialized, mediaSize.width, mainHeight, padding,
                 subHeight, audioHeight),
             SizedBox(
@@ -174,17 +147,11 @@ class _LoadedAppState extends State<LoadedApp> {
               children: [
                 SizedBox(
                   width: textWidth,
-                  // height: mediaSize.height - mainHeight - 85,
                   child: textSection,
                 ),
                 SizedBox(
                   width: settingsWidth,
-                  // height: mediaSize.height - mainHeight - 85,
-                  // child: Container(
                   child: SettingsList(),
-                  // width: settingsWidth,
-                  // height: mediaSize.height - mainHeight - 85,
-                  // ),
                 ),
               ],
             )),

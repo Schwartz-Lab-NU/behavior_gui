@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'api.dart';
 import 'dart:async';
 
-// ValueNotifier<_rigStatus> __rigStatusNotifier = ValueNotifier(Dynamic_rigStatus());
 DynamicRigStatus _rigStatus = DynamicRigStatus();
 
 class SettingsList extends StatefulWidget {
@@ -10,7 +9,6 @@ class SettingsList extends StatefulWidget {
 }
 
 class _SettingsListState extends State<SettingsList> {
-  // DynamicRigStatus _rigStatus = DynamicRigStatus();
   DynamicRigStatusValues _rigStatusValues = DynamicRigStatusValues();
   List<String> _ignoreList = [
     'initialization',
@@ -20,7 +18,7 @@ class _SettingsListState extends State<SettingsList> {
     'notes'
   ];
   Map<String, List<String>> _categories = {};
-  Map<String, TextEditingController> _text = {}; //=TextEditingController();
+  Map<String, TextEditingController> _text = {};
   int _numUpdates = 0;
 
   @override
@@ -33,9 +31,6 @@ class _SettingsListState extends State<SettingsList> {
   void _handleStateChange() {
     if (_numUpdates == 0) {
       debugPrint('setting RSVs');
-      // Map<String, List<String>> categories = {};
-      // Map<String, TextEditingController> text;
-
       _rigStatusValues.forEach((key, value) {
         //exclude: initialized, recording, calibration, filename, notes?
         if (!_ignoreList.contains(key)) {
@@ -51,8 +46,6 @@ class _SettingsListState extends State<SettingsList> {
         }
       });
       _numUpdates = 1;
-      // _categories = categories;
-      // _text = text;
     } else {
       setState(() {
         _numUpdates = _numUpdates + 1;
@@ -63,7 +56,6 @@ class _SettingsListState extends State<SettingsList> {
   void updateRig(String status, dynamic value) {
     RigStatus newStatus = RigStatus.empty();
     newStatus[status] = value;
-    debugPrint('attempting to change $status to $value');
     RigStatus.apply(newStatus);
   }
 
@@ -74,7 +66,6 @@ class _SettingsListState extends State<SettingsList> {
       itemCount: _categories.length,
       itemBuilder: (context, i) {
         return ExpansionTile(
-            // backgroundColor: Colors.black,
             title: Text(keys[i],
                 style: TextStyle(color: Theme.of(context).buttonColor)),
             children: <Widget>[
@@ -98,11 +89,6 @@ class _SettingsListState extends State<SettingsList> {
                           onChanged: status.mutable
                               ? (newValue) => updateRig(item, newValue)
                               : null,
-                          // iconSize: status.mutable ? 20 : 0,
-                          // icon: status.mutable
-                          //     ? Icon(Icons.arrow_drop_down,
-                          //         color: Theme.of(context).buttonColor)
-                          //     : null,
                           icon: null,
                           iconSize: 0,
                           items: status.allowed.values
@@ -165,8 +151,6 @@ class _SettingsListState extends State<SettingsList> {
                         ]),
                         leading: Icon(icons[keys[i]],
                             color: Theme.of(context).primaryColor)));
-                // trailing: child);
-                // );
               }).toList())
             ]);
       },
@@ -174,16 +158,11 @@ class _SettingsListState extends State<SettingsList> {
   }
 }
 
-// class Setting {
-//   final String title;
-//   List<String> contents = [];
-//   final IconData icon;
-
-//   Setting(this.title, this.contents, this.icon);
-// }
-
-SizedBox _buildButtonColumn(double width, bool enabled, Color color,
+SizedBox _buildButtonColumn(double width, bool enabled, BuildContext context,
     IconData icon, String label, void Function(dynamic) callback) {
+  Color color = enabled
+      ? Theme.of(context).buttonColor
+      : Theme.of(context).unselectedWidgetColor;
   return SizedBox(
       width: width,
       child: Center(
@@ -258,11 +237,6 @@ SizedBox _buildDropdownColumn(
                             fontWeight: FontWeight.w400,
                             color: color,
                           ))));
-              // Text(value,
-              //     style: TextStyle(
-              //         fontSize: 18,
-              //         fontWeight: FontWeight.w400,
-              //         color: color)));
             }).toList();
           },
         ),
@@ -305,15 +279,6 @@ SizedBox _buildInputColumn(
           child: button,
           itemBuilder: (BuildContext context) {
             return <PopupMenuEntry>[
-              // PopupMenuItem(
-              //   enabled: false,
-              //   value: 'text label',
-              //   child: Text(labels[1],
-              //       style: TextStyle(
-              //           fontSize: 8,
-              //           fontWeight: FontWeight.w400,
-              //           color: color)),
-              // ),
               PopupMenuItem(
                   enabled: false,
                   value: 'text label',
@@ -334,42 +299,34 @@ SizedBox _buildInputColumn(
                             color: color)),
                   )),
             ];
-            // return PopupMenuItem(
-            //     enabled: enabled,
-            //     height: 26,
-            //     value: value,
-            //     child: Text(value,
-            //         style: TextStyle(
-            //             fontSize: 18,
-            //             fontWeight: FontWeight.w400,
-            //             color: color)));
-            // }).toList();
           },
         ),
       )));
 }
 
 class StatusBar extends StatefulWidget {
-  final Color color;
   final double width;
   final void Function(String) recordCallback;
 
-  StatusBar(this.color, this.width, {this.recordCallback});
+  StatusBar(this.width, {this.recordCallback});
 
   @override
   _StatusBarState createState() => _StatusBarState();
 }
 
-class _StatusBarState extends State<StatusBar>
-    with SingleTickerProviderStateMixin {
+class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
   DateTime _lastUpdate = DateTime.now();
   // bool _expanded;
   String _lastMessage = '';
   StreamSubscription<void> statusSub;
   StreamSubscription<String> messageSub;
 
-  AnimationController _expandController;
-  Animation<double> _animation;
+  AnimationController _controllerStatus;
+  Animation<double> _animationStatus;
+
+  bool _showCalibratePanel = false;
+  AnimationController _controllerCalib;
+  Animation<double> _animationCalib;
 
   TextEditingController _text = TextEditingController();
 
@@ -380,12 +337,16 @@ class _StatusBarState extends State<StatusBar>
 
     _prepareAnimations();
     statusSub = DynamicRigStatus.onChange.listen((didChange) {
-      if (_rigStatus['initialization'] == 'initialized') {
-        _expandController.forward();
+      if (_rigStatus['initialization'].value == 'initialized') {
+        _controllerStatus.forward();
       } else {
-        _expandController.reverse();
+        _controllerStatus.reverse();
+        _controllerCalib.reverse();
       }
-      debugPrint('registered rig status change');
+      if (!_rigStatus['calibration'].mutable) {
+        _controllerCalib.reverse(); //TODO: can we do this better?
+      }
+
       setState(() {
         _lastUpdate = DateTime.now();
         // _expanded = _rigStatus['initialization'] == 'initialized';
@@ -396,62 +357,54 @@ class _StatusBarState extends State<StatusBar>
         _lastMessage = message;
       });
     });
-    if (_rigStatus['initialization'] == 'initialized') {
-      _expandController.forward();
+    if (_rigStatus['initialization'].value == 'initialized') {
+      _controllerStatus.forward();
     } else {
-      _expandController.reverse();
+      _controllerStatus.reverse();
     }
+    _controllerCalib.reverse();
   }
 
   @override
   void dispose() {
     statusSub.cancel();
     messageSub.cancel();
-    _expandController.dispose();
+    _controllerStatus.dispose();
+    _controllerCalib.dispose();
     super.dispose();
   }
 
-  // void _toggleRecord() {
-  //   RigStatus rigStatus = RigStatus.empty();
-  //   rigStatus['recording'] = !_rigStatus['recording'];
-  //   RigStatus.apply(rigStatus);
-  // }
-
   void _toggleInit() {
     RigStatus rigStatus = RigStatus.empty();
-    rigStatus['initialization'] = _rigStatus['initialization'] == 'initialized'
-        ? 'deinitialized'
-        : 'initialized';
+    rigStatus['initialization'] =
+        (_rigStatus['initialization'].value == 'initialized')
+            ? 'deinitialized'
+            : 'initialized';
+    debugPrint(rigStatus.toString());
     RigStatus.apply(rigStatus);
   }
 
-  void _toggleCalibrate(int i) {
-    RigStatus rigStatus = RigStatus.empty();
-    if (i == 0) {
-      rigStatus['calibration'] =
-          _rigStatus['calibration'] == 'calibrating intrinsic'
-              ? 'uncalibrated'
-              : 'calibrating intrinsic';
+  void _toggleCalibrate() {
+    if (_showCalibratePanel) {
+      _controllerCalib.reverse();
     } else {
-      rigStatus['calibration'] =
-          _rigStatus['calibration'] == 'calibrating extrinsic'
-              ? 'uncalibrated'
-              : 'calibrating extrinsic';
+      _controllerCalib.forward();
     }
-    RigStatus.apply(rigStatus);
+    setState(() {
+      _showCalibratePanel = !_showCalibratePanel;
+    });
   }
-
-  // @override
-  // void didUpdateWidget(StatusBar oldWidget) {
-  //   super.didUpdateWidget(oldWidget);
-  //   _runExpandCheck();
-  // }
 
   void _prepareAnimations() {
-    _expandController =
+    _controllerStatus =
         AnimationController(vsync: this, duration: Duration(milliseconds: 500));
-    _animation =
-        CurvedAnimation(parent: _expandController, curve: Curves.fastOutSlowIn);
+    _animationStatus =
+        CurvedAnimation(parent: _controllerStatus, curve: Curves.fastOutSlowIn);
+
+    _controllerCalib =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    _animationCalib =
+        CurvedAnimation(parent: _controllerCalib, curve: Curves.fastOutSlowIn);
   }
 
   void _showDialog(BuildContext context, doRecording) async {
@@ -493,111 +446,107 @@ class _StatusBarState extends State<StatusBar>
   Widget build(BuildContext context) {
     debugPrint('rebuilding status bar');
     debugPrint(_rigStatus.toString());
-    Widget initButton;
-    List<Widget> children;
     void Function(dynamic) callback = (arg) => debugPrint('registered tap');
 
-    String intrinsic;
-    String extrinsic;
-    String calibration = _rigStatus['calibration'];
-
-    if (calibration != null) {
-      intrinsic = (calibration == 'calibrated' || calibration == 'intrinsic'
-              ? '☑'
-              : '☐') +
-          ' intrinsic';
-      extrinsic = (calibration == 'calibrated' || calibration == 'extrinsic'
-              ? '☑'
-              : '☐') +
-          ' extrinsic';
-    } else {
-      calibration = '';
-    }
-
-    // if (_rigStatus['initialization'] == 'initialized') {
     Widget recordButton;
-    Color inactive;
-    bool isRecording = _rigStatus['recording'] == true;
-    if (isRecording) {
-      recordButton = _buildButtonColumn(widget.width / 4, true, widget.color,
+    Color inactive = Theme.of(context).unselectedWidgetColor;
+    Color active = Theme.of(context).buttonColor;
+
+    if (_rigStatus['recording'].value) {
+      recordButton = _buildButtonColumn(widget.width / 4, true, context,
           Icons.pause, 'PAUSE', (data) => widget.recordCallback(_text.text));
-      inactive = Theme.of(context).unselectedWidgetColor;
     } else {
-      inactive = calibration.contains('calibrating')
-          ? Theme.of(context).unselectedWidgetColor
-          : widget.color;
-      recordButton = _buildButtonColumn(widget.width / 4, true, inactive,
-          Icons.circle, 'RECORD', (data) => _showDialog(context, true));
+      recordButton = _buildButtonColumn(
+          widget.width / 4,
+          true,
+          context, //TODO: assumes we can always stop recording...
+          Icons.circle,
+          'RECORD',
+          (data) => _showDialog(context, true));
     }
 
+    Widget calibrationButton = _buildButtonColumn(
+        widget.width / 4,
+        _rigStatus['calibration'].mutable,
+        context,
+        Icons.build,
+        'CALIBRATE',
+        (arg) => _toggleCalibrate());
+
+    Widget processButton = _buildButtonColumn(widget.width / 4, true, context,
+        Icons.leaderboard, 'ANALYSIS', callback);
+
+    Widget logsButton = _buildButtonColumn(
+        widget.width / 4, true, context, Icons.info, 'LOGS', callback);
+
+    List<Widget> children;
     children = [
       recordButton,
-      isRecording
-          ? _buildButtonColumn(widget.width / 4, false, inactive, Icons.build,
-              'CALIBRATE', (i) => _toggleCalibrate(i))
-          : _buildDropdownColumn(
-              widget.width / 4,
-              !isRecording,
-              calibration.contains('calibrating') ? widget.color : inactive,
-              Theme.of(context).backgroundColor,
-              Icons.build,
-              ['CALIBRATE', intrinsic, extrinsic],
-              (i) => _toggleCalibrate(i)),
-      // isRecording
-      //     ? _buildButtonColumn(widget.width / 4, false, inactive, Icons.folder,
-      //         'FILE NAME', (data) => _showDialog(context))
-      //     : _buildInputColumn(
-      //         widget.width / 4,
-      //         !isRecording,
-      //         inactive,
-      //         Theme.of(context).backgroundColor,
-      //         Icons.folder,
-      //         ['FILE NAME', '/path/to/root/\$file', 'Input root file name:'],
-      //         callback),
-      _buildButtonColumn(widget.width / 4, !isRecording, inactive, Icons.folder,
-          'FILE NAME', (data) => _showDialog(context, false)),
-      _buildButtonColumn(widget.width / 4, false, widget.color, Icons.info,
-          'STATUS', callback),
+      calibrationButton,
+      processButton,
+      logsButton,
       SizedBox(
           width: widget.width,
           child: Text(
             _lastMessage,
-            style: TextStyle(color: widget.color),
+            style: TextStyle(color: active),
           )),
     ];
 
-    if (_rigStatus['initialization'] == 'initialized') {
-      initButton = _buildButtonColumn(widget.width / 4, !isRecording, inactive,
-          Icons.not_interested, 'STOP', (arg) => _toggleInit());
+    Widget initButton;
+    if (_rigStatus['initialization'].value == 'initialized') {
+      initButton = _buildButtonColumn(
+          widget.width / 4,
+          _rigStatus['initialization'].mutable,
+          context,
+          Icons.not_interested,
+          'STOP',
+          (arg) => _toggleInit());
     } else {
-      initButton = _buildButtonColumn(widget.width / 4, true, widget.color,
-          Icons.play_arrow, 'START', (arg) => _toggleInit());
+      initButton = _buildButtonColumn(
+          widget.width / 4,
+          true,
+          context, //TODO: assumes we can always init?
+          Icons.play_arrow,
+          'START',
+          (arg) => _toggleInit());
     }
 
-    return SizedBox(
-        height: 50,
-        child: Row(children: [
-          initButton,
-          SizeTransition(
-            sizeFactor: _animation,
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.start, children: children),
-            // child: widget.child,
-            axis: Axis.horizontal,
-            axisAlignment: 1.0,
-          )
-        ]));
+    return Column(children: [
+      SizedBox(
+          height: 50,
+          child: Row(children: [
+            initButton,
+            SizeTransition(
+              sizeFactor: _animationStatus,
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: children),
+              // child: widget.child,
+              axis: Axis.horizontal,
+              axisAlignment: 1.0,
+            )
+          ])),
+      SizeTransition(
+        sizeFactor: _animationCalib,
+        axis: Axis.vertical,
+
+        child: SizedBox(
+            height: 150,
+            child: ListView(scrollDirection: Axis.horizontal, children: [
+              SizedBox(width: 10),
+              Container(color: Colors.red, width: 500),
+              SizedBox(width: 10),
+              Container(color: Colors.green, width: 500),
+              SizedBox(width: 10),
+              Container(color: Colors.blue, width: 500),
+              SizedBox(width: 10),
+            ])),
+        // axisAlignment: 1.0,
+      ),
+    ]);
   }
 }
-
-//build this dynamically from current rig status
-// List<Setting> settings = [
-//   Setting('Acquisition', ['nCameras', 'nMicrophones'], Icons.work),
-//   Setting(
-//       'Video', ['Frame Capture Rate', 'Frame Display Rate'], Icons.videocam),
-//   Setting('Audio', ['Sensitivity', 'Gain'], Icons.mic),
-//   Setting('Post-Processing', ['waitTime', 'nWorkers'], Icons.computer)
-// ];
 
 Map<String, IconData> icons = {
   'Acquisition': Icons.work,

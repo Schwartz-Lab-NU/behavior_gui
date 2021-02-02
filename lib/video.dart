@@ -52,10 +52,10 @@ class _VideoStreamState extends State<VideoStream> {
       Function updateAudio = (_) {
         debugPrint('updating audio settings for axes');
         changedAudioSettings.value = {
-          'fMin': drs['minimum frequency'],
-          'fMax': drs['maximum frequency'],
-          'isLogScaled': drs['log scaling'],
-          'readRate': drs['read rate']
+          'fMin': drs['minimum frequency'].value,
+          'fMax': drs['maximum frequency'].value,
+          'isLogScaled': drs['log scaling'].value,
+          'readRate': drs['read rate'].value
         };
       };
       updateAudio(null);
@@ -206,7 +206,7 @@ class Annotater extends CustomPainter {
     //     Offset(size.width / 2, size.height / 2), size.width / 4, marker);
 
     if (listenable != null) {
-      debugPrint('listenable: ${listenable.value}');
+      // debugPrint('listenable: ${listenable.value}');
       //x axis will go from -1/readRate to 0
       for (int i = 1; i < 10; i++) {
         double x = size.width / 10 * i;
