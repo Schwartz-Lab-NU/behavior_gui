@@ -17,12 +17,6 @@ initialStatus = {  # just an example
         'current': '',
         'mutable': True,
     },
-    'calibration': {
-        'allowedValues': ['uncalibrated', 'calibrating', 'calibrated'],
-        'category': 'Video',
-        'current': 'uncalibrated',
-        'mutable': True,
-    },
     'sample frequency': {
         'allowedValues': {'min': int(1e4), 'max': int(1e6)},
         'category': 'Audio',
@@ -68,16 +62,77 @@ initialStatus = {  # just an example
         'current': 1,
         'allowedValues': {'min': 1, 'max': 5},
         'mutable': False,
+    },
+    'camera count': {
+        'category': 'Video',
+        'current': 4,
+        'allowedValues': {'min': 1, 'max': 7},
+        'mutable': False,
+    },
+    'calibration' : {
+        'category': 'Video',
+        'mutable': True,
+        'current': {
+            'isCalibrating': {
+                'category': 'Video',
+                'mutable': True,
+                'current': False
+            },
+            'camera number': {
+                'category': 'Video',
+                'mutable': True,
+                'current': 0,
+                'allowedValues': {'min': 0, 'max': 6}
+            }
+        }
     }
-    # 'video0 displaying': {
-    #     'category': 'Video',
-    #     'current': False,
-    #     'mutable': True,
-    #     #request displaying = True
-    #         #if requesting true, start a thread that calls 'predisplay'
-    #         #thread will periodically call predisplay and then emit annotation data to server
-
-    #     #request displaying = False
-    #         #close thread
-    # }
 }
+
+for i in range(4):
+  initialStatus[f'camera {i}'] = {
+      'category': 'Video',
+      'mutable': True,
+      'current': {  # create a nested dict
+          'serialNumber': {
+              'category': 'Video',
+              'mutable': False,
+              # TODO: just an example, obviously we would want to match these on assignment
+              'current': f'ID000{i}xxx',
+              'allowedValues': [f'ID000{i}xxx' for i in range(4)],
+          },
+          'lastIntrinsic': {
+              'category': 'Video',
+              'mutable': False,
+              'current': 0,  # unix timestamp
+              'allowedValues': {'min': 0, 'max': int(1e10)}
+          },
+          'lastExtrinsic': {
+              'category': 'Video',
+              'mutable': False,
+              'current': 0,  # unix timestamp
+              'allowedValues': {'min': 0, 'max': int(1e10)}
+          },
+          'displaying': {
+              'category': 'Video',
+              'mutable': True,
+              'current': False
+          },
+        #   'processing': {
+        #       'category': 'Video',
+        #       'mutable': True,
+        #       'current': False
+        #   },
+        #   'calibratingIntrinsic': {
+        #       'category': 'Video',
+        #       'mutable': True,
+        #       'current': False
+        #   },
+        #   'calibratingExtrinsic': {
+        #       'category': 'Video',
+        #       'mutable': True,
+        #       'current': False
+        #   }
+      }
+  }
+
+print(f'initial status: {initialStatus}')

@@ -10,7 +10,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'dart:async';
 import 'dart:collection';
 // import 'dart:ui';
-// import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 const String socketHostname = 'http://localhost:5001';
 const String mainHostname = 'http://localhost:5000';
@@ -29,11 +29,11 @@ class Allowable<T> {
   final Range<T> range;
   final Set<T> values;
 
-  Allowable(this.allowed, this.print, {this.range, this.values}) {
-    if (!((range == null) ^ (values == null))) {
-      throw 'Must define exactly 1 of range or values set.';
-    }
-  }
+  Allowable(this.allowed, this.print, {this.range, this.values}); // {
+  //   if (!((range == null) ^ (values == null))) {
+  //     throw 'Must define exactly 1 of range or values set.';
+  //   }
+  // }
 
   bool call(dynamic value) {
     if (!(value is T)) return false;
@@ -113,15 +113,9 @@ class DynamicRigStatusValues extends RigStatusValues {
     Api._socket.on('broadcast', (data) => _update(data));
   }
 
-  static void _get() async {
-    //each json result has following form:
-    // {
-    //// typeName1: {'allowedValues': [status1a, status1b, ...], 'category': RigStatusCategory, 'current': status1b},
-    //// typeName2: ...
-    //// ...
-    // }
-    final Map<String, dynamic> json = await Api._get('allowed');
-    RigStatus newStatus = RigStatus.empty();
+  static RigStatus _parseJSON(
+      Map<String, dynamic> json, RigStatusValues instance) {
+    RigStatus newStatus = RigStatus.sub(instance); //will this work?
 
     json.forEach((status, value) {
       Allowable thisAllowable;
@@ -138,14 +132,14 @@ class DynamicRigStatusValues extends RigStatusValues {
               () => thisSet.toString(),
               values: thisSet);
         }
-        _instance._map[status] = RigStatusValue<String>(thisAllowable,
+        instance._map[status] = RigStatusValue<String>(thisAllowable,
             value['category'], value['current'], value['mutable']);
       } else if (value['current'] is bool) {
         thisAllowable = Allowable<bool>(
             (bool value) => value is bool, () => '{True, False}',
             values: Set.from([true, false]));
 
-        _instance._map[status] = RigStatusValue<bool>(thisAllowable,
+        instance._map[status] = RigStatusValue<bool>(thisAllowable,
             value['category'], value['current'], value['mutable']);
       } else if (value['current'] is num) {
         if (value['allowedValues'] is List) {
@@ -167,15 +161,64 @@ class DynamicRigStatusValues extends RigStatusValues {
           throw 'Incomprehensible allowed status types';
         }
 
-        _instance._map[status] = RigStatusValue<num>(thisAllowable,
+        instance._map[status] = RigStatusValue<num>(thisAllowable,
             value['category'], value['current'], value['mutable']);
+      } else if (value['current'] is Map) {
+        //recursively call this function to fill in the
+        RigStatusValues thisMap = RigStatusValues();
+        _parseJSON(value['current'], thisMap); //this should modify thisMap
+
+        //an update will be allowed if its key is contained in thisValue and its value is valid
+        thisAllowable = Allowable<RigStatusValues>((RigStatusValues statuses) {
+          statuses.forEach((key, value) {
+            debugPrint('in nested map, testing key $key for value $value');
+            if (!(thisMap.containsKey(key) &&
+                thisMap[key].allowed(value.current))) {
+              return false;
+            }
+          });
+          return true;
+        }, () => 'A map of key-value pairs.');
+
+        instance._map[status] = RigStatusValue<RigStatusValues>(
+            thisAllowable, value['category'], thisMap, value['mutable']);
       } else {
         throw 'Incomprehensible status type';
       }
+      debugPrint('applying $status = ${value['current']} to $newStatus');
       newStatus[status] = value['current'];
     });
+
+    return newStatus;
+  }
+
+  static void _get() async {
+    //each json result has following form:
+    // {
+    //// typeName1: {'allowedValues': [status1a, status1b, ...], 'category': RigStatusCategory, 'current': status1b},
+    //// typeName2: ...
+    //// ...
+    // }
+    final Map<String, dynamic> json = await Api._get('allowed');
+    RigStatus newStatus = _parseJSON(json, _instance);
     _changeController.add(newStatus);
     initialized.complete();
+  }
+
+  static RigStatus _parseJSONUpdate(
+      Map<String, dynamic> update, RigStatusValues instance) {
+    RigStatus newRigStatus = RigStatus.empty();
+    update.forEach((status, value) {
+      if (value['current'] is Map) {
+        newRigStatus[status] =
+            _parseJSONUpdate(value['current'], instance._map[status].current);
+      } else {
+        newRigStatus[status] = value['current'];
+        instance._map[status].current = value['current'];
+      }
+      instance._map[status].mutable = value['mutable'];
+    });
+    return newRigStatus;
   }
 
   static void _update(Map<String, dynamic> update) {
@@ -185,14 +228,8 @@ class DynamicRigStatusValues extends RigStatusValues {
     //// [typeName2]: {'current':[status2c], 'mutable':[isMutable2c]},
     //// ...
 
-    RigStatus newRigStatus = RigStatus.empty();
     if (!initialized.isCompleted) return;
-    update.forEach((status, value) {
-      newRigStatus[status] = value['current'];
-      _instance._map[status].current = value['current'];
-      _instance._map[status].mutable = value['mutable'];
-    });
-    _changeController.add(newRigStatus);
+    _changeController.add(_parseJSONUpdate(update, _instance));
   }
 }
 
@@ -205,14 +242,23 @@ class RigStatus extends MapBase<String, dynamic> {
   }
 
   get keys => _map.keys;
-  RigStatusItem operator [](Object key) => RigStatusItem(key, _map[key]);
+  RigStatusItem operator [](Object key) =>
+      RigStatusItem(key, _map[key], _statuses);
   void operator []=(Object type, dynamic value) {
+    //TODO: note we're not checking for mutability here. technically this is difficult since mutability can change and therefore invalidate the rigstatus
+    //note that the server is also checking for mutability
+    //maybe on RigStatus.apply we can double check for mutability before making api call
+
     if ((type is String) &&
         _statuses.containsKey(type) &&
         _statuses[type].allowed(value)) {
       _map[type] = value;
       // this._changeController.add(true);//but only needed if dynamic??
     } else {
+      debugPrint('attempted kv pair: $type : $value');
+      debugPrint('key is string: ${type is String}');
+      debugPrint('status contains key: ${_statuses.containsKey(type)}');
+      debugPrint('status allows value: ${_statuses[type].allowed(value)}');
       throw 'Couldn\'t set RigStatus';
     }
   }
@@ -236,24 +282,37 @@ class RigStatus extends MapBase<String, dynamic> {
 
   int get hashCode => keys.hashCode ^ values.hashCode;
 
-  static final DynamicRigStatusValues _statuses = DynamicRigStatusValues();
+  static final RigStatusValues _globalStatus = DynamicRigStatusValues();
   // bool _isDynamic = false;
   static final Completer initialized = DynamicRigStatusValues.initialized;
+  final RigStatusValues _statuses;
 
   RigStatus.current()
-      : this._map =
-            _statuses.map<String, dynamic>((String type, RigStatusValue value) {
-          return RigStatusItem(type, value.current);
+      : this._statuses = _globalStatus,
+        this._map = _globalStatus
+            .map<String, dynamic>((String type, RigStatusValue value) {
+          return RigStatusItem(type, value.current, _globalStatus);
         });
 
-  RigStatus.empty() : this._map = Map<String, dynamic>();
+  RigStatus.empty()
+      : this._statuses = _globalStatus,
+        this._map = Map<String, dynamic>();
 
-  RigStatus.fromJSON(Map<String, dynamic> json) : this._map = json;
+  RigStatus.sub(this._statuses)
+      : this._map =
+            _statuses.map<String, dynamic>((String type, RigStatusValue value) {
+          return RigStatusItem(type, value.current, _statuses);
+        });
+
+  RigStatus.fromJSON(Map<String, dynamic> json)
+      : this._statuses = _globalStatus,
+        this._map = json;
 
   Map<String, dynamic> toJSON() => _map;
 
   static Future<RigStatus> apply(dynamic status) {
-    //todo: at some point we should remove any applied changes that match the current state?
+    //TODO: at some point we should remove any applied changes that match the current state? but maybe server side
+    //TODO: also check for mutability here, since mutability status is itself mutable
     if (((status is RigStatus) && !(status is DynamicRigStatus)) ||
         status is RigStatusItem) {
       return status._post();
@@ -263,8 +322,8 @@ class RigStatus extends MapBase<String, dynamic> {
   }
 
   static RigStatusValue getAllowed(String status) {
-    if (_statuses.containsKey(status)) {
-      return _statuses[status];
+    if (_globalStatus.containsKey(status)) {
+      return _globalStatus[status];
     } else {
       return null;
     }
@@ -333,16 +392,21 @@ class RigStatusItem implements MapEntry<String, dynamic> {
   get type => this.key;
   set type(dynamic value) => throw 'RigStatusItem keys may not be changed';
   // set key(dynamic value) => throw 'RigStatusItem keys may not be changed';
-  String get category => RigStatus._statuses[key].category;
-  bool get mutable => RigStatus._statuses[key].mutable;
+
+  String category;
+  bool mutable;
+
+  // String get category => RigStatus._statuses[key].category;
+  // bool get mutable => RigStatus._statuses[key].mutable;
   String toString() => this.key;
 
-  RigStatusItem(this.key, value) {
-    if (RigStatus._statuses.containsKey(this.key) &&
-        RigStatus._statuses[this.key].allowed(value)) {
+  RigStatusItem(this.key, value, DynamicRigStatusValues statuses) {
+    if (statuses.containsKey(this.key) && statuses[this.key].allowed(value)) {
       this.value = value;
+      this.category = statuses[this.key].category;
+      this.mutable = statuses[this.key].mutable;
     } else {
-      throw 'Invalid key-value pair';
+      throw 'Invalid key-value pair: ${this.key}, ${value}';
     }
   }
   Future<RigStatus> _post() async {

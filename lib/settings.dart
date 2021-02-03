@@ -105,6 +105,7 @@ class _SettingsListState extends State<SettingsList> {
                                                 .unselectedWidgetColor)));
                           }).toList()));
                 } else {
+                  //TODO: this assumes that if not values we have a range, not the case for a nested map
                   child = SizedBox(
                       width: 100,
                       child: TextField(
@@ -512,6 +513,9 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
           (arg) => _toggleInit());
     }
 
+    List<int> camList =
+        Iterable<int>.generate(_rigStatus['camera count'].value).toList();
+
     return Column(children: [
       SizedBox(
           height: 50,
@@ -532,14 +536,32 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         axis: Axis.vertical,
 
         child: SizedBox(
-            height: 150,
+            height: 300,
             child: ListView(scrollDirection: Axis.horizontal, children: [
               SizedBox(width: 10),
-              Container(color: Colors.red, width: 500),
+              Container(
+                  // color: Colors.red,
+                  width: 500,
+                  child: _CalibrationBox(
+                      'Intrinsic Calibration',
+                      'Determines the undistortion parameters of each camera by collecting images of a calibration board.',
+                      camList)),
               SizedBox(width: 10),
-              Container(color: Colors.green, width: 500),
+              Container(
+                  // color: Colors.red,
+                  width: 500,
+                  child: _CalibrationBox(
+                      'Top Camera Alignment',
+                      'Aligns the top camera to the arena by detecting the location of the fixed calibration markers.',
+                      [0])),
               SizedBox(width: 10),
-              Container(color: Colors.blue, width: 500),
+              Container(
+                  // color: Colors.red,
+                  width: 500,
+                  child: _CalibrationBox(
+                      'Side Camera Alignment',
+                      'Aligns a side camera to the top camera by detecting the location of a mobile calibration board visible to both cameras.',
+                      camList.sublist(1))),
               SizedBox(width: 10),
             ])),
         // axisAlignment: 1.0,
@@ -554,3 +576,94 @@ Map<String, IconData> icons = {
   'Audio': Icons.mic,
   // 'Post-Processing': Icons.computer
 };
+
+class _CalibrationBox extends StatelessWidget {
+  _CalibrationBox(this.title, this.subtitle, this.cameraIndex);
+  final String title;
+  final String subtitle;
+  final List<int> cameraIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    debugPrint(_rigStatus['camera count'].toString());
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(title,
+            style:
+                TextStyle(fontSize: 16, color: Theme.of(context).buttonColor)),
+        Padding(
+            padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
+            child: Text(subtitle,
+                style: TextStyle(
+                    fontSize: 10,
+                    fontStyle: FontStyle.italic,
+                    color: Theme.of(context).unselectedWidgetColor))),
+        Expanded(
+          child: ListView.builder(
+              // shrinkWrap: true,
+              // physics: ScrollPhysics(),
+              itemCount: cameraIndex.length,
+              itemBuilder: (context, ind) {
+                return ListTile(
+                  leading: Icon(Icons.videocam,
+                      color: Theme.of(context).primaryColor),
+                  title: Text('Camera ${cameraIndex[ind]}',
+                      style: TextStyle(color: Theme.of(context).primaryColor)),
+                  subtitle: Text('Last calibrated: xx-xx-xxxx',
+                      style: TextStyle(
+                          color: Theme.of(context).unselectedWidgetColor)),
+                  // trailing: Icon(Icons.play_arrow),
+                  trailing: _buildButtonColumn(
+                      150,
+                      true,
+                      context,
+                      Icons.play_arrow,
+                      'CALIBRATE',
+                      (arg) => debugPrint('registered tap')),
+                );
+              }),
+        )
+      ],
+    );
+  }
+}
+
+void main() async {
+  DynamicRigStatus();
+  await Future.delayed(Duration(seconds: 1));
+
+  runApp(MaterialApp(
+      home: Scaffold(
+          body: SizedBox(
+              width: 1000,
+              height: 300,
+              child: DecoratedBox(
+                  decoration: BoxDecoration(color: Colors.yellow),
+                  child: ListView(scrollDirection: Axis.horizontal, children: [
+                    SizedBox(width: 10),
+                    Container(
+                        color: Colors.red,
+                        width: 500,
+                        child: _CalibrationBox(
+                            'Intrinsic Calibration',
+                            'Determines the undistortion parameters of each camera by collecting images of a calibration board.',
+                            [0, 1, 2, 3])),
+                    SizedBox(width: 10),
+                    Container(
+                        color: Colors.red,
+                        width: 500,
+                        child: _CalibrationBox(
+                            'Top Camera Alignment',
+                            'Aligns the top camera to the arena by detecting the location of the fixed calibration markers.',
+                            [0])),
+                    SizedBox(width: 10),
+                    Container(
+                        color: Colors.red,
+                        width: 500,
+                        child: _CalibrationBox(
+                            'Side Camera Alignment',
+                            'Aligns a side camera to the top camera by detecting the location of a mobile calibration board visible to both cameras.',
+                            [1, 2, 3])),
+                  ]))))));
+}

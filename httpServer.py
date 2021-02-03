@@ -34,7 +34,7 @@ def hello_world():
 @app.route('/kill')
 def kill_server():
   print('doing shutdown')
-  status['initialization']['current'] = 'deinitialized'
+  status['initialization']('deinitialized')
   time.sleep(3)
   if ran_ffmpeg:
     finish_ffmpeg()

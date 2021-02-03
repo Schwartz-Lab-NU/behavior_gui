@@ -35,11 +35,15 @@ class RigStatusValue:
     # print(f'initing rsv: {value}')
     if 'allowedValues' in value.keys():
       self._allowed = value['allowedValues']
-    else:
+      self._current = value['current']
+    elif type(value['current'] == bool):
       self._allowed = (True, False)
+      self._current = value['current']
+    else:
+      self._allowed = []  # TODO: placeholder for nested dict...
+      self._current = {k: RigStatusValue(v) for k, v in value['current']}
 
     self._category = value['category']
-    self._current = value['current']
     self._mutable = value['mutable']
     self._callback = lambda x: x
 
@@ -59,9 +63,19 @@ class RigStatusValue:
     self._callback = fun
 
   def __call__(self, state):
+    # TODO: check that state is allowed and parseable!
     if (self._current == state) or not self._mutable:
-      return
-    self._current = state
+      raise 'Couldn\'t set status'
+    if type(self._current) == dict:
+      current = self._current.copy()
+      try:
+        for k, v in state.items():
+          current[k](v)
+        self._current = current
+      except:
+        'Couldn\'t set sub-status'
+    else:
+      self._current = state
 
     self._callback(state)
 
