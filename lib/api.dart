@@ -10,7 +10,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'dart:async';
 import 'dart:collection';
 // import 'dart:ui';
-import 'package:flutter/material.dart';
+// import 'package:flutter/material.dart';
 
 const String socketHostname = 'http://localhost:5001';
 const String mainHostname = 'http://localhost:5000';
@@ -119,6 +119,7 @@ class DynamicRigStatusValues extends RigStatusValues {
 
     json.forEach((status, value) {
       Allowable thisAllowable;
+      dynamic applyValue;
 
       if (value['current'] is String) {
         Set<String> thisSet = Set<String>.from(value['allowedValues']);
@@ -134,6 +135,7 @@ class DynamicRigStatusValues extends RigStatusValues {
         }
         instance._map[status] = RigStatusValue<String>(thisAllowable,
             value['category'], value['current'], value['mutable']);
+        applyValue = value['current'];
       } else if (value['current'] is bool) {
         thisAllowable = Allowable<bool>(
             (bool value) => value is bool, () => '{True, False}',
@@ -141,6 +143,7 @@ class DynamicRigStatusValues extends RigStatusValues {
 
         instance._map[status] = RigStatusValue<bool>(thisAllowable,
             value['category'], value['current'], value['mutable']);
+        applyValue = value['current'];
       } else if (value['current'] is num) {
         if (value['allowedValues'] is List) {
           Set<num> thisSet = Set<num>.from(value['allowedValues']);
@@ -163,17 +166,19 @@ class DynamicRigStatusValues extends RigStatusValues {
 
         instance._map[status] = RigStatusValue<num>(thisAllowable,
             value['category'], value['current'], value['mutable']);
+        applyValue = value['current'];
       } else if (value['current'] is Map) {
         //recursively call this function to fill in the
-        RigStatusValues thisMap = RigStatusValues();
-        _parseJSON(value['current'], thisMap); //this should modify thisMap
+        applyValue = RigStatusValues();
+        _parseJSON(
+            value['current'], applyValue); //this should modify applyValue
 
         //an update will be allowed if its key is contained in thisValue and its value is valid
         thisAllowable = Allowable<RigStatusValues>((RigStatusValues statuses) {
           statuses.forEach((key, value) {
-            debugPrint('in nested map, testing key $key for value $value');
-            if (!(thisMap.containsKey(key) &&
-                thisMap[key].allowed(value.current))) {
+            // debugPrint('in nested map, testing key $key for value $value');
+            if (!(applyValue.containsKey(key) &&
+                applyValue[key].allowed(value.current))) {
               return false;
             }
           });
@@ -181,12 +186,13 @@ class DynamicRigStatusValues extends RigStatusValues {
         }, () => 'A map of key-value pairs.');
 
         instance._map[status] = RigStatusValue<RigStatusValues>(
-            thisAllowable, value['category'], thisMap, value['mutable']);
+            thisAllowable, value['category'], applyValue, value['mutable']);
       } else {
         throw 'Incomprehensible status type';
       }
-      debugPrint('applying $status = ${value['current']} to $newStatus');
-      newStatus[status] = value['current'];
+      // debugPrint('applying $status = $applyValue to $newStatus');
+      newStatus[status] = applyValue;
+      // debugPrint('applied status');
     });
 
     return newStatus;
@@ -207,11 +213,11 @@ class DynamicRigStatusValues extends RigStatusValues {
 
   static RigStatus _parseJSONUpdate(
       Map<String, dynamic> update, RigStatusValues instance) {
-    RigStatus newRigStatus = RigStatus.empty();
+    RigStatus newRigStatus = RigStatus.sub(instance);
     update.forEach((status, value) {
       if (value['current'] is Map) {
-        newRigStatus[status] =
-            _parseJSONUpdate(value['current'], instance._map[status].current);
+        _parseJSONUpdate(value['current'], instance._map[status].current);
+        newRigStatus[status] = instance._map[status].current;
       } else {
         newRigStatus[status] = value['current'];
         instance._map[status].current = value['current'];
@@ -255,10 +261,11 @@ class RigStatus extends MapBase<String, dynamic> {
       _map[type] = value;
       // this._changeController.add(true);//but only needed if dynamic??
     } else {
-      debugPrint('attempted kv pair: $type : $value');
-      debugPrint('key is string: ${type is String}');
-      debugPrint('status contains key: ${_statuses.containsKey(type)}');
-      debugPrint('status allows value: ${_statuses[type].allowed(value)}');
+      // debugPrint('attempted kv pair: $type : $value');
+      // debugPrint('status: $_statuses');
+      // debugPrint('key is string: ${type is String}');
+      // debugPrint('status contains key: ${_statuses.containsKey(type)}');
+      // debugPrint('values is rsv: ${value is RigStatusValues}');
       throw 'Couldn\'t set RigStatus';
     }
   }
@@ -400,7 +407,7 @@ class RigStatusItem implements MapEntry<String, dynamic> {
   // bool get mutable => RigStatus._statuses[key].mutable;
   String toString() => this.key;
 
-  RigStatusItem(this.key, value, DynamicRigStatusValues statuses) {
+  RigStatusItem(this.key, value, RigStatusValues statuses) {
     if (statuses.containsKey(this.key) && statuses[this.key].allowed(value)) {
       this.value = value;
       this.category = statuses[this.key].category;
