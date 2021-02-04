@@ -30,7 +30,7 @@ class _SettingsListState extends State<SettingsList> {
 
   void _handleStateChange() {
     if (_numUpdates == 0) {
-      debugPrint('setting RSVs');
+      // debugPrint('setting RSVs');
       _rigStatusValues.forEach((key, value) {
         //exclude: initialized, recording, calibration, filename, notes?
         if (!_ignoreList.contains(key)) {
@@ -53,9 +53,20 @@ class _SettingsListState extends State<SettingsList> {
     }
   }
 
-  void updateRig(String status, dynamic value) {
-    RigStatus newStatus = RigStatus.empty();
-    newStatus[status] = value;
+  void updateRig(String status, dynamic value, List<String> stack) {
+    debugPrint('stack: $stack');
+    Map<String, dynamic> json = {status: value};
+    while (stack.isNotEmpty) {
+      json = {stack.removeLast(): json};
+    }
+
+    debugPrint(
+        'aiming to update status $status with value $value using json: $json');
+
+    // RigStatus newStatus = RigStatus.empty();
+    // newStatus[status] = value;
+    RigStatus newStatus = RigStatus.fromJSON(json);
+    debugPrint('resulting status: $newStatus');
     RigStatus.apply(newStatus);
   }
 
@@ -70,92 +81,123 @@ class _SettingsListState extends State<SettingsList> {
                 style: TextStyle(color: Theme.of(context).buttonColor)),
             children: <Widget>[
               Column(
-                  children: _categories[keys[i]].map((item) {
-                RigStatusValue status = _rigStatusValues[item];
-                String currentString = status.current.toString();
-                Widget child;
-                if (status is RigStatusValue<bool>) {
-                  child = Switch(
-                    activeColor: Theme.of(context).buttonColor,
-                    inactiveThumbColor: Theme.of(context).buttonColor,
-                    inactiveTrackColor: Theme.of(context).unselectedWidgetColor,
-                    value: status.current,
-                    onChanged: (newValue) => updateRig(item, newValue),
-                  );
-                } else if (status.allowed.values != null) {
-                  child = DropdownButtonHideUnderline(
-                      child: DropdownButton(
-                          value: status.current,
-                          onChanged: status.mutable
-                              ? (newValue) => updateRig(item, newValue)
-                              : null,
-                          icon: null,
-                          iconSize: 0,
-                          items: status.allowed.values
-                              .map<DropdownMenuItem>((dynamic value) {
-                            return DropdownMenuItem(
-                                value: value,
-                                child: Text(value.toString(),
-                                    textAlign: TextAlign.right,
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        color: status.mutable
-                                            ? Theme.of(context).buttonColor
-                                            : Theme.of(context)
-                                                .unselectedWidgetColor)));
-                          }).toList()));
-                } else {
-                  //TODO: this assumes that if not values we have a range, not the case for a nested map
-                  child = SizedBox(
-                      width: 100,
-                      child: TextField(
-                          textAlign: TextAlign.right,
-                          controller: _text[item],
-                          enabled: status.mutable,
-                          onSubmitted: (newValue) {
-                            if (status.current is double) {
-                              updateRig(item, double.parse(newValue));
-                            } else {
-                              updateRig(item, int.parse(newValue));
-                            }
-                            _text[item].text = '';
-                          },
-                          decoration: InputDecoration(
-                              hintText: status.current.toString(),
-                              hintStyle: TextStyle(
-                                  fontSize: 12,
-                                  color: status.mutable
-                                      ? Theme.of(context).buttonColor
-                                      : Theme.of(context)
-                                          .unselectedWidgetColor)),
-                          style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w400,
-                              color: status.mutable
-                                  ? Theme.of(context).buttonColor
-                                  : Theme.of(context).unselectedWidgetColor)));
-                }
-
-                return Tooltip(
-                    message:
-                        '${status.mutable ? "Mutable" : "Immutable"}. Allowed values: ${status.allowed.toString()}',
-                    preferBelow: false,
-                    verticalOffset: -15,
-                    child: ListTile(
-                        title: Row(children: [
-                          Expanded(
-                              child: Text(
-                                  '${item[0].toUpperCase()}${item.substring(1)}',
-                                  style: TextStyle(
-                                      color: Theme.of(context).primaryColor))),
-                          child,
-                        ]),
-                        leading: Icon(icons[keys[i]],
-                            color: Theme.of(context).primaryColor)));
-              }).toList())
+                  children: _categories[keys[i]]
+                      .map((item) => _buildSettingItem(
+                          context, item, keys[i], 0.0, _rigStatusValues, []))
+                      .toList())
             ]);
       },
     );
+  }
+
+  Widget _buildSettingItem(BuildContext context, String item, String key,
+      double indent, RigStatusValues statuses, List<String> stack) {
+    {
+      RigStatusValue status = statuses[item];
+      // String currentString = status.current.toString();
+      Widget child;
+      if (status is RigStatusValue<bool>) {
+        child = Switch(
+          activeColor: Theme.of(context).buttonColor,
+          inactiveThumbColor: Theme.of(context).buttonColor,
+          inactiveTrackColor: Theme.of(context).unselectedWidgetColor,
+          value: status.current,
+          onChanged: (newValue) => updateRig(item, newValue, stack),
+        );
+      } else if (status.allowed.values != null) {
+        child = DropdownButtonHideUnderline(
+            child: DropdownButton(
+                value: status.current,
+                onChanged: status.mutable
+                    ? (newValue) => updateRig(item, newValue, stack)
+                    : null,
+                icon: null,
+                iconSize: 0,
+                items: status.allowed.values
+                    .map<DropdownMenuItem>((dynamic value) {
+                  return DropdownMenuItem(
+                      value: value,
+                      child: Text(value.toString(),
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: status.mutable
+                                  ? Theme.of(context).buttonColor
+                                  : Theme.of(context).unselectedWidgetColor)));
+                }).toList()));
+      } else if (status.allowed.range != null) {
+        //TODO: this assumes that if not values we have a range, not the case for a nested map
+        child = SizedBox(
+            width: 100,
+            child: TextField(
+                textAlign: TextAlign.right,
+                controller: _text[item],
+                enabled: status.mutable,
+                onSubmitted: (newValue) {
+                  if (status.current is double) {
+                    updateRig(item, double.parse(newValue), stack);
+                  } else {
+                    updateRig(item, int.parse(newValue), stack);
+                  }
+                  _text[item].text = '';
+                },
+                decoration: InputDecoration(
+                    hintText: status.current.toString(),
+                    hintStyle: TextStyle(
+                        fontSize: 12,
+                        color: status.mutable
+                            ? Theme.of(context).buttonColor
+                            : Theme.of(context).unselectedWidgetColor)),
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w400,
+                    color: status.mutable
+                        ? Theme.of(context).buttonColor
+                        : Theme.of(context).unselectedWidgetColor)));
+      } else {
+        List<String> newStack = List<String>.from(stack);
+        newStack.add(item);
+
+        return ExpansionTile(
+          title: Text('${item[0].toUpperCase()}${item.substring(1)}',
+              style: TextStyle(color: Theme.of(context).buttonColor)),
+          leading: Padding(
+              padding: EdgeInsets.fromLTRB(indent, 0, 0, 0),
+              child: Icon(icons[key], color: Theme.of(context).buttonColor)),
+          children: <Widget>[
+            Column(
+              children: status.current.keys
+                  .map<Widget>((subitem) => _buildSettingItem(
+                      context,
+                      subitem,
+                      key,
+                      indent + 20.0,
+                      status.current,
+                      newStack)) //TODO: currently this ignores the child categories... probably fine but weird
+                  .toList(),
+            )
+          ],
+        );
+      }
+
+      return Tooltip(
+          message:
+              '${status.mutable ? "Mutable" : "Immutable"}. Allowed values: ${status.allowed.toString()}',
+          preferBelow: false,
+          verticalOffset: -15,
+          child: ListTile(
+              title: Row(children: [
+                Expanded(
+                    child: Text('${item[0].toUpperCase()}${item.substring(1)}',
+                        style:
+                            TextStyle(color: Theme.of(context).primaryColor))),
+                child,
+              ]),
+              leading: Padding(
+                  padding: EdgeInsets.fromLTRB(indent, 0, 0, 0),
+                  child: Icon(icons[key],
+                      color: Theme.of(context).primaryColor))));
+    }
   }
 }
 
@@ -445,8 +487,8 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('rebuilding status bar');
-    debugPrint(_rigStatus.toString());
+    // debugPrint('rebuilding status bar');
+    // debugPrint(_rigStatus.toString());
     void Function(dynamic) callback = (arg) => debugPrint('registered tap');
 
     Widget recordButton;
@@ -585,7 +627,7 @@ class _CalibrationBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint(_rigStatus['camera count'].toString());
+    // debugPrint(_rigStatus['camera count'].toString());
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [

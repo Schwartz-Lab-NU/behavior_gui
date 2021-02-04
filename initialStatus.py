@@ -69,7 +69,7 @@ initialStatus = {  # just an example
         'allowedValues': {'min': 1, 'max': 7},
         'mutable': False,
     },
-    'calibration' : {
+    'calibration': {
         'category': 'Video',
         'mutable': True,
         'current': {
@@ -117,22 +117,22 @@ for i in range(4):
               'mutable': True,
               'current': False
           },
-        #   'processing': {
-        #       'category': 'Video',
-        #       'mutable': True,
-        #       'current': False
-        #   },
-        #   'calibratingIntrinsic': {
-        #       'category': 'Video',
-        #       'mutable': True,
-        #       'current': False
-        #   },
-        #   'calibratingExtrinsic': {
-        #       'category': 'Video',
-        #       'mutable': True,
-        #       'current': False
-        #   }
+          #   'processing': {
+          #       'category': 'Video',
+          #       'mutable': True,
+          #       'current': False
+          #   },
+          #   'calibratingIntrinsic': {
+          #       'category': 'Video',
+          #       'mutable': True,
+          #       'current': False
+          #   },
+          #   'calibratingExtrinsic': {
+          #       'category': 'Video',
+          #       'mutable': True,
+          #       'current': False
+          #   }
       }
   }
 
-print(f'initial status: {initialStatus}')
+# print(f'initial status: {initialStatus}')

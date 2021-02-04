@@ -52,5 +52,5 @@ def parse_update(update):
   emit('broadcast', status.update, broadcast=True, include_self=False)
 
   # return the new status to the requesting client
-  print('returning status change')
+  print(f'returning status change: {status.update}')
   return status.update

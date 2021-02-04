@@ -1,21 +1,18 @@
-// import 'dart:io';
-
-// import 'package:flutter/material.dart';
-// import 'dart:typed_data';
-
-// import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-// import 'dart:convert';
 import 'dart:async';
 import 'dart:collection';
-// import 'dart:ui';
-// import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+
+// import 'dart:convert';
 
 const String socketHostname = 'http://localhost:5001';
 const String mainHostname = 'http://localhost:5000';
 
-// enum RigStatusCategory { Video, Audio, Acquisition, Processing }
+//TODO: RigStatus should not nest RigStatusValues
+//instead, each rig status needs a scope with a corresponding rsv...
+//goal is to be able to make a rig status such as:
+// {'camera 0': {'displaying': false}3}
 
 class Range<T> {
   T min;
@@ -84,6 +81,33 @@ class RigStatusValues extends UnmodifiableMapBase<String, RigStatusValue> {
 
   // bool _isDynamic = false;
   RigStatusValues();
+
+  factory RigStatusValues.from(RigStatus rigStatus, RigStatusValues instance) {
+    RigStatusValues result = RigStatusValues.copy(instance);
+    debugPrint('status so far: $rigStatus');
+    rigStatus.forEach((key, value) {
+      debugPrint('setting $key to ${value.value}!');
+      result[key].current = value.value;
+    });
+    return result;
+  }
+
+  factory RigStatusValues.copy(RigStatusValues from) {
+    if (from is DynamicRigStatusValues) {
+      return DynamicRigStatusValues();
+    } else {
+      RigStatusValues result = RigStatusValues();
+      result._map = Map.from(from._map);
+      return result;
+    }
+  }
+
+  Map<String, dynamic> toJSON() {
+    debugPrint('converting rsv to json');
+    return _map.map((key, rigStatusValue) {
+      return MapEntry(key, rigStatusValue.current);
+    });
+  }
 }
 
 class DynamicRigStatusValues extends RigStatusValues {
@@ -115,7 +139,7 @@ class DynamicRigStatusValues extends RigStatusValues {
 
   static RigStatus _parseJSON(
       Map<String, dynamic> json, RigStatusValues instance) {
-    RigStatus newStatus = RigStatus.sub(instance); //will this work?
+    RigStatus newStatus = RigStatus.subempty(instance); //will this work?
 
     json.forEach((status, value) {
       Allowable thisAllowable;
@@ -261,11 +285,11 @@ class RigStatus extends MapBase<String, dynamic> {
       _map[type] = value;
       // this._changeController.add(true);//but only needed if dynamic??
     } else {
-      // debugPrint('attempted kv pair: $type : $value');
-      // debugPrint('status: $_statuses');
-      // debugPrint('key is string: ${type is String}');
-      // debugPrint('status contains key: ${_statuses.containsKey(type)}');
-      // debugPrint('values is rsv: ${value is RigStatusValues}');
+      debugPrint('attempted kv pair: $type : $value');
+      debugPrint('status: $_statuses');
+      debugPrint('key is string: ${type is String}');
+      debugPrint('status contains key: ${_statuses.containsKey(type)}');
+      debugPrint('value is rsv: ${value is RigStatusValues}');
       throw 'Couldn\'t set RigStatus';
     }
   }
@@ -310,12 +334,48 @@ class RigStatus extends MapBase<String, dynamic> {
             _statuses.map<String, dynamic>((String type, RigStatusValue value) {
           return RigStatusItem(type, value.current, _statuses);
         });
+  RigStatus.subempty(this._statuses) : this._map = Map<String, dynamic>();
 
-  RigStatus.fromJSON(Map<String, dynamic> json)
-      : this._statuses = _globalStatus,
-        this._map = json;
+  // RigStatus.copy(RigStatus from)
+  //     : this._statuses = RigStatusValues.copy(from._statuses),
+  //       this._map = Map.from(from._map);
 
-  Map<String, dynamic> toJSON() => _map;
+  // RigStatus.fromItem(RigStatusItem item)
+  //     : this._statuses = _globalStatus,
+  //       this._map = Map<String, dynamic>.fromEntries(
+  //           Iterable.generate(1, (ind) => item));
+
+  // RigStatus.fromItemScoped(RigStatusItem item, this._statuses)
+  //     : this._map = Map<String, dynamic>.fromEntries(
+  //           Iterable.generate(1, (ind) => item));
+  static RigStatus _parseJSON(
+      Map<String, dynamic> json, RigStatusValues instance) {
+    RigStatus result = RigStatus.subempty(instance);
+    json.forEach((key, value) {
+      debugPrint('key: $key, value: $value');
+      if (value is Map) {
+        result[key] = RigStatusValues.from(
+            _parseJSON(value, instance[key].current), instance[key].current);
+      } else {
+        result[key] = value;
+      }
+    });
+    return result;
+  }
+
+  factory RigStatus.fromJSON(Map<String, dynamic> json) {
+    return _parseJSON(json, _globalStatus);
+  }
+  // : this._statuses = _globalStatus,
+  //   this._map = json;
+
+  Map<String, dynamic> toJSON() => _map.map((key, value) {
+        if (value is RigStatusValues) {
+          return MapEntry(key, value.toJSON());
+        } else {
+          return MapEntry(key, value);
+        }
+      });
 
   static Future<RigStatus> apply(dynamic status) {
     //TODO: at some point we should remove any applied changes that match the current state? but maybe server side
