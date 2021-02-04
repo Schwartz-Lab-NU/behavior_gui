@@ -65,19 +65,19 @@ class RigStatusValue:
 
   def __call__(self, state):
     # TODO: check that state is allowed and parseable!
-    if (self._current == state) or not self._mutable:
-      return
-      # raise 'Couldn\'t set status' #TODO: fix client to not request immutable statuses, then throw here
+    if not self._mutable:
+      raise 'Couldn\'t set status'
+
     if type(self._current) is dict:
       current = self._current.copy()
-      # try: #TODO: as above, throw here once fixed
-      print(f'goal: {state}')
-      for k, v in state.items():
-        print(f'attempting to set {k} to {v}')
-        current[k](v)
-      self._current = current
-      # except:
-      #   'Couldn\'t set sub-status'
+      try:
+        print(f'goal: {state}')
+        for k, v in state.items():
+          print(f'attempting to set {k} to {v}')
+          current[k](v)
+        self._current = current
+      except:
+        'Couldn\'t set sub-status'
     else:
       self._current = state
 
