@@ -15,9 +15,12 @@ status['initialization'].callback(initialization)
 
 def recording(state):
   if state:
+    ag.start(filepaths='')
+    ag.run()
     status['initialization'].immutable()
     status['calibration'].immutable()
   else:
+    ag.stop()
     status['initialization'].mutable()
     status['calibration'].mutable()
 
