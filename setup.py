@@ -27,5 +27,4 @@ global annotationsToGUI  # TODO: should be defined in socketApp.py??
 
 
 status = RigStatus.RigStatus(initialStatus)
-# TODO: set these settings in initialStatus!!!
 ag = AcquisitionGroup(status)

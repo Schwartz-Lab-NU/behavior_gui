@@ -96,6 +96,7 @@ class _VideoStreamState extends State<VideoStream> {
           // rescale[12] = -widget.size.width / 2 + _baseSize.width / 2;
         } else {
           // rescale[5] = controller.value.aspectRatio / widgetAR;
+          //TODO: looks like this part is wrong?
           baseSize = Size(widget.size.width,
               widget.size.width / controller.value.aspectRatio);
         }
@@ -198,9 +199,9 @@ class Annotater extends CustomPainter {
     debugPrint('repainting');
 
     Paint marker = Paint();
-    marker.color = Colors.white;
+    marker.color = Colors.red;
     marker.style = PaintingStyle.stroke;
-    TextStyle style = TextStyle(color: Colors.white, fontSize: 10);
+    TextStyle style = TextStyle(color: Colors.red, fontSize: 10);
 
     // canvas.drawLine(Offset(0, 0), Offset(size.width, size.height), marker);
     // canvas.drawCircle(
@@ -240,7 +241,8 @@ class Annotater extends CustomPainter {
         // canvas.drawLine(Offset(0, y), Offset(8, y), marker);
         canvas.drawLine(
             Offset(size.width, y), Offset(size.width - 8, y), marker);
-        double freq = fMin + i / 5 * fRange;
+        // double freq = fMin + i / 5 * fRange;
+        double freq = fMax - i/5 * fRange;
         if (listenable.value['isLogScaled']) {
           freq = pow(10, freq);
         }
@@ -257,7 +259,7 @@ class Annotater extends CustomPainter {
       canvas.drawLine(Offset(size.width, 0), Offset(size.width - 8, 8), marker);
       TextSpan span = TextSpan(
           style: style,
-          text: sprintf('0s,%0.01fkHz', [listenable.value['fMin'] / 1000]));
+          text: sprintf('0s,%0.01fkHz', [listenable.value['fMax'] / 1000]));
       TextPainter tp = TextPainter(
           text: span,
           textDirection: TextDirection.ltr,

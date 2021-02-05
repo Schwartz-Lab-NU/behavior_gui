@@ -139,6 +139,8 @@ class _LoadedAppState extends State<LoadedApp> {
         .toList();
     displaying.add(_rigStatus['spectrogram'].current['displaying'].current);
 
+    List<int> serialNumbers = List<int>.generate(4, (i) => i).map<int>((index) => _rigStatus['camera $index'].current['serial number'].current).toList();
+
     return MaterialApp(
       title: 'Behavior App',
       theme: Theme.of(context),
@@ -148,7 +150,7 @@ class _LoadedAppState extends State<LoadedApp> {
           children: [
             StatusBar(mainWidth, recordCallback: _toggleRecord),
             VideoSection(_isInitialized, mediaSize.width, mainHeight, padding,
-                subHeight, audioHeight, _toggleVideo, displaying),
+                subHeight, audioHeight, _toggleVideo, displaying, serialNumbers),
             SizedBox(
                 height: 30,
                 width: mediaSize.width - 20,

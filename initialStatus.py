@@ -45,15 +45,15 @@ initialStatus = {  # just an example
             },
             'minimum frequency': {
                 'category': 'Audio',
-                'current': int(1e4),
-                'allowedValues': {'min': int(1e2), 'max': int(4e4)},
-                'mutable': False, #temporary
+                'current': int(200),
+                'allowedValues': {'min': int(1e2), 'max': int(3e4)},
+                'mutable': True
             },
             'maximum frequency': {
                 'category': 'Audio',
-                'current': int(5e4),
-                'allowedValues': {'min': int(5e4), 'max': int(1.5e5)},
-                'mutable': False, #temporary
+                'current': int(4e4),
+                'allowedValues': {'min': int(4e4), 'max': int(1.5e5)},
+                'mutable': True
             },
             'frequency resolution': {
                 'category': 'Audio',
@@ -127,6 +127,7 @@ initialStatus = {  # just an example
     }
 }
 
+serialNumbers = [17391304, 17391290, 19287342, 19412282]
 for i in range(4):
   initialStatus[f'camera {i}'] = {
       'category': 'Video',
@@ -136,8 +137,8 @@ for i in range(4):
               'category': 'Video',
               'mutable': False,
               # TODO: just an example, obviously we would want to match these on assignment
-              'current': f'ID000{i}xxx',
-              'allowedValues': [f'ID000{i}xxx' for i in range(4)],
+              'current': serialNumbers[i],
+              'allowedValues': serialNumbers,
           },
           'last intrinsic': {
               'category': 'Video',

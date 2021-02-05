@@ -4,7 +4,7 @@ import 'collapseImage.dart';
 
 class VideoSection extends StatelessWidget {
   VideoSection(this.visible, this.width, this.height, this.padding,
-      this.heightUpper, this.heightLower, this.callback, this.displaying);
+      this.heightUpper, this.heightLower, this.callback, this.displaying, this.serialNumbers);
   final bool visible;
   final double width;
   final double height;
@@ -15,6 +15,7 @@ class VideoSection extends StatelessWidget {
 
   final void Function(bool, int) callback;
   final List<bool> displaying;
+  final List<int> serialNumbers;
 
 //   @override
 //   _VideoSectionState createState() => _VideoSectionState();
@@ -23,6 +24,7 @@ class VideoSection extends StatelessWidget {
 // class _VideoSectionState extends State<VideoSection> {
   @override
   Widget build(BuildContext context) {
+    debugPrint(serialNumbers.toString());
     debugPrint('rebuilding videosection, visible = ' + visible.toString());
     return ExpandedImage(
         expand: visible,
@@ -39,7 +41,7 @@ class VideoSection extends StatelessWidget {
             CollapsibleImage(
               visible: visible && displaying[0],
               size: Size(0, height),
-              src: 'http://localhost:5000/video/0/stream.m3u8',
+              src: 'http://localhost:5000/video/${serialNumbers[0]}/stream.m3u8',
               title: 'Top Camera',
               axis: Axis.horizontal,
               callback: (visible) => callback(visible, 0),
@@ -55,7 +57,11 @@ class VideoSection extends StatelessWidget {
                         visible: (i) => visible && displaying[i + 1],
                         size: Size(0, heightUpper),
                         axis: Axis.horizontal,
-                        images: sideCameras,
+                        images: [
+                          'http://localhost:5000/video/${serialNumbers[1]}/stream.m3u8',
+                          'http://localhost:5000/video/${serialNumbers[2]}/stream.m3u8',
+                          'http://localhost:5000/video/${serialNumbers[3]}/stream.m3u8',
+                        ],//TODO: refactor this
                         titleFn: (i) => 'Side Camera ${i + 1}',
                         callbacks: (visible, i) => callback(visible, i + 1)),
                   ),
@@ -78,13 +84,6 @@ class VideoSection extends StatelessWidget {
   }
 }
 
-List<String> sideCameras = [
-  'http://localhost:5000/video/1/stream.m3u8',
-  'http://localhost:5000/video/2/stream.m3u8',
-  'http://localhost:5000/video/3/stream.m3u8',
-  // 'http://localhost:5000/video/4/stream.m3u8',
-];
-
 // List<String> streams = [
 //   'video1.display',
 //   'video2.display',
@@ -96,6 +95,6 @@ void main() {
   runApp(MaterialApp(
       home: Scaffold(
     body: VideoSection(
-        true, 1800, 500, 10, 250, 250, null, List<bool>.filled(5, true)),
-  )));
+        true, 1800, 500, 10, 250, 250, null, List<bool>.filled(5, true), [0, 1, 2, 3],
+  ))));
 }
