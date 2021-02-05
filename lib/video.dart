@@ -52,9 +52,10 @@ class _VideoStreamState extends State<VideoStream> {
       Function updateAudio = (_) {
         debugPrint('updating audio settings for axes');
         changedAudioSettings.value = {
-          'fMin': rigStatus['minimum frequency'].current,
-          'fMax': rigStatus['maximum frequency'].current,
-          'isLogScaled': rigStatus['log scaling'].current,
+          'fMin': rigStatus['spectrogram'].current['minimum frequency'].current,
+          'fMax': rigStatus['spectrogram'].current['maximum frequency'].current,
+          'isLogScaled':
+              rigStatus['spectrogram'].current['log scaling'].current,
           'readRate': rigStatus['read rate'].current
         };
       };

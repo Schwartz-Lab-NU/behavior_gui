@@ -34,28 +34,39 @@ initialStatus = {  # just an example
         'current': False,
         'mutable': True,
     },
-    'log scaling': {
+    'spectrogram': {
         'category': 'Audio',
-        'current': True,
         'mutable': True,
-    },
-    'minimum frequency': {
-        'category': 'Audio',
-        'current': int(1e4),
-        'allowedValues': {'min': int(1e2), 'max': int(4e4)},
-        'mutable': True,
-    },
-    'maximum frequency': {
-        'category': 'Audio',
-        'current': int(5e4),
-        'allowedValues': {'min': int(5e4), 'max': int(1.5e5)},
-        'mutable': True,
-    },
-    'frequency resolution': {
-        'category': 'Audio',
-        'current': int(1e2),
-        'allowedValues': [int(1e2), int(2e2), int(5e2), int(1e3)],
-        'mutable': True,
+        'current': {
+            'log scaling': {
+                'category': 'Audio',
+                'current': True,
+                'mutable': True,
+            },
+            'minimum frequency': {
+                'category': 'Audio',
+                'current': int(1e4),
+                'allowedValues': {'min': int(1e2), 'max': int(4e4)},
+                'mutable': True,
+            },
+            'maximum frequency': {
+                'category': 'Audio',
+                'current': int(5e4),
+                'allowedValues': {'min': int(5e4), 'max': int(1.5e5)},
+                'mutable': True,
+            },
+            'frequency resolution': {
+                'category': 'Audio',
+                'current': int(1e2),
+                'allowedValues': [int(1e2), int(2e2), int(5e2), int(1e3)],
+                'mutable': True,
+            },
+            'displaying': {
+                'category': 'Audio',
+                'current': False,
+                'mutable': True,
+            }
+        }
     },
     'read rate': {
         'category': 'Audio',
@@ -88,7 +99,7 @@ initialStatus = {  # just an example
                 'category': 'Video',
                 'mutable': True,
                 'current': 'Intrinsic',
-                'allowed': ['Intrinsic', 'Extrinsic']
+                'allowedValues': ['Intrinsic', 'Extrinsic']
             }
         }
     }

@@ -11,13 +11,17 @@ class CollapsibleImageList extends StatelessWidget {
   final Axis axis;
   final List<String> images;
   final String Function(int) titleFn;
-  final bool visible;
+  final bool Function(int) visible;
+  final void Function(bool, int) callbacks;
   CollapsibleImageList(
       {this.size,
-      this.visible = true,
+      this.visible = _evalTrue,
       this.images,
       this.titleFn,
-      this.axis = Axis.horizontal});
+      this.axis = Axis.horizontal,
+      this.callbacks});
+
+  static bool _evalTrue(int index) => true;
 
   @override
   Widget build(BuildContext context) {
@@ -28,12 +32,12 @@ class CollapsibleImageList extends StatelessWidget {
         itemCount: images.length,
         itemBuilder: (context, i) {
           return CollapsibleImage(
-            title: this.titleFn(i),
-            src: this.images[i],
-            visible: this.visible,
-            axis: this.axis,
-            size: this.size,
-          );
+              title: this.titleFn(i),
+              src: this.images[i],
+              visible: this.visible(i),
+              axis: this.axis,
+              size: this.size,
+              callback: (visible) => this.callbacks(visible, i));
         });
   }
 }
@@ -45,34 +49,61 @@ class CollapsibleImage extends StatefulWidget {
   final Size size;
   final Axis axis;
   final bool visible;
+  final void Function(bool) callback;
   CollapsibleImage(
       {this.size,
       this.src,
       this.visible = true,
       this.title,
-      this.axis = Axis.horizontal});
+      this.axis = Axis.horizontal,
+      this.callback});
 
   @override
   _CollapsibleImageState createState() => _CollapsibleImageState();
 }
 
 class _CollapsibleImageState extends State<CollapsibleImage> {
-  bool expanded = true;
+  bool expanded;
+
+  @override
+  void initState() {
+    super.initState();
+
+    expanded = widget.visible;
+  }
 
   void toggle() {
     // RigStatus rigStatus = RigStatus.empty();
     // rigStatus['video# displaying'] = expanded;
     // RigStatus.apply(rigStatus);
 
+    // widget.callback(expanded);
+
     setState(() {
       expanded = !expanded;
+      widget.callback(expanded);
     });
+  }
+
+  @override
+  void didUpdateWidget(CollapsibleImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.visible && !widget.visible) {
+      //if the video was closed and then opened without user input, keep it closed
+      //but if the video was open and is now forced close, close it here
+      setState(() {
+        expanded = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     // debugPrint(bmp[32694].toString());
     bool isHorizontal = widget.axis == Axis.horizontal;
+    debugPrint(
+        'building collapsible image: ${widget.title} with state visible=${widget.visible} and expanded=$expanded');
 
     // if (img == null) return Container();
 
@@ -81,19 +112,6 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
         child: Stack(alignment: AlignmentDirectional.centerStart, children: [
           ExpandedImage(
               expand: expanded,
-              // child: Image.memory(
-              //   bmp,
-              //   // child: Image.asset(
-              //   //   'images/image.png',
-              //   height: isHorizontal ? widget.size : null,
-              //   width: isHorizontal ? null : widget.size,
-              //   fit: widget.fit,
-              //   gaplessPlayback: true,
-              // )
-              // child: StreamImage(
-              //   videoProvider: VideoProvider(0),
-              // ),
-              // child: Image(image: VideoProvider(0)),
               isHorizontal: isHorizontal,
               child: VideoStream(widget.src, expanded && widget.visible,
                   size: widget.size)
@@ -107,7 +125,6 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
               quarterTurns: isHorizontal ? -1 : 0,
               child: Text(widget.title,
                   style: TextStyle(
-                    // color: Theme.of(context).buttonColor
                     color: expanded
                         ? Theme.of(context).primaryColor
                         : Theme.of(context).buttonColor,
