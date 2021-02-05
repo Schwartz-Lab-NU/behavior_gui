@@ -41,7 +41,7 @@
         });
 
         var video1 = document.getElementById('player1');
-        var hls1 = new Hls();
+        var hls1 = new Hls({debug: true});
         hls1.attachMedia(video1);
         hls1.on(Hls.Events.MEDIA_ATTACHED, () => console.log('video and hls.js are now bound together!'));
         hls1.on(Hls.Events.ERROR, (event, data) => {
