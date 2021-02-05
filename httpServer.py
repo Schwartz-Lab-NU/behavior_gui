@@ -139,14 +139,15 @@ def add_header(response):
 @app.route('/video/<int:cam_id>/<string:file_name>')
 @cross_origin()
 def stream(cam_id, file_name):
-  # print(f'requested file: {file_name} from video: {cam_id}')
+  print(f'requested file: {file_name} from video: {cam_id}')
   # if 'm3u8' not in file_name:
   #   print('requested file: ', file_name)
   if cam_id == 4:
     vid_dir = r'C: \Users\SchwartzLab\PycharmProjects\bahavior_rig\temp_frames\spectrogram'
   else:
     vid_dir = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\temp_frames\camera_' + \
-      str(cam_id)  # would depend on cam_id
+        str(cam_id)  # would depend on cam_id
+  print(f'directory: {vid_dir}')
   # NOTE: the hls protocol dictates that the client will first request the .m3u8 file, then additional files as needed
   return send_from_directory(directory=vid_dir, filename=file_name)
 
