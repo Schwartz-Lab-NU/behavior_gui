@@ -143,7 +143,7 @@ def stream(cam_id, file_name):
   # if 'm3u8' not in file_name:
   #   print('requested file: ', file_name)
   if cam_id == 4:
-    vid_dir = r'C: \Users\SchwartzLab\PycharmProjects\bahavior_rig\temp_frames\spectrogram'
+    vid_dir = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\temp_frames\spectrogram'
   else:
     vid_dir = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\temp_frames\camera_' + \
         str(cam_id)  # would depend on cam_id
