@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'api.dart';
 import 'dart:async';
 
-DynamicRigStatus _rigStatus = DynamicRigStatus();
+RigStatusMap _rigStatus = RigStatusMap.live();
 
 class SettingsList extends StatefulWidget {
   _SettingsListState createState() => _SettingsListState();
 }
 
 class _SettingsListState extends State<SettingsList> {
-  DynamicRigStatusValues _rigStatusValues = DynamicRigStatusValues();
+  RigStatusMap _rigStatus = RigStatusMap.live();
   List<String> _ignoreList = [
     'initialization',
     'recording',
@@ -24,14 +24,14 @@ class _SettingsListState extends State<SettingsList> {
   @override
   void initState() {
     _handleStateChange();
-    DynamicRigStatusValues.onChange.listen((event) => _handleStateChange());
+    RigStatusMap.onChange.listen((event) => _handleStateChange());
     super.initState();
   }
 
   void _handleStateChange() {
     if (_numUpdates == 0) {
       // debugPrint('setting RSVs');
-      _rigStatusValues.forEach((key, value) {
+      _rigStatus.forEach((key, value) {
         //exclude: initialized, recording, calibration, filename, notes?
         if (!_ignoreList.contains(key)) {
           //value.category is owner
@@ -53,21 +53,26 @@ class _SettingsListState extends State<SettingsList> {
     }
   }
 
-  void updateRig(String status, dynamic value, List<String> stack) {
-    debugPrint('stack: $stack');
-    Map<String, dynamic> json = {status: value};
-    while (stack.isNotEmpty) {
-      json = {stack.removeLast(): json};
-    }
+  // void updateRig(String status, dynamic value, List<String> stack) {
+  void updateRig(
+      String status, dynamic value, RigStatusMap stack, RigStatusMap nested) {
+    // debugPrint('stack: $stack');
+    // Map<String, dynamic> json = {status: value};
+    // while (stack.isNotEmpty) {
+    //   json = {stack.removeLast(): json};
+    // }
 
-    debugPrint(
-        'aiming to update status $status with value $value using json: $json');
+    // debugPrint(
+    //     'aiming to update status $status with value $value using json: $json');
 
-    // RigStatus newStatus = RigStatus.empty();
-    // newStatus[status] = value;
-    RigStatus newStatus = RigStatus.fromJSON(json);
-    debugPrint('resulting status: $newStatus');
-    RigStatus.apply(newStatus);
+    // // RigStatus newStatus = RigStatus.empty();
+    // // newStatus[status] = value;
+    // RigStatusMap newStatus = RigStatusMap.fromJSON(json);
+
+    // debugPrint('resulting status: $newStatus');
+    // RigStatusMap.apply(newStatus);
+    nested[status].current = value;
+    RigStatusMap.apply(stack);
   }
 
   @override
@@ -76,14 +81,15 @@ class _SettingsListState extends State<SettingsList> {
     return ListView.builder(
       itemCount: _categories.length,
       itemBuilder: (context, i) {
+        RigStatusMap rigStatusMap = RigStatusMap();
         return ExpansionTile(
             title: Text(keys[i],
                 style: TextStyle(color: Theme.of(context).buttonColor)),
             children: <Widget>[
               Column(
                   children: _categories[keys[i]]
-                      .map((item) => _buildSettingItem(
-                          context, item, keys[i], 0.0, _rigStatusValues, []))
+                      .map((item) => _buildSettingItem(context, item, keys[i],
+                          0.0, rigStatusMap, rigStatusMap))
                       .toList())
             ]);
       },
@@ -91,25 +97,25 @@ class _SettingsListState extends State<SettingsList> {
   }
 
   Widget _buildSettingItem(BuildContext context, String item, String key,
-      double indent, RigStatusValues statuses, List<String> stack) {
+      double indent, RigStatusMap statuses, RigStatusMap nested) {
     {
-      RigStatusValue status = statuses[item];
+      RigStatusItem status = nested[item];
       // String currentString = status.current.toString();
       Widget child;
-      if (status is RigStatusValue<bool>) {
+      if (status.current is bool) {
         child = Switch(
           activeColor: Theme.of(context).buttonColor,
           inactiveThumbColor: Theme.of(context).buttonColor,
           inactiveTrackColor: Theme.of(context).unselectedWidgetColor,
           value: status.current,
-          onChanged: (newValue) => updateRig(item, newValue, stack),
+          onChanged: (newValue) => updateRig(item, newValue, statuses, nested),
         );
       } else if (status.allowed.values != null) {
         child = DropdownButtonHideUnderline(
             child: DropdownButton(
                 value: status.current,
                 onChanged: status.mutable
-                    ? (newValue) => updateRig(item, newValue, stack)
+                    ? (newValue) => updateRig(item, newValue, statuses, nested)
                     : null,
                 icon: null,
                 iconSize: 0,
@@ -135,9 +141,9 @@ class _SettingsListState extends State<SettingsList> {
                 enabled: status.mutable,
                 onSubmitted: (newValue) {
                   if (status.current is double) {
-                    updateRig(item, double.parse(newValue), stack);
+                    updateRig(item, double.parse(newValue), statuses, nested);
                   } else {
-                    updateRig(item, int.parse(newValue), stack);
+                    updateRig(item, int.parse(newValue), statuses, nested);
                   }
                   _text[item].text = '';
                 },
@@ -155,8 +161,9 @@ class _SettingsListState extends State<SettingsList> {
                         ? Theme.of(context).buttonColor
                         : Theme.of(context).unselectedWidgetColor)));
       } else {
-        List<String> newStack = List<String>.from(stack);
-        newStack.add(item);
+        // List<String> newStack = List<String>.from(stack);
+        // newStack.add(item);
+        nested = nested[item].current;
 
         return ExpansionTile(
           title: Text('${item[0].toUpperCase()}${item.substring(1)}',
@@ -172,8 +179,8 @@ class _SettingsListState extends State<SettingsList> {
                       subitem,
                       key,
                       indent + 20.0,
-                      status.current,
-                      newStack)) //TODO: currently this ignores the child categories... probably fine but weird
+                      statuses,
+                      nested)) //TODO: currently this ignores the child categories... probably fine but weird
                   .toList(),
             )
           ],
@@ -379,8 +386,8 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     // _expanded = _rigStatus['initialization'] == 'initialized';
 
     _prepareAnimations();
-    statusSub = DynamicRigStatus.onChange.listen((didChange) {
-      if (_rigStatus['initialization'].value == 'initialized') {
+    statusSub = RigStatusMap.onChange.listen((didChange) {
+      if (_rigStatus['initialization'].current == 'initialized') {
         _controllerStatus.forward();
       } else {
         _controllerStatus.reverse();
@@ -400,7 +407,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         _lastMessage = message;
       });
     });
-    if (_rigStatus['initialization'].value == 'initialized') {
+    if (_rigStatus['initialization'].current == 'initialized') {
       _controllerStatus.forward();
     } else {
       _controllerStatus.reverse();
@@ -418,13 +425,13 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
   }
 
   void _toggleInit() {
-    RigStatus rigStatus = RigStatus.empty();
-    rigStatus['initialization'] =
-        (_rigStatus['initialization'].value == 'initialized')
+    RigStatusMap rigStatus = RigStatusMap();
+    rigStatus['initialization'].current =
+        (_rigStatus['initialization'].current == 'initialized')
             ? 'deinitialized'
             : 'initialized';
     debugPrint(rigStatus.toString());
-    RigStatus.apply(rigStatus);
+    RigStatusMap.apply(rigStatus);
   }
 
   void _toggleCalibrate() {
@@ -495,7 +502,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     Color inactive = Theme.of(context).unselectedWidgetColor;
     Color active = Theme.of(context).buttonColor;
 
-    if (_rigStatus['recording'].value) {
+    if (_rigStatus['recording'].current) {
       recordButton = _buildButtonColumn(widget.width / 4, true, context,
           Icons.pause, 'PAUSE', (data) => widget.recordCallback(_text.text));
     } else {
@@ -537,7 +544,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     ];
 
     Widget initButton;
-    if (_rigStatus['initialization'].value == 'initialized') {
+    if (_rigStatus['initialization'].current == 'initialized') {
       initButton = _buildButtonColumn(
           widget.width / 4,
           _rigStatus['initialization'].mutable,
@@ -556,7 +563,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     }
 
     List<int> camList =
-        Iterable<int>.generate(_rigStatus['camera count'].value).toList();
+        Iterable<int>.generate(_rigStatus['camera count'].current).toList();
 
     return Column(children: [
       SizedBox(
@@ -587,7 +594,8 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                   child: _CalibrationBox(
                       'Intrinsic Calibration',
                       'Determines the undistortion parameters of each camera by collecting images of a calibration board.',
-                      camList)),
+                      camList,
+                      CalibrationType.intrinsic)),
               SizedBox(width: 10),
               Container(
                   // color: Colors.red,
@@ -595,15 +603,17 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                   child: _CalibrationBox(
                       'Top Camera Alignment',
                       'Aligns the top camera to the arena by detecting the location of the fixed calibration markers.',
-                      [0])),
+                      [0],
+                      CalibrationType.extrinsic)),
               SizedBox(width: 10),
               Container(
                   // color: Colors.red,
                   width: 500,
                   child: _CalibrationBox(
                       'Side Camera Alignment',
-                      'Aligns a side camera to the top camera by detecting the location of a mobile calibration board visible to both cameras.',
-                      camList.sublist(1))),
+                      'Aligns a side camera to the top camera by detecting the location of a calibration board visible to both.',
+                      camList.sublist(1),
+                      CalibrationType.extrinsic)),
               SizedBox(width: 10),
             ])),
         // axisAlignment: 1.0,
@@ -620,10 +630,12 @@ Map<String, IconData> icons = {
 };
 
 class _CalibrationBox extends StatelessWidget {
-  _CalibrationBox(this.title, this.subtitle, this.cameraIndex);
+  _CalibrationBox(
+      this.title, this.subtitle, this.cameraIndex, this.calibrationType);
   final String title;
   final String subtitle;
   final List<int> cameraIndex;
+  final CalibrationType calibrationType;
 
   @override
   Widget build(BuildContext context) {
@@ -647,12 +659,18 @@ class _CalibrationBox extends StatelessWidget {
               // physics: ScrollPhysics(),
               itemCount: cameraIndex.length,
               itemBuilder: (context, ind) {
+                RigStatusMap camera = _rigStatus['camera ${ind}'].current;
+                DateTime lastCalibrated = DateTime.fromMillisecondsSinceEpoch(
+                    camera['last ${calibrationType.toString().split(".").last}']
+                            .current *
+                        1000);
                 return ListTile(
                   leading: Icon(Icons.videocam,
                       color: Theme.of(context).primaryColor),
                   title: Text('Camera ${cameraIndex[ind]}',
                       style: TextStyle(color: Theme.of(context).primaryColor)),
-                  subtitle: Text('Last calibrated: xx-xx-xxxx',
+                  subtitle: Text(
+                      'Last calibrated: ${lastCalibrated.year}-${lastCalibrated.month}-${lastCalibrated.day}',
                       style: TextStyle(
                           color: Theme.of(context).unselectedWidgetColor)),
                   // trailing: Icon(Icons.play_arrow),
@@ -671,8 +689,10 @@ class _CalibrationBox extends StatelessWidget {
   }
 }
 
+enum CalibrationType { intrinsic, extrinsic }
+
 void main() async {
-  DynamicRigStatus();
+  RigStatusMap.live();
   await Future.delayed(Duration(seconds: 1));
 
   runApp(MaterialApp(
@@ -690,7 +710,8 @@ void main() async {
                         child: _CalibrationBox(
                             'Intrinsic Calibration',
                             'Determines the undistortion parameters of each camera by collecting images of a calibration board.',
-                            [0, 1, 2, 3])),
+                            [0, 1, 2, 3],
+                            CalibrationType.intrinsic)),
                     SizedBox(width: 10),
                     Container(
                         color: Colors.red,
@@ -698,7 +719,8 @@ void main() async {
                         child: _CalibrationBox(
                             'Top Camera Alignment',
                             'Aligns the top camera to the arena by detecting the location of the fixed calibration markers.',
-                            [0])),
+                            [0],
+                            CalibrationType.extrinsic)),
                     SizedBox(width: 10),
                     Container(
                         color: Colors.red,
@@ -706,6 +728,7 @@ void main() async {
                         child: _CalibrationBox(
                             'Side Camera Alignment',
                             'Aligns a side camera to the top camera by detecting the location of a mobile calibration board visible to both cameras.',
-                            [1, 2, 3])),
+                            [1, 2, 3],
+                            CalibrationType.extrinsic)),
                   ]))))));
 }

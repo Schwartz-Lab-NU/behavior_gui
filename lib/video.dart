@@ -47,19 +47,19 @@ class _VideoStreamState extends State<VideoStream> {
 
     if ((widget.size.width != 0) & (widget.size.height != 0)) {
       ValueNotifier changedAudioSettings = ValueNotifier(null);
-      DynamicRigStatus drs = DynamicRigStatus();
+      RigStatusMap rigStatus = RigStatusMap.live();
 
       Function updateAudio = (_) {
         debugPrint('updating audio settings for axes');
         changedAudioSettings.value = {
-          'fMin': drs['minimum frequency'].value,
-          'fMax': drs['maximum frequency'].value,
-          'isLogScaled': drs['log scaling'].value,
-          'readRate': drs['read rate'].value
+          'fMin': rigStatus['minimum frequency'].current,
+          'fMax': rigStatus['maximum frequency'].current,
+          'isLogScaled': rigStatus['log scaling'].current,
+          'readRate': rigStatus['read rate'].current
         };
       };
       updateAudio(null);
-      DynamicRigStatus.onChange.listen(updateAudio);
+      RigStatusMap.onChange.listen(updateAudio);
 
       _annotater = Annotater(listenable: changedAudioSettings);
     } else {

@@ -6,7 +6,7 @@ import 'videoSection.dart';
 // import 'package:flutter/rendering.dart' show debugPaintSizeEnabled;
 
 void main() {
-  DynamicRigStatusValues();
+  RigStatusMap.live();
   runApp(MaterialApp(
       home: MyApp(),
       theme: ThemeData(
@@ -18,14 +18,15 @@ void main() {
         unselectedWidgetColor: Colors.grey,
       )));
 }
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
         initialData: false,
-        future: DynamicRigStatusValues.initialized.future,
+        future: RigStatusMap.initialized.future,
         builder: (context, snapshot) {
-          if (DynamicRigStatusValues.initialized.isCompleted) {
+          if (RigStatusMap.initialized.isCompleted) {
             return LoadedApp();
           } else {
             return Scaffold(
@@ -53,32 +54,32 @@ class LoadedApp extends StatefulWidget {
 
 class _LoadedAppState extends State<LoadedApp> {
   int _updateCount = 0;
-  DynamicRigStatus _rigStatus = DynamicRigStatus();
+  RigStatusMap _rigStatus = RigStatusMap.live();
   bool _isInitialized;
   final TextEditingController _text = TextEditingController();
 
   @override
   void initState() {
-    _isInitialized = _rigStatus['initialization'].value == 'initialized';
-    DynamicRigStatus.onChange.listen((event) => _handleStateChange());
+    _isInitialized = _rigStatus['initialization'].current == 'initialized';
+    RigStatusMap.onChange.listen((event) => _handleStateChange());
     super.initState();
   }
 
   void _handleStateChange() {
     setState(() {
       _updateCount += 1;
-      _isInitialized = _rigStatus['initialization'].value == 'initialized';
+      _isInitialized = _rigStatus['initialization'].current == 'initialized';
     });
   }
 
   void _toggleRecord(String rootfilename) {
     //we want to update the state of the status list and the notes when the record button is pushed
 
-    RigStatus rigStatus = RigStatus.empty();
-    rigStatus['recording'] = (!_rigStatus['recording'].value);
-    rigStatus['notes'] = _text.text;
-    rigStatus['rootfilename'] = rootfilename;
-    RigStatus.apply(rigStatus);
+    RigStatusMap rigStatus = RigStatusMap();
+    rigStatus['recording'].current = (!_rigStatus['recording'].current);
+    rigStatus['notes'].current = _text.text;
+    rigStatus['rootfilename'].current = rootfilename;
+    RigStatusMap.apply(rigStatus);
     _text.text = '';
   }
 
@@ -118,7 +119,6 @@ class _LoadedAppState extends State<LoadedApp> {
         )
       ],
     );
-
 
     return MaterialApp(
       title: 'Behavior App',
