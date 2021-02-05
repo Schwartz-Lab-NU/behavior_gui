@@ -65,13 +65,35 @@ initialStatus = {  # just an example
                 'category': 'Audio',
                 'current': False,
                 'mutable': True,
+            },
+            'pixel duration': {
+                'category': 'Audio',
+                'current': .0032,
+                'allowedValues': {'min': .001, 'max': .005},
+                'mutable': True,
+            },
+            'pixel fractional overlap': {
+                'category': 'Audio',
+                'current': .675,
+                'allowedValues': {'min': .25, 'max': .75},
+                'mutable': True,
+            },
+            'noise correction': {
+                'category': 'Audio',
+                'current': True,
+                'mutable': True
+            },
+            'default': {
+                'category': 'Audio',
+                'current': True,
+                'mutable': False
             }
         }
     },
     'read rate': {
         'category': 'Audio',
-        'current': 1,
-        'allowedValues': {'min': 1, 'max': 5},
+        'current': 2 ,
+        'allowedValues': {'min': 2, 'max': 5},
         'mutable': False,
     },
     'camera count': {
