@@ -47,19 +47,19 @@ initialStatus = {  # just an example
                 'category': 'Audio',
                 'current': int(1e4),
                 'allowedValues': {'min': int(1e2), 'max': int(4e4)},
-                'mutable': True,
+                'mutable': False, #temporary
             },
             'maximum frequency': {
                 'category': 'Audio',
                 'current': int(5e4),
                 'allowedValues': {'min': int(5e4), 'max': int(1.5e5)},
-                'mutable': True,
+                'mutable': False, #temporary
             },
             'frequency resolution': {
                 'category': 'Audio',
                 'current': int(1e2),
                 'allowedValues': [int(1e2), int(2e2), int(5e2), int(1e3)],
-                'mutable': True,
+                'mutable': False,#temporary
             },
             'displaying': {
                 'category': 'Audio',
@@ -70,13 +70,13 @@ initialStatus = {  # just an example
                 'category': 'Audio',
                 'current': .0032,
                 'allowedValues': {'min': .001, 'max': .005},
-                'mutable': True,
+                'mutable': False, #temporary
             },
             'pixel fractional overlap': {
                 'category': 'Audio',
                 'current': .675,
                 'allowedValues': {'min': .25, 'max': .75},
-                'mutable': True,
+                'mutable': False, #temporary
             },
             'noise correction': {
                 'category': 'Audio',
