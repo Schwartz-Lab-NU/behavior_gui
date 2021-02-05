@@ -139,10 +139,14 @@ def add_header(response):
 @app.route('/video/<int:cam_id>/<string:file_name>')
 @cross_origin()
 def stream(cam_id, file_name):
-  print(f'requested file: {file_name} from video: {cam_id}')
+  # print(f'requested file: {file_name} from video: {cam_id}')
   # if 'm3u8' not in file_name:
   #   print('requested file: ', file_name)
-  vid_dir = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\temp_frames\camera_'+str(cam_id)  # would depend on cam_id
+  if cam_id == 4:
+    vid_dir = r'C: \Users\SchwartzLab\PycharmProjects\bahavior_rig\temp_frames\spectrogram'
+  else:
+    vid_dir = r'C:\Users\SchwartzLab\PycharmProjects\bahavior_rig\temp_frames\camera_' + \
+      str(cam_id)  # would depend on cam_id
   # NOTE: the hls protocol dictates that the client will first request the .m3u8 file, then additional files as needed
   return send_from_directory(directory=vid_dir, filename=file_name)
 
@@ -157,8 +161,8 @@ def stream(cam_id, file_name):
 
 if __name__ == '__main__':
     # ag = AcquisitionGroup(frame_rate=frame_rate, audio_settings=audio_settings)
-    ag.start()
-    ag.run()
-    #Thread(target=socketio.run, args=(appSocket,), kwargs={'port': 5001}).start()
-    app.run(host='localhost', port=5000, debug=False,
-               use_reloader=False)
+  ag.start()
+  ag.run()
+  #Thread(target=socketio.run, args=(appSocket,), kwargs={'port': 5001}).start()
+  app.run(host='localhost', port=5000, debug=False,
+          use_reloader=False)
