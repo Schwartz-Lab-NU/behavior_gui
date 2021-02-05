@@ -44,6 +44,9 @@
         var hls1 = new Hls();
         hls1.attachMedia(video2);
         hls1.on(Hls.Events.MEDIA_ATTACHED, () => console.log('video and hls.js are now bound together!'));
+        hls1.on(Hls.Events.ERROR, (event, data) => {
+         console.log('error on spectrogram!!', event, data);
+        });
         hls1.loadSource('/video/4');
         hls1.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
            console.log('loaded manifest, found ' + data.levels.length + ' quality level(s)');
