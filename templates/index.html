@@ -31,12 +31,30 @@
      <script>
       if (Hls.isSupported()) {
         console.log('hello hls.js!');
-        var video = document.getElementById('player2');
-        var hls = new Hls();
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MEDIA_ATTACHED, () => console.log('video and hls.js are now bound together!'));
-        hls.loadSource('http://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
-        hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+        var video0 = document.getElementById('player0');
+        var hls0 = new Hls();
+        hls0.attachMedia(video0);
+        hls0.on(Hls.Events.MEDIA_ATTACHED, () => console.log('video and hls.js are now bound together!'));
+        hls0.loadSource('/video/0');
+        hls0.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+           console.log('loaded manifest, found ' + data.levels.length + ' quality level(s)');
+        });
+
+        var video1 = document.getElementById('player1');
+        var hls1 = new Hls();
+        hls1.attachMedia(video2);
+        hls1.on(Hls.Events.MEDIA_ATTACHED, () => console.log('video and hls.js are now bound together!'));
+        hls1.loadSource('/video/4');
+        hls1.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+           console.log('loaded manifest, found ' + data.levels.length + ' quality level(s)');
+        });
+
+        var video2 = document.getElementById('player2');
+        var hls2 = new Hls();
+        hls2.attachMedia(video2);
+        hls2.on(Hls.Events.MEDIA_ATTACHED, () => console.log('video and hls.js are now bound together!'));
+        hls2.loadSource('http://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+        hls2.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
            console.log('loaded manifest, found ' + data.levels.length + ' quality level(s)');
         });
       }
