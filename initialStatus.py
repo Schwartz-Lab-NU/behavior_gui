@@ -73,7 +73,7 @@ initialStatus = {  # just an example
         'category': 'Video',
         'mutable': True,
         'current': {
-            'isCalibrating': {
+            'is calibrating': {
                 'category': 'Video',
                 'mutable': True,
                 'current': False
@@ -83,6 +83,12 @@ initialStatus = {  # just an example
                 'mutable': True,
                 'current': 0,
                 'allowedValues': {'min': 0, 'max': 6}
+            },
+            'calibration type': {
+                'category': 'Video',
+                'mutable': True,
+                'current': 'Intrinsic',
+                'allowed': ['Intrinsic', 'Extrinsic']
             }
         }
     }
@@ -93,20 +99,20 @@ for i in range(4):
       'category': 'Video',
       'mutable': True,
       'current': {  # create a nested dict
-          'serialNumber': {
+          'serial number': {
               'category': 'Video',
               'mutable': False,
               # TODO: just an example, obviously we would want to match these on assignment
               'current': f'ID000{i}xxx',
               'allowedValues': [f'ID000{i}xxx' for i in range(4)],
           },
-          'lastIntrinsic': {
+          'last intrinsic': {
               'category': 'Video',
               'mutable': False,
               'current': 0,  # unix timestamp
               'allowedValues': {'min': 0, 'max': int(1e10)}
           },
-          'lastExtrinsic': {
+          'last extrinsic': {
               'category': 'Video',
               'mutable': False,
               'current': 0,  # unix timestamp

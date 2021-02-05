@@ -594,7 +594,8 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                   child: _CalibrationBox(
                       'Intrinsic Calibration',
                       'Determines the undistortion parameters of each camera by collecting images of a calibration board.',
-                      camList)),
+                      camList,
+                      CalibrationType.intrinsic)),
               SizedBox(width: 10),
               Container(
                   // color: Colors.red,
@@ -602,15 +603,17 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                   child: _CalibrationBox(
                       'Top Camera Alignment',
                       'Aligns the top camera to the arena by detecting the location of the fixed calibration markers.',
-                      [0])),
+                      [0],
+                      CalibrationType.extrinsic)),
               SizedBox(width: 10),
               Container(
                   // color: Colors.red,
                   width: 500,
                   child: _CalibrationBox(
                       'Side Camera Alignment',
-                      'Aligns a side camera to the top camera by detecting the location of a mobile calibration board visible to both cameras.',
-                      camList.sublist(1))),
+                      'Aligns a side camera to the top camera by detecting the location of a calibration board visible to both.',
+                      camList.sublist(1),
+                      CalibrationType.extrinsic)),
               SizedBox(width: 10),
             ])),
         // axisAlignment: 1.0,
@@ -627,10 +630,12 @@ Map<String, IconData> icons = {
 };
 
 class _CalibrationBox extends StatelessWidget {
-  _CalibrationBox(this.title, this.subtitle, this.cameraIndex);
+  _CalibrationBox(
+      this.title, this.subtitle, this.cameraIndex, this.calibrationType);
   final String title;
   final String subtitle;
   final List<int> cameraIndex;
+  final CalibrationType calibrationType;
 
   @override
   Widget build(BuildContext context) {
@@ -654,12 +659,18 @@ class _CalibrationBox extends StatelessWidget {
               // physics: ScrollPhysics(),
               itemCount: cameraIndex.length,
               itemBuilder: (context, ind) {
+                RigStatusMap camera = _rigStatus['camera ${ind}'].current;
+                DateTime lastCalibrated = DateTime.fromMillisecondsSinceEpoch(
+                    camera['last ${calibrationType.toString().split(".").last}']
+                            .current *
+                        1000);
                 return ListTile(
                   leading: Icon(Icons.videocam,
                       color: Theme.of(context).primaryColor),
                   title: Text('Camera ${cameraIndex[ind]}',
                       style: TextStyle(color: Theme.of(context).primaryColor)),
-                  subtitle: Text('Last calibrated: xx-xx-xxxx',
+                  subtitle: Text(
+                      'Last calibrated: ${lastCalibrated.year}-${lastCalibrated.month}-${lastCalibrated.day}',
                       style: TextStyle(
                           color: Theme.of(context).unselectedWidgetColor)),
                   // trailing: Icon(Icons.play_arrow),
@@ -677,6 +688,8 @@ class _CalibrationBox extends StatelessWidget {
     );
   }
 }
+
+enum CalibrationType { intrinsic, extrinsic }
 
 void main() async {
   RigStatusMap.live();
@@ -697,7 +710,8 @@ void main() async {
                         child: _CalibrationBox(
                             'Intrinsic Calibration',
                             'Determines the undistortion parameters of each camera by collecting images of a calibration board.',
-                            [0, 1, 2, 3])),
+                            [0, 1, 2, 3],
+                            CalibrationType.intrinsic)),
                     SizedBox(width: 10),
                     Container(
                         color: Colors.red,
@@ -705,7 +719,8 @@ void main() async {
                         child: _CalibrationBox(
                             'Top Camera Alignment',
                             'Aligns the top camera to the arena by detecting the location of the fixed calibration markers.',
-                            [0])),
+                            [0],
+                            CalibrationType.extrinsic)),
                     SizedBox(width: 10),
                     Container(
                         color: Colors.red,
@@ -713,6 +728,7 @@ void main() async {
                         child: _CalibrationBox(
                             'Side Camera Alignment',
                             'Aligns a side camera to the top camera by detecting the location of a mobile calibration board visible to both cameras.',
-                            [1, 2, 3])),
+                            [1, 2, 3],
+                            CalibrationType.extrinsic)),
                   ]))))));
 }
