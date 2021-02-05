@@ -5,16 +5,16 @@ initialStatus = {  # just an example
         'current': 'uninitialized',
         'mutable': True,
     },
-    'notes': {
-        'allowedValues': [],  # allows anything
-        'category': 'Acquisition',
-        'current': '',  # string
-        'mutable': True,
-    },
     'rootfilename': {
         'allowedValues': [],
         'category': 'Acquisition',
         'current': '',
+        'mutable': True,
+    },
+    'notes': {
+        'allowedValues': [],  # allows anything
+        'category': 'Acquisition',
+        'current': '',  # string
         'mutable': True,
     },
     'sample frequency': {
