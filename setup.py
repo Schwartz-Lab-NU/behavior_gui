@@ -1,7 +1,7 @@
 # import testDefs
 # import AcquisitionGroup
 # from utils.audio_settings import audio_settings
-from initialStatus import initialStatus
+from behavior_gui.initialStatus import initialStatus
 
 global status
 global ag
@@ -100,6 +100,7 @@ class RigStatusValue:
 
 class RigStatus(dict):
   def __init__(self, status):
+    super().__init__()
     self._status = {k: RigStatusValue(v) for k, v in status.items()}
 
   def __getitem__(self, key):
