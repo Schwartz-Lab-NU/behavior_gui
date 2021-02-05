@@ -1,6 +1,5 @@
-# import testDefs
-# import AcquisitionGroup
-# from utils.audio_settings import audio_settings
+from AcquisitionGroup import AcquisitionGroup
+from utils.audio_settings import audio_settings
 from behavior_gui.initialStatus import initialStatus
 
 global status
@@ -12,22 +11,18 @@ global printToGUI  # TODO: should be defined in socketApp.py??
 global annotationsToGUI  # TODO: should be defined in socketApp.py??
 # will look something like socketio.emit("annotation", {"streamId":0, "data": [ {"rectangle":[(p0x, p0y), ..., (p3x, p3y)]}, ... ]})
 
-# status = testDefs.initialStatus
-# ag = AcquisitionGroup.AcquisitionGroup(frame_rate=30,audio_settings=audio_settings)
+# class FakeAcqGroup:
+#   def __init__(self):
+#     self.running = False
 
+#   def stop(self):
+#     self.running = False
 
-class FakeAcqGroup:
-  def __init__(self):
-    self.running = False
+#   def start(self):
+#     pass
 
-  def stop(self):
-    self.running = False
-
-  def start(self):
-    pass
-
-  def run(self):
-    self.running = True
+#   def run(self):
+#     self.running = True
 
 
 class RigStatusValue:
@@ -118,5 +113,6 @@ class RigStatus(dict):
     return {k: v.update for k, v in self._status.items()}
 
 
-ag = FakeAcqGroup()
 status = RigStatus(initialStatus)
+# TODO: set these settings in initialStatus!!!
+ag = AcquisitionGroup(frame_rate=15, audio_settings=audio_settings)

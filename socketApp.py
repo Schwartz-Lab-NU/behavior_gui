@@ -1,8 +1,8 @@
 from flask import Flask
 from flask_socketio import SocketIO, emit
 
-from setup import status, ag
-from httpServer import bgthread
+from behavior_gui.setup import status, ag
+# from httpServer import bgthread
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins='*', async_mode='eventlet')

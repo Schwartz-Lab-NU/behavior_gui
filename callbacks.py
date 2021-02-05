@@ -1,4 +1,4 @@
-from setup import ag, status
+from behavior_gui.setup import ag, status
 # from initialStatus import status
 
 

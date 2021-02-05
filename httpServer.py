@@ -13,8 +13,6 @@ from flask_cors import CORS, cross_origin
 import logging
 
 from behavior_gui.setup import status
-from AcquisitionGroup import AcquisitionGroup
-from utils.audio_settings import audio_settings
 
 
 app = Flask(__name__)
@@ -158,7 +156,7 @@ def stream(cam_id, file_name):
 #           use_reloader=False)
 
 if __name__ == '__main__':
-    ag = AcquisitionGroup(frame_rate=frame_rate, audio_settings=audio_settings)
+    # ag = AcquisitionGroup(frame_rate=frame_rate, audio_settings=audio_settings)
     ag.start()
     ag.run()
     #Thread(target=socketio.run, args=(appSocket,), kwargs={'port': 5001}).start()
