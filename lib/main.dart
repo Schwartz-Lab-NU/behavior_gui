@@ -76,9 +76,9 @@ class _LoadedAppState extends State<LoadedApp> {
     //we want to update the state of the status list and the notes when the record button is pushed
 
     RigStatusMap rigStatus = RigStatusMap();
-    rigStatus['recording'].current = (!_rigStatus['recording'].current);
-    rigStatus['notes'].current = _text.text;
     rigStatus['rootfilename'].current = rootfilename;
+    rigStatus['notes'].current = _text.text;
+    rigStatus['recording'].current = (!_rigStatus['recording'].current);
     RigStatusMap.apply(rigStatus);
     _text.text = '';
   }
