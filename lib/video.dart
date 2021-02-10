@@ -163,13 +163,14 @@ class _VideoStreamState extends State<VideoStream> {
           foregroundPainter: _annotater,
           // width: 100,
           // height: 100,
-          child: Stack(children: [
-            Transform(
-                origin: Offset(_size.width / 2, _size.height / 2),
-                transform: _rescale,
-                child: PlayerView(_controller))
-          ]));
-      // child: PlayerView(_controller));
+          // child: Stack(children: [
+          //   Transform(
+          //       origin: Offset(_size.width / 2, _size.height / 2),
+          //       transform: _rescale,
+          //       child: PlayerView(_controller))
+          // ]));
+          child:
+              AspectRatio(aspectRatio: 1.25, child: PlayerView(_controller)));
     } else if (widget.visible) {
       child = Center(child: CircularProgressIndicator());
     } else {
