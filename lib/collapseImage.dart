@@ -9,7 +9,7 @@ import 'video.dart';
 class CollapsibleImageList extends StatelessWidget {
   final Size size;
   final Axis axis;
-  final List<String> images;
+  final List<int> images;
   final String Function(int) titleFn;
   final bool Function(int) visible;
   final void Function(bool, int) callbacks;
@@ -45,7 +45,7 @@ class CollapsibleImageList extends StatelessWidget {
 class CollapsibleImage extends StatefulWidget {
   // final Widget child;
   final String title;
-  final String src;
+  final int src;
   final Size size;
   final Axis axis;
   final bool visible;
@@ -221,8 +221,8 @@ void main() async {
                   height: 300,
                   child: CollapsibleImage(
                     //
-                    size: Size(800, 300),
-                    src: 'http://localhost:5000/video/0/stream.m3u8',
+                    size: Size(800, 0),
+                    src: 0,
                     title: 'Top Camera',
                     axis: Axis.horizontal,
                   ) //
