@@ -50,6 +50,7 @@ def spectrogram(state):
   print(f'applying new status from state: {state}')
   ag.nidaq.parse_settings(status['spectrogram'].current)
   #TODO: trying to update _nx or _nfft will cause an error
+  #status['spectrogram'].current['port number'] = ag.nidaq.port
   #that means we can only update log scaling and noise correction
 
 status['spectrogram'].callback(spectrogram)

@@ -284,7 +284,7 @@ int SocketTexture::update() {
 
     for (size_t i = 0; i < size_raw_; i++) {
         char v = *buffer;
-        *(pix++) = ((uint32_t)v << 16) + ((uint32_t)v << 8) + v + 0xFF000000;
+        *(pix++) = ((uint32_t)v << 16) + ((uint32_t)v << 8) + v + 0xFF000000; //0xFF555555
         // *(pix++) = 0xFF000000 + ((i % 256) << 16) + (((2 * i) % 256) << 8) +
         //            (((4 * i) % 256) << 0);
         buffer++;
