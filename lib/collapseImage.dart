@@ -219,13 +219,22 @@ void main() async {
               body: SizedBox(
                   width: 800,
                   height: 300,
-                  child: CollapsibleImage(
-                    //
-                    size: Size(800, 0),
-                    src: 0,
-                    title: 'Top Camera',
-                    axis: Axis.horizontal,
-                  ) //
+                  child: CollapsibleImageList(
+                      size: Size(800, 0),
+                      visible: (i) => true,
+                      images: [0, 0, 0],
+                      titleFn: (i) => 'camera $i',
+                      axis: Axis.horizontal,
+                      callbacks: (exp, res) => print('expanded? $exp $res'))
+                  // child: CollapsibleImage(
+                  //   //
+                  //   visible: true,
+                  //   size: Size(800, 0),
+                  //   src: 0,
+                  //   title: 'Top Camera',
+                  //   axis: Axis.horizontal,
+                  //   callback: (res) => print('expanded? $res'),
+                  // ) //
                   ) //
               ) //
           ));
