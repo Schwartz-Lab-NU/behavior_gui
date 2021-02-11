@@ -7,16 +7,18 @@ import 'package:flutter/material.dart';
 import 'video.dart';
 
 class CollapsibleImageList extends StatelessWidget {
-  final Size size;
+  final Size Function(int) sizes;
   final Axis axis;
-  final List<int> images;
+  final int numImages;
+  final int Function(int) images;
   final String Function(int) titleFn;
   final bool Function(int) visible;
   final void Function(bool, int) callbacks;
   CollapsibleImageList(
-      {this.size,
+      {@required this.sizes,
+      this.numImages = 1,
       this.visible = _evalTrue,
-      this.images,
+      @required this.images,
       this.titleFn,
       this.axis = Axis.horizontal,
       this.callbacks});
@@ -29,11 +31,12 @@ class CollapsibleImageList extends StatelessWidget {
         // shrinkWrap: false,
         shrinkWrap: true,
         scrollDirection: this.axis,
-        itemCount: images.length,
+        itemCount: numImages,
         itemBuilder: (context, i) {
           return CollapsibleImage(
+              size: this.sizes(i),
               title: this.titleFn(i),
-              src: this.images[i],
+              src: this.images(i),
               visible: this.visible(i),
               axis: this.axis,
               callback: (visible) => this.callbacks(visible, i));
@@ -50,6 +53,7 @@ class CollapsibleImage extends StatefulWidget {
   final void Function(bool) callback;
   final bool startExpanded;
   final Size size;
+  final bool audio;
   CollapsibleImage(
       {@required this.src,
       @required this.size,
@@ -57,7 +61,8 @@ class CollapsibleImage extends StatefulWidget {
       this.title,
       this.axis = Axis.horizontal,
       this.callback,
-      this.startExpanded = false});
+      this.startExpanded = false,
+      this.audio = false});
 
   @override
   _CollapsibleImageState createState() => _CollapsibleImageState();
@@ -131,7 +136,11 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
             child: SizedBox(
                 width: widget.size.width == 0 ? null : widget.size.width,
                 height: widget.size.height == 0 ? null : widget.size.height,
-                child: VideoStream(widget.src, visible)),
+                child: VideoStream(
+                  widget.src,
+                  visible,
+                  audio: widget.audio,
+                )),
             callback: doneAnimation,
             //
           ),
@@ -234,47 +243,22 @@ class _ExpandedImageState extends State<ExpandedImage>
 }
 
 void main() async {
-  // DynamicRigStatus();
-  // await Future.delayed(Duration(milliseconds: 500));
-
   runApp(
       //
       MaterialApp(
           //
           home: Scaffold(
               body: SizedBox(
-                  width: 800,
+                  // width: 800,
                   height: 300,
-                  // child: CollapsibleImageList(
-                  //     size: Size(800, 0),
-                  //     visible: (i) => true,
-                  //     images: [0, 0, 0],
-                  //     titleFn: (i) => 'camera $i',
-                  //     axis: Axis.horizontal,
-                  //     callbacks: (exp, res) => print('expanded? $exp $res'))
-                  child: Row(
-                    children: [
-                      CollapsibleImage(
-                          //
-                          visible: true,
-                          src: 0,
-                          title: 'Top Camera',
-                          axis: Axis.horizontal,
-                          callback: (res) => print('expanded? $res'),
-                          startExpanded: false,
-                          size: Size(375, 0)),
-                      CollapsibleImage(
-                          //
-                          visible: true,
-                          src: 0,
-                          title: 'Top Camera',
-                          axis: Axis.horizontal,
-                          callback: (res) => print('expanded? $res'),
-                          startExpanded: false,
-                          size: Size(375, 0)),
-                      Expanded(child: Container()),
-                    ],
-                  )) //
+                  child: CollapsibleImageList(
+                      numImages: 5,
+                      sizes: (i) => Size(375, 0),
+                      visible: (i) => true,
+                      images: (i) => 0,
+                      titleFn: (i) => 'camera $i',
+                      axis: Axis.horizontal,
+                      callbacks: (exp, res) => print('expanded? $exp $res'))) //
               ) //
           ));
 }
