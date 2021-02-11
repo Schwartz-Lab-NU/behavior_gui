@@ -48,7 +48,6 @@ class VideoSection extends StatelessWidget {
             // StreamingImage(0),
             CollapsibleImage(
               visible: visible && displaying[0],
-              size: Size(0, height),
               src: 0,
               title: 'Top Camera',
               axis: Axis.horizontal,
@@ -74,7 +73,6 @@ class VideoSection extends StatelessWidget {
                           (BuildContext context, BoxConstraints constraints) {
                     return CollapsibleImage(
                       visible: visible && displaying[4],
-                      size: Size(constraints.maxWidth, heightLower),
                       src: 4,
                       title: 'Audio Spectrogram',
                       axis: Axis.horizontal,

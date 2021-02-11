@@ -437,7 +437,6 @@ void WindowsTextureTestPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
     const std::string &method_name = method_call.method_name();
-    std::wcout << "Got method call: " << method_name.c_str() << std::endl;
 
     if (method_name.compare("clearedinitialize") == 0) {
         uint16_t *args = (uint16_t *)method_call.arguments();
@@ -451,7 +450,6 @@ void WindowsTextureTestPlugin::HandleMethodCall(
 
     } else if (method_name.compare("play") == 0) {
         int64_t *texture_id = (int64_t *)method_call.arguments();
-        std::wcout << "Requested to play texture " << *texture_id << std::endl;
 
         auto response = flutter::EncodableValue(flutter::EncodableMap{
             {flutter::EncodableValue("playing"), flutter::EncodableValue(NULL)},
@@ -460,16 +458,12 @@ void WindowsTextureTestPlugin::HandleMethodCall(
             // for (TextureItem texture : textures_) {
             // TextureItem texture = textures_[i];
             if (textures_[i].texture_id == *texture_id) {
-                std::wcout << "Identified texture with "
-                           << textures_[i].listener_count << " listeners."
-                           << std::endl;
                 textures_[i].listener_count += 1;
 
                 if (!textures_[i].runner->joinable()) {
                     delete textures_[i].runner;
                     textures_[i].socket->connect();
                     textures_[i].runner = new std::thread([this, i]() {
-                        std::wcout << "Starting thread." << std::endl;
                         bool running = true;
                         while (running) {
                             running = (textures_[i].socket->update() > 0) &&
@@ -477,21 +471,13 @@ void WindowsTextureTestPlugin::HandleMethodCall(
                             registrar_->MarkTextureFrameAvailable(
                                 textures_[i].texture_id);
                         }
-                        std::wcout << "Thread for texture #"
-                                   << textures_[i].texture_id
-                                   << " is done executing." << std::endl;
                     });
-                } else {
-                    std::wcout << "Runner was joinable, so presumed running."
-                               << std::endl;
                 }
 
                 response = flutter::EncodableValue(flutter::EncodableMap{
                     {flutter::EncodableValue("playing"),
                      flutter::EncodableValue(true)},
                 });
-                std::wcout << "Texture now has " << textures_[i].listener_count
-                           << " listeners." << std::endl;
                 break;
             }
         }
@@ -505,10 +491,6 @@ void WindowsTextureTestPlugin::HandleMethodCall(
 
         for (size_t i = 0; i < textures_.size(); i++) {
             if (textures_[i].texture_id == *texture_id) {
-                std::wcout << "Identified texture with "
-                           << textures_[i].listener_count << " listeners."
-                           << std::endl;
-
                 if (textures_[i].listener_count > 1) {
                     textures_[i].listener_count -= 1;
                 } else if (textures_[i].listener_count == 1) {
@@ -520,9 +502,6 @@ void WindowsTextureTestPlugin::HandleMethodCall(
                 response = flutter::EncodableValue(
                     flutter::EncodableMap{{flutter::EncodableValue("playing"),
                                            flutter::EncodableValue(false)}});
-
-                std::wcout << "Texture now has " << textures_[i].listener_count
-                           << " listeners." << std::endl;
                 break;
             }
         }
