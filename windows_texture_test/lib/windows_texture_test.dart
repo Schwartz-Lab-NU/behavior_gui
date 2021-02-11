@@ -27,8 +27,11 @@ class PlayerValue {
 
 class PlayerController extends ValueNotifier<PlayerValue> {
   late Completer<void> _creatingCompleter;
+  static final Completer<void> _disposingCompleter = Completer<void>();
+  static final Completer<void> _disposedCompleter = Completer<void>();
   int _textureId = 0;
   bool _isDisposed = false;
+  bool playing = false; //TODO: this should live on PlayerValue?
 
   PlayerController() : super(PlayerValue.uninitialized());
 
@@ -38,6 +41,16 @@ class PlayerController extends ValueNotifier<PlayerValue> {
     }
     try {
       _creatingCompleter = Completer<void>();
+
+      if (!_disposingCompleter.isCompleted) {
+        _disposingCompleter.complete();
+        debugPrint('Calling dispose from init');
+        //inform plugin that we've reset the state and can no longer guarantee which players are visible
+        await _channel.invokeMapMethod<String, dynamic>('dispose');
+        _disposedCompleter.complete();
+      }
+
+      await _disposedCompleter.future;
 
       final reply = await _channel.invokeMapMethod<String, dynamic>(
           'initialize', (port << 32) + (width << 16) + height);
@@ -50,6 +63,46 @@ class PlayerController extends ValueNotifier<PlayerValue> {
 
     _creatingCompleter.complete();
     return _creatingCompleter.future;
+  }
+
+  Future<void> play() async {
+    debugPrint(
+        'attempting to play. isDisposed: $_isDisposed. isInit: ${value.isInitialized}');
+    if (_isDisposed || !value.isInitialized) return Future<void>.value();
+
+    Completer<void> completer = Completer<void>();
+    try {
+      final reply =
+          await _channel.invokeMapMethod<String, dynamic>('play', _textureId);
+      debugPrint('awaited method');
+      if (reply != null) {
+        playing = reply['playing'];
+      }
+    } on PlatformException catch (e) {}
+    completer.complete();
+    return completer.future;
+  }
+
+  Future<void> pause() async {
+    if (_isDisposed || !value.isInitialized) return Future<void>.value();
+    Completer<void> completer = Completer<void>();
+    try {
+      final reply =
+          await _channel.invokeMapMethod<String, dynamic>('pause', _textureId);
+      if (reply != null) {
+        playing = reply['playing'];
+      }
+    } on PlatformException catch (e) {}
+    completer.complete();
+    return completer.future;
+  }
+
+  @override
+  void dispose() {
+    print('Disposing of player controller');
+    if (!_isDisposed && value.isInitialized)
+      _channel.invokeMapMethod<String, dynamic>('dispose');
+    super.dispose();
   }
 }
 

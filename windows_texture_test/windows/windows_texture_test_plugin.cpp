@@ -214,23 +214,27 @@ class SocketTexture {
     const FlutterDesktopPixelBuffer *CopyPixelBuffer(size_t width,
                                                      size_t height);
     int update();
+    void connect();
+    void disconnect();
 
    private:
     std::unique_ptr<FlutterDesktopPixelBuffer> buffer1_;
     std::unique_ptr<FlutterDesktopPixelBuffer> buffer2_;
     std::unique_ptr<uint8_t> pixels1_;
     std::unique_ptr<uint8_t> pixels2_;
+    uint16_t port;
     size_t request_count_ = 0;
     size_t recv_count_ = 0;
     size_t size_raw_;
     size_t size_;
     WSASession session_;
     // UDPSocket socket_;
-    std::unique_ptr<TCPSocket> socket_;
+    TCPSocket *socket_ = NULL;
     std::unique_ptr<char> socket_buffer_;
 };
 
-SocketTexture::SocketTexture(size_t width, size_t height, uint16_t port) {
+SocketTexture::SocketTexture(size_t width, size_t height, uint16_t port)
+    : port(port) {
     std::wcout << "Creating socket texture object." << std::endl;
     size_raw_ = width * height;
     size_ = size_raw_ * 4;
@@ -251,10 +255,21 @@ SocketTexture::SocketTexture(size_t width, size_t height, uint16_t port) {
     FillBlack(buffer1_.get());
     FillBlack(buffer2_.get());
 
-    socket_.reset(new TCPSocket(L"127.0.0.1", port));
+    // socket_.reset(new TCPSocket(L"127.0.0.1", port));
     socket_buffer_.reset(new char[size_raw_]);
     // socket_.SendTo(_T("127.0.0.1"), 5002, "listening", 9);
 }
+
+void SocketTexture::connect() {
+    disconnect();
+    socket_ = new TCPSocket(L"127.0.0.1", port);
+}
+void SocketTexture::disconnect() {
+    if (socket_ != NULL) {
+        delete socket_;
+        socket_ = NULL;
+    }
+};
 
 const FlutterDesktopPixelBuffer *SocketTexture::CopyPixelBuffer(size_t width,
                                                                 size_t height) {
@@ -297,6 +312,7 @@ int SocketTexture::update() {
 
 SocketTexture::~SocketTexture() {
     // TODO: this seems to be sent out of order
+    disconnect();
     // socket_.SendTo(_T("127.0.0.1"), 5002, "done", 4);
 }
 
@@ -314,14 +330,21 @@ class WindowsTextureTestPlugin : public flutter::Plugin {
     void HandleMethodCall(
         const flutter::MethodCall<flutter::EncodableValue> &method_call,
         std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+    void initialize(
+        uint16_t width, uint16_t height, uint16_t port,
+        std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+    void clearTextures();
 
     flutter::TextureRegistrar *registrar_;
     // std::unique_ptr<flutter::TextureVariant> texture_;
     // std::unique_ptr<SocketTexture> socket_texture_;
+   public:
     struct TextureItem {
         flutter::TextureVariant *texture;
         SocketTexture *socket;
+        std::thread *runner;
         int64_t texture_id;
+        int listener_count;
         uint16_t width, height, port;
     };
     std::vector<TextureItem> textures_;
@@ -352,12 +375,62 @@ WindowsTextureTestPlugin::WindowsTextureTestPlugin(
     flutter::TextureRegistrar *registrar)
     : registrar_(registrar) {}
 
-WindowsTextureTestPlugin::~WindowsTextureTestPlugin() {
-    for (auto texture : textures_) {
-        delete texture.texture;
-        delete texture.socket;
+WindowsTextureTestPlugin::~WindowsTextureTestPlugin() { clearTextures(); }
+
+void WindowsTextureTestPlugin::clearTextures() {
+    std::wcout << "Clearing textures" << std::endl;
+    for (auto texture = textures_.begin(); texture < textures_.end();
+         texture++) {
+        texture->listener_count = 0;
+
+        if (texture->runner->joinable()) texture->runner->join();
+        delete texture->runner;
+        delete texture->texture;
+        delete texture->socket;
     }
     textures_.clear();
+}
+
+void WindowsTextureTestPlugin::initialize(
+    uint16_t width, uint16_t height, uint16_t port,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+    // check if texture already exists
+    for (auto texture = textures_.begin(); texture < textures_.end();
+         texture++) {
+        if (texture->port == port) {
+            std::wcout << "Texture already exists as #" << texture->texture_id
+                       << std::endl;
+            // python should guarantee that the texture height and width are the
+            // same
+            auto response = flutter::EncodableValue(flutter::EncodableMap{
+                {flutter::EncodableValue("textureId"),
+                 flutter::EncodableValue(texture->texture_id)},
+            });
+            result->Success(response);
+            return;
+        }
+    }
+
+    TextureItem texture;
+    texture.width = width;
+    texture.height = height;
+    texture.port = port;
+    texture.listener_count = 0;
+    texture.socket = new SocketTexture(width, height, port);
+    texture.texture = new flutter::TextureVariant(flutter::PixelBufferTexture(
+        [texture](size_t width,
+                  size_t height) -> const FlutterDesktopPixelBuffer * {
+            return texture.socket->CopyPixelBuffer(width, height);
+        }));
+    texture.runner = new std::thread();
+    texture.texture_id = registrar_->RegisterTexture(texture.texture);
+
+    auto response = flutter::EncodableValue(flutter::EncodableMap{
+        {flutter::EncodableValue("textureId"),
+         flutter::EncodableValue(texture.texture_id)},
+    });
+    textures_.push_back(texture);
+    result->Success(response);
 }
 
 void WindowsTextureTestPlugin::HandleMethodCall(
@@ -366,41 +439,98 @@ void WindowsTextureTestPlugin::HandleMethodCall(
     const std::string &method_name = method_call.method_name();
     std::wcout << "Got method call: " << method_name.c_str() << std::endl;
 
-    if (method_name.compare("initialize") == 0) {
+    if (method_name.compare("clearedinitialize") == 0) {
         uint16_t *args = (uint16_t *)method_call.arguments();
 
-        // TODO: parse args against existing SocketTextures. if already exists,
-        // just return the existing texture_id
-        TextureItem texture;
-        texture.width = args[0];
-        texture.height = args[1];
-        texture.port = args[2];
-        texture.socket = new SocketTexture(args[0], args[1], args[2]);
-        texture.texture =
-            new flutter::TextureVariant(flutter::PixelBufferTexture(
-                [texture](size_t width,
-                          size_t height) -> const FlutterDesktopPixelBuffer * {
-                    return texture.socket->CopyPixelBuffer(width, height);
-                }));
+        clearTextures();
+        initialize(args[0], args[1], args[2], std::move(result));
 
-        texture.texture_id = registrar_->RegisterTexture(texture.texture);
+    } else if (method_name.compare("initialize") == 0) {
+        uint16_t *args = (uint16_t *)method_call.arguments();
+        initialize(args[0], args[1], args[2], std::move(result));
+
+    } else if (method_name.compare("play") == 0) {
+        int64_t *texture_id = (int64_t *)method_call.arguments();
+        std::wcout << "Requested to play texture " << *texture_id << std::endl;
 
         auto response = flutter::EncodableValue(flutter::EncodableMap{
-            {flutter::EncodableValue("textureId"),
-             flutter::EncodableValue(texture.texture_id)},
+            {flutter::EncodableValue("playing"), flutter::EncodableValue(NULL)},
         });
+        for (size_t i = 0; i < textures_.size(); i++) {
+            // for (TextureItem texture : textures_) {
+            // TextureItem texture = textures_[i];
+            if (textures_[i].texture_id == *texture_id) {
+                std::wcout << "Identified texture with "
+                           << textures_[i].listener_count << " listeners."
+                           << std::endl;
+                textures_[i].listener_count += 1;
+
+                if (!textures_[i].runner->joinable()) {
+                    delete textures_[i].runner;
+                    textures_[i].socket->connect();
+                    textures_[i].runner = new std::thread([this, i]() {
+                        std::wcout << "Starting thread." << std::endl;
+                        bool running = true;
+                        while (running) {
+                            running = (textures_[i].socket->update() > 0) &&
+                                      (textures_[i].listener_count > 0);
+                            registrar_->MarkTextureFrameAvailable(
+                                textures_[i].texture_id);
+                        }
+                        std::wcout << "Thread for texture #"
+                                   << textures_[i].texture_id
+                                   << " is done executing." << std::endl;
+                    });
+                } else {
+                    std::wcout << "Runner was joinable, so presumed running."
+                               << std::endl;
+                }
+
+                response = flutter::EncodableValue(flutter::EncodableMap{
+                    {flutter::EncodableValue("playing"),
+                     flutter::EncodableValue(true)},
+                });
+                std::wcout << "Texture now has " << textures_[i].listener_count
+                           << " listeners." << std::endl;
+                break;
+            }
+        }
         result->Success(response);
 
-        // Update the texture @ 10 Hz
-        // TODO: move this to other method name
-        // Setting this to 60 Hz might cause epileptic shocks :D
-        StartTimer(1000 / 20, [this, texture]() {
-            int ret = texture.socket->update();
-            registrar_->MarkTextureFrameAvailable(texture.texture_id);
-            return ret;
+    } else if (method_name.compare("pause") == 0) {
+        int64_t *texture_id = (int64_t *)method_call.arguments();
+        auto response = flutter::EncodableValue(flutter::EncodableMap{
+            {flutter::EncodableValue("playing"), flutter::EncodableValue(NULL)},
         });
-        textures_.push_back(texture);
 
+        for (size_t i = 0; i < textures_.size(); i++) {
+            if (textures_[i].texture_id == *texture_id) {
+                std::wcout << "Identified texture with "
+                           << textures_[i].listener_count << " listeners."
+                           << std::endl;
+
+                if (textures_[i].listener_count > 1) {
+                    textures_[i].listener_count -= 1;
+                } else if (textures_[i].listener_count == 1) {
+                    textures_[i].listener_count = 0;
+                    textures_[i].runner->join();
+                    textures_[i].socket->disconnect();
+                }
+
+                response = flutter::EncodableValue(
+                    flutter::EncodableMap{{flutter::EncodableValue("playing"),
+                                           flutter::EncodableValue(false)}});
+
+                std::wcout << "Texture now has " << textures_[i].listener_count
+                           << " listeners." << std::endl;
+                break;
+            }
+        }
+        result->Success(response);
+
+    } else if (method_name.compare("dispose") == 0) {
+        clearTextures();
+        result->Success();
     } else {
         std::wcout << "Not implemented method: " << method_name.c_str()
                    << std::endl;
