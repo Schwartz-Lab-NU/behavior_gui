@@ -71,7 +71,7 @@ initialStatus = {  # just an example
                 'current': 5002,
                 'mutable': False,
                 'allowedValues': {'min': 5002, 'max': 5100}
-            }
+            },
             'pixel duration': {
                 'category': 'Audio',
                 'current': .0032,
