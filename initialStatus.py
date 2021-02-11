@@ -166,7 +166,7 @@ for i in range(4):
           },
           'aspect ratio': {
               'category': 'Video',
-              'current': 1.25
+              'current': 1.25,
               'mutable': False,
               'allowedValues': [1.25]
           }
