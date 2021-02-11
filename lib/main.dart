@@ -83,18 +83,18 @@ class _LoadedAppState extends State<LoadedApp> {
     _text.text = '';
   }
 
-  void _toggleVideo(bool visible, int index) {
-    debugPrint(
-        'Attempting to make camera $index ${visible ? "visible" : "invisible"}');
-    RigStatusMap rigStatus = RigStatusMap();
-    if (index == 4) {
-      //TODO: don't love this
-      rigStatus['spectrogram'].current['displaying'].current = visible;
-    } else {
-      rigStatus['camera $index'].current['displaying'].current = visible;
-    }
-    RigStatusMap.apply(rigStatus);
-  }
+  // void _toggleVideo(bool visible, int index) {
+  //   debugPrint(
+  //       'Attempting to make camera $index ${visible ? "visible" : "invisible"}');
+  //   RigStatusMap rigStatus = RigStatusMap();
+  //   if (index == 4) {
+  //     //TODO: don't love this
+  //     rigStatus['spectrogram'].current['displaying'].current = visible;
+  //   } else {
+  //     rigStatus['camera $index'].current['displaying'].current = visible;
+  //   }
+  //   RigStatusMap.apply(rigStatus);
+  // }
 
   @override
   void dispose() {
@@ -133,13 +133,16 @@ class _LoadedAppState extends State<LoadedApp> {
       ],
     );
 
-    List<bool> displaying = List<int>.generate(4, (i) => i)
-        .map<bool>((index) =>
-            _rigStatus['camera $index'].current['displaying'].current)
-        .toList();
-    displaying.add(_rigStatus['spectrogram'].current['displaying'].current);
+    // List<bool> displaying = List<int>.generate(4, (i) => i)
+    //     .map<bool>((index) =>
+    //         _rigStatus['camera $index'].current['displaying'].current)
+    //     .toList();
+    // displaying.add(_rigStatus['spectrogram'].current['displaying'].current);
 
-    List<int> serialNumbers = List<int>.generate(4, (i) => i).map<int>((index) => _rigStatus['camera $index'].current['serial number'].current).toList();
+    // List<int> serialNumbers = List<int>.generate(4, (i) => i)
+    //     .map<int>((index) =>
+    //         _rigStatus['camera $index'].current['serial number'].current)
+    //     .toList();
 
     return MaterialApp(
       title: 'Behavior App',
@@ -150,7 +153,7 @@ class _LoadedAppState extends State<LoadedApp> {
           children: [
             StatusBar(mainWidth, recordCallback: _toggleRecord),
             VideoSection(_isInitialized, mediaSize.width, mainHeight, padding,
-                subHeight, audioHeight, _toggleVideo, displaying, serialNumbers),
+                subHeight, audioHeight, _rigStatus),
             SizedBox(
                 height: 30,
                 width: mediaSize.width - 20,

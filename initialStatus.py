@@ -59,24 +59,30 @@ initialStatus = {  # just an example
                 'category': 'Audio',
                 'current': int(1e2),
                 'allowedValues': [int(1e2), int(2e2), int(5e2), int(1e3)],
-                'mutable': False,#temporary
+                'mutable': False,  # temporary
             },
-            'displaying': {
+            # 'displaying': {
+            #     'category': 'Audio',
+            #     'current': False,
+            #     'mutable': True,
+            # },
+            'port': {
                 'category': 'Audio',
-                'current': False,
-                'mutable': True,
-            },
+                'current': 5002,
+                'mutable': False,
+                'allowedValues': {'min': 5002, 'max': 5100}
+            }
             'pixel duration': {
                 'category': 'Audio',
                 'current': .0032,
                 'allowedValues': {'min': .001, 'max': .005},
-                'mutable': False, #temporary
+                'mutable': False,  # temporary
             },
             'pixel fractional overlap': {
                 'category': 'Audio',
                 'current': .675,
                 'allowedValues': {'min': .25, 'max': .75},
-                'mutable': False, #temporary
+                'mutable': False,  # temporary
             },
             'noise correction': {
                 'category': 'Audio',
@@ -92,7 +98,7 @@ initialStatus = {  # just an example
     },
     'read rate': {
         'category': 'Audio',
-        'current': 2 ,
+        'current': 2,
         'allowedValues': {'min': 2, 'max': 5},
         'mutable': False,
     },
@@ -152,11 +158,23 @@ for i in range(4):
               'current': 0,  # unix timestamp
               'allowedValues': {'min': 0, 'max': int(1e10)}
           },
-          'displaying': {
+          'port': {
               'category': 'Video',
-              'mutable': True,
-              'current': False
+              'current': 5003 + i,
+              'mutable': False,
+              'allowedValues': {'min': 5002, 'max': 5100}
           },
+          'aspect ratio': {
+              'category': 'Video',
+              'current': 1.25
+              'mutable': False,
+              'allowedValues': [1.25]
+          }
+          #   'displaying': {
+          #       'category': 'Video',
+          #       'mutable': True,
+          #       'current': False
+          #   },
           #   'processing': {
           #       'category': 'Video',
           #       'mutable': True,

@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'collapseImage.dart';
+import 'api.dart';
 // import 'video.dart';
 
 class VideoSection extends StatelessWidget {
   VideoSection(
-      this.visible,
-      this.width,
-      this.height,
-      this.padding,
-      this.heightUpper,
-      this.heightLower,
-      this.callback,
-      this.displaying,
-      this.serialNumbers);
+    this.visible,
+    this.width,
+    this.height,
+    this.padding,
+    this.heightUpper,
+    this.heightLower,
+    this.rigStatus,
+  );
   final bool visible;
   final double width;
   final double height;
@@ -21,19 +21,12 @@ class VideoSection extends StatelessWidget {
   final double heightUpper;
   final double heightLower;
 
-  final void Function(bool, int) callback;
-  final List<bool> displaying;
-  final List<int> serialNumbers;
+  final RigStatusMap rigStatus;
 
-//   @override
-//   _VideoSectionState createState() => _VideoSectionState();
-// }
-
-// class _VideoSectionState extends State<VideoSection> {
   @override
   Widget build(BuildContext context) {
-    debugPrint(serialNumbers.toString());
     debugPrint('rebuilding videosection, visible = ' + visible.toString());
+
     return ExpandedImage(
         expand: visible,
         isHorizontal: false,
@@ -45,14 +38,16 @@ class VideoSection extends StatelessWidget {
           height: height,
           child: Row(children: [
             SizedBox(width: padding / 4),
-            // StreamingImage(0),
             CollapsibleImage(
-              visible: visible && displaying[0],
-              size: Size(0, height),
-              src: 0,
+              size: Size(
+                  rigStatus['camera 0'].current['aspect ratio'].current *
+                      height,
+                  0),
+              visible: visible,
+              src: rigStatus['camera 0'].current['port'].current,
               title: 'Top Camera',
               axis: Axis.horizontal,
-              callback: (visible) => callback(visible, 0),
+              // callback: (visible) => callback(visible, 0),
             ),
             SizedBox(width: padding / 2),
             Expanded(
@@ -60,25 +55,32 @@ class VideoSection extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                   SizedBox(
-                    height: heightUpper,
-                    child: CollapsibleImageList(
-                        visible: (i) => visible && displaying[i + 1],
-                        size: Size(0, heightUpper),
+                      height: heightUpper,
+                      child: CollapsibleImageList(
+                        visible: (i) => visible,
+                        sizes: (i) => Size(
+                            rigStatus['camera ${i + 1}']
+                                    .current['aspect ratio']
+                                    .current *
+                                heightUpper,
+                            0),
                         axis: Axis.horizontal,
-                        images: [1, 2, 3], //TODO: refactor this
+                        images: (i) => rigStatus['camera ${i + 1}']
+                            .current['port']
+                            .current,
                         titleFn: (i) => 'Side Camera ${i + 1}',
-                        callbacks: (visible, i) => callback(visible, i + 1)),
-                  ),
+                        // callbacks: (visible, i) => callback(visible, i + 1)),
+                      )),
                   LayoutBuilder(
                       builder: //TODO: should we rebuild this whenever video0 is collapsed/expanded?
                           (BuildContext context, BoxConstraints constraints) {
                     return CollapsibleImage(
-                      visible: visible && displaying[4],
-                      size: Size(constraints.maxWidth, heightLower),
-                      src: 4,
+                      size: Size(constraints.maxWidth, 0),
+                      visible: visible,
+                      src: rigStatus['spectrogram'].current['port'].current,
                       title: 'Audio Spectrogram',
                       axis: Axis.horizontal,
-                      callback: (visible) => callback(visible, 4),
+                      // callback: (visible) => callback(visible, 4),
                     );
                   }),
                 ])),
@@ -88,25 +90,18 @@ class VideoSection extends StatelessWidget {
   }
 }
 
-// List<String> streams = [
-//   'video1.display',
-//   'video2.display',
-//   'video3.display',
-//   // 'video4.display',
-// ];
-
-void main() {
-  runApp(MaterialApp(
-      home: Scaffold(
-          body: VideoSection(
-    true,
-    1800,
-    500,
-    10,
-    250,
-    250,
-    null,
-    List<bool>.filled(5, true),
-    [0, 1, 2, 3],
-  ))));
-}
+// void main() {
+//   runApp(MaterialApp(
+//       home: Scaffold(
+//           body: VideoSection(
+//     true,
+//     1800,
+//     500,
+//     10,
+//     250,
+//     250,
+//     null,
+//     List<bool>.filled(5, true),
+//     [0, 1, 2, 3],
+//   ))));
+// }

@@ -7,16 +7,18 @@ import 'package:flutter/material.dart';
 import 'video.dart';
 
 class CollapsibleImageList extends StatelessWidget {
-  final Size size;
+  final Size Function(int) sizes;
   final Axis axis;
-  final List<int> images;
+  final int numImages;
+  final int Function(int) images;
   final String Function(int) titleFn;
   final bool Function(int) visible;
   final void Function(bool, int) callbacks;
   CollapsibleImageList(
-      {this.size,
+      {@required this.sizes,
+      this.numImages = 1,
       this.visible = _evalTrue,
-      this.images,
+      @required this.images,
       this.titleFn,
       this.axis = Axis.horizontal,
       this.callbacks});
@@ -29,14 +31,14 @@ class CollapsibleImageList extends StatelessWidget {
         // shrinkWrap: false,
         shrinkWrap: true,
         scrollDirection: this.axis,
-        itemCount: images.length,
+        itemCount: numImages,
         itemBuilder: (context, i) {
           return CollapsibleImage(
+              size: this.sizes(i),
               title: this.titleFn(i),
-              src: this.images[i],
+              src: this.images(i),
               visible: this.visible(i),
               axis: this.axis,
-              size: this.size,
               callback: (visible) => this.callbacks(visible, i));
         });
   }
@@ -46,17 +48,21 @@ class CollapsibleImage extends StatefulWidget {
   // final Widget child;
   final String title;
   final int src;
-  final Size size;
   final Axis axis;
   final bool visible;
   final void Function(bool) callback;
+  final bool startExpanded;
+  final Size size;
+  final bool audio;
   CollapsibleImage(
-      {this.size,
-      this.src,
+      {@required this.src,
+      @required this.size,
       this.visible = true,
       this.title,
       this.axis = Axis.horizontal,
-      this.callback});
+      this.callback,
+      this.startExpanded = true,
+      this.audio = false});
 
   @override
   _CollapsibleImageState createState() => _CollapsibleImageState();
@@ -64,12 +70,15 @@ class CollapsibleImage extends StatefulWidget {
 
 class _CollapsibleImageState extends State<CollapsibleImage> {
   bool expanded;
+  bool visible;
+  void Function() doneAnimation = () {};
 
   @override
   void initState() {
     super.initState();
 
-    expanded = widget.visible;
+    expanded = widget.visible && widget.startExpanded;
+    visible = expanded;
   }
 
   void toggle() {
@@ -80,7 +89,18 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
     // widget.callback(expanded);
 
     setState(() {
-      expanded = !expanded;
+      if (expanded) {
+        expanded = false;
+        doneAnimation = () => setState(() {
+              visible = false;
+              doneAnimation = () {};
+            });
+      } else {
+        expanded = true;
+        visible = true;
+        doneAnimation = () {};
+      }
+
       widget.callback(expanded);
     });
   }
@@ -103,7 +123,7 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
     // debugPrint(bmp[32694].toString());
     bool isHorizontal = widget.axis == Axis.horizontal;
     debugPrint(
-        'building collapsible image: ${widget.title} with state visible=${widget.visible} and expanded=$expanded');
+        'building collapsible image "${widget.title}" with state visible=${widget.visible} and expanded=$expanded');
 
     // if (img == null) return Container();
 
@@ -111,16 +131,26 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
         onTap: toggle,
         child: Stack(alignment: AlignmentDirectional.centerStart, children: [
           ExpandedImage(
-              expand: expanded,
-              isHorizontal: isHorizontal,
-              child: VideoStream(widget.src, expanded && widget.visible,
-                  size: widget.size)
-              //
-              ),
-          Container(
-              width: isHorizontal ? 20 : widget.size.width,
-              height: isHorizontal ? widget.size.height : 20,
-              color: Theme.of(context).backgroundColor.withOpacity(0.6)),
+            expand: expanded,
+            isHorizontal: isHorizontal,
+            child: SizedBox(
+                width: widget.size.width == 0 ? null : widget.size.width,
+                height: widget.size.height == 0 ? null : widget.size.height,
+                child: VideoStream(
+                  widget.src,
+                  visible,
+                  audio: widget.audio,
+                )),
+            callback: doneAnimation,
+            //
+          ),
+          LayoutBuilder(builder: (BuildContext _, BoxConstraints constraints) {
+            return Container(
+              width: isHorizontal ? 20 : constraints.maxWidth,
+              height: isHorizontal ? constraints.maxHeight : 20,
+              color: Theme.of(context).backgroundColor.withOpacity(0.6),
+            );
+          }),
           RotatedBox(
               quarterTurns: isHorizontal ? -1 : 0,
               child: Text(widget.title,
@@ -140,13 +170,15 @@ class ExpandedImage extends StatefulWidget {
   final int duration;
   final int delayForward;
   final int delayReverse;
+  final void Function() callback;
   ExpandedImage(
       {this.expand,
       this.child,
       this.isHorizontal = true,
       this.duration = 500,
       this.delayForward = 0,
-      this.delayReverse = 0});
+      this.delayReverse = 0,
+      this.callback});
 
   @override
   _ExpandedImageState createState() => _ExpandedImageState();
@@ -169,6 +201,9 @@ class _ExpandedImageState extends State<ExpandedImage>
     // double delay = widget.delay / duration;
     expandController = AnimationController(
         vsync: this, duration: Duration(milliseconds: duration));
+    // expandController.addStatusListener((status) {
+    //   if (status == AnimationStatus.completed) widget.callback();
+    // });
     animation = CurvedAnimation(
         parent: expandController,
         curve: Interval(widget.delayForward / duration,
@@ -178,9 +213,9 @@ class _ExpandedImageState extends State<ExpandedImage>
 
   void _runExpandCheck() {
     if (widget.expand) {
-      expandController.forward();
+      expandController.forward().whenComplete(widget.callback);
     } else {
-      expandController.reverse();
+      expandController.reverse().whenComplete(widget.callback);
     }
   }
 
@@ -208,25 +243,22 @@ class _ExpandedImageState extends State<ExpandedImage>
 }
 
 void main() async {
-  // DynamicRigStatus();
-  // await Future.delayed(Duration(milliseconds: 500));
-
   runApp(
       //
       MaterialApp(
           //
           home: Scaffold(
               body: SizedBox(
-                  width: 800,
+                  // width: 800,
                   height: 300,
-                  child: CollapsibleImage(
-                    //
-                    size: Size(800, 0),
-                    src: 0,
-                    title: 'Top Camera',
-                    axis: Axis.horizontal,
-                  ) //
-                  ) //
+                  child: CollapsibleImageList(
+                      numImages: 5,
+                      sizes: (i) => Size(375, 0),
+                      visible: (i) => true,
+                      images: (i) => 5002,
+                      titleFn: (i) => 'camera $i',
+                      axis: Axis.horizontal,
+                      callbacks: (exp, res) => print('expanded? $exp $res'))) //
               ) //
           ));
 }

@@ -1,5 +1,5 @@
 from AcquisitionGroup import AcquisitionGroup
-import RigStatus
+from RigStatus import RigStatus
 # from utils.audio_settings import audio_settings
 from behavior_gui.initialStatus import initialStatus
 
@@ -26,5 +26,5 @@ global annotationsToGUI  # TODO: should be defined in socketApp.py??
 #     self.running = True
 
 
-status = RigStatus.RigStatus(initialStatus)
+status = RigStatus(initialStatus)
 ag = AcquisitionGroup(status)

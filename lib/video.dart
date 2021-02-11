@@ -14,14 +14,11 @@ class VideoStream extends StatefulWidget {
   VideoStream(
     this.src,
     this.visible, {
-    @required this.size,
-    this.seekTo,
+    this.audio = false,
   });
   final int src;
   final bool visible;
-  final Size size;
-  final int
-      seekTo; //optional, start this many seconds relative to video start (for debugging)
+  final bool audio;
 
   @override
   _VideoStreamState createState() => _VideoStreamState();
@@ -31,23 +28,23 @@ class _VideoStreamState extends State<VideoStream> {
   PlayerController _controller;
   // Future<void> _initializeVideoPlayerFuture;
   // StreamController<bool> _isDisplaying = StreamController<bool>();
-  bool _isDisplaying = false;
-  Size _size;
-  Size _baseSize;
-  Matrix4 _rescale = Matrix4.identity();
+  // bool _isDisplaying = false;
+  // Size _size;
+  // Size _baseSize;
+  // Matrix4 _rescale = Matrix4.identity();
   Annotater _annotater;
 
   @override
   void initState() {
     //default 1.25 AR? TODO: just get the size from the DynamicRigStatus?
-    _size = Size(
-        widget.size.width == 0 ? widget.size.height * 1.25 : widget.size.width,
-        widget.size.height == 0
-            ? widget.size.width / 1.25
-            : widget.size.height);
-    _baseSize = _size;
+    // _size = Size(
+    //     widget.size.width == 0 ? widget.size.height * 1.25 : widget.size.width,
+    //     widget.size.height == 0
+    //         ? widget.size.width / 1.25
+    //         : widget.size.height);
+    // _baseSize = _size;
 
-    if ((widget.size.width != 0) & (widget.size.height != 0)) {
+    if (widget.audio) {
       ValueNotifier changedAudioSettings = ValueNotifier(null);
       RigStatusMap rigStatus = RigStatusMap.live();
 
@@ -76,69 +73,77 @@ class _VideoStreamState extends State<VideoStream> {
 
   void initController() {
     PlayerController controller = PlayerController();
-
-    //TODO: init values from rigStatus
-    double ar = 1280 / 1024;
-    controller.initialize(1280, 1024, port: widget.src + 5002).then((_) {
-      debugPrint('initialized controller: ${controller.value}');
-      Size baseSize;
-      Size size = Size(
-          widget.size.width == 0 ? ar * widget.size.height : widget.size.width,
-          widget.size.height == 0
-              ? widget.size.width / ar
-              : widget.size.height);
-      Matrix4 rescale = Matrix4.identity();
-      if ((widget.size.width != 0) & (widget.size.height != 0)) {
-        double widgetAR = widget.size.width / widget.size.height;
-        if (widgetAR > ar) {
-          rescale[0] = widgetAR / ar;
-          baseSize = Size(ar * widget.size.height, widget.size.height);
-          // rescale[12] = -widget.size.width / 2 + _baseSize.width / 2;
-        } else {
-          // rescale[5] = controller.value.aspectRatio / widgetAR;
-          //TODO: fixed?
-          rescale[5] = ar / widgetAR;
-          baseSize = Size(widget.size.width, widget.size.width / ar);
-        }
-      } else {
-        baseSize = size;
-      }
+    controller.initialize(1280, 1024, port: widget.src).then((_) {
+      // //TODO: init values from rigStatus
+      // double ar = 1280 / 1024;
+      // controller.initialize(1280, 1024, port: widget.src + 5002).then((_) {
+      //   debugPrint('initialized controller: ${controller.value}');
+      //   Size baseSize;
+      //   Size size = Size(
+      //       widget.size.width == 0 ? ar * widget.size.height : widget.size.width,
+      //       widget.size.height == 0
+      //           ? widget.size.width / ar
+      //           : widget.size.height);
+      //   Matrix4 rescale = Matrix4.identity();
+      //   if ((widget.size.width != 0) & (widget.size.height != 0)) {
+      //     double widgetAR = widget.size.width / widget.size.height;
+      //     if (widgetAR > ar) {
+      //       rescale[0] = widgetAR / ar;
+      //       baseSize = Size(ar * widget.size.height, widget.size.height);
+      //       // rescale[12] = -widget.size.width / 2 + _baseSize.width / 2;
+      //     } else {
+      //       // rescale[5] = controller.value.aspectRatio / widgetAR;
+      //       //TODO: fixed?
+      //       rescale[5] = ar / widgetAR;
+      //       baseSize = Size(widget.size.width, widget.size.width / ar);
+      //     }
+      //   } else {
+      //     baseSize = size;
+      //   }
+      if (widget.visible) controller.play();
 
       setState(() {
-        _rescale = rescale;
-        _size = size;
-        _baseSize = baseSize;
-        _isDisplaying = true;
+        // _rescale = rescale;
+        // _size = size;
+        // _baseSize = baseSize;
+        // _isDisplaying = true;
         _controller = controller;
       });
     });
   }
 
-  // @override
-  // void didChangeDependencies() {
-  //   debugPrint('dependency change');
-  //   super.didChangeDependencies();
-  // }
+  @override
+  void didChangeDependencies() {
+    debugPrint('dependency change');
+    super.didChangeDependencies();
+  }
 
   @override
   void didUpdateWidget(VideoStream oldStream) {
     if (oldStream.visible != widget.visible) {
-      //we changed the visibility status
+      debugPrint('visibility changed');
       if (widget.visible) {
-        // setState(() {
-        // _initializeVideoPlayerFuture = initController();
-        // });
-        initController();
+        _controller.play();
       } else {
-        // setState(() {
-        // _controller.dispose();
-        // _controller = null;
-        // });
-        setState(() {
-          _isDisplaying = false;
-        });
-        _controller.dispose();
+        _controller.pause();
       }
+      //we changed the visibility status
+      // if (widget.visible) {
+      //   // setState(() {
+      //   // _initializeVideoPlayerFuture = initController();
+      //   // });
+      //   initController();
+      // } else {
+      //   // setState(() {
+      //   // _controller.dispose();
+      //   // _controller = null;
+      //   // });
+      //   setState(() {
+      //     _controller.dispose();
+      //     // _isDisplaying = false;
+      //     _controller = null;
+      //   });
+      // }
     }
     //TODO: if widget size changes, we also want to update but without tearing down the controller
 
@@ -149,6 +154,7 @@ class _VideoStreamState extends State<VideoStream> {
 
   @override
   void dispose() {
+    debugPrint('disposing controller');
     _controller.dispose();
     super.dispose();
   }
@@ -156,27 +162,23 @@ class _VideoStreamState extends State<VideoStream> {
   @override
   Widget build(BuildContext context) {
     Widget child;
-    if (_isDisplaying) {
+    if (_controller != null && widget.visible) {
       // _rescale[0] = .5;
-      child = CustomPaint(
-          size: Size(1280, 1024), //TODO: what to set this to?
-          foregroundPainter: _annotater,
-          // width: 100,
-          // height: 100,
-          // child: Stack(children: [
-          //   Transform(
-          //       origin: Offset(_size.width / 2, _size.height / 2),
-          //       transform: _rescale,
-          //       child: PlayerView(_controller))
-          // ]));
-          child:
-              AspectRatio(aspectRatio: 1.25, child: PlayerView(_controller)));
+      if (widget.audio) {
+        child = CustomPaint(
+            size: Size(1280, 1024), //TODO: what to set this to?
+            foregroundPainter: _annotater,
+            child: PlayerView(_controller));
+      } else {
+        child = PlayerView(_controller);
+      }
     } else if (widget.visible) {
       child = Center(child: CircularProgressIndicator());
     } else {
       child = Container();
     }
-    return SizedBox(width: _size.width, height: _size.height, child: child);
+    // return SizedBox(width: _size.width, height: _size.height, child: child);
+    return child;
   }
 }
 
@@ -282,5 +284,8 @@ void main() {
                   //     child: DecoratedBox(
                   //         decoration: BoxDecoration(color: Colors.green),
                   //         child: Container())))))));
-                  child: VideoStream(0, true, size: Size(0, 400)))))));
+                  child: VideoStream(
+                    0,
+                    true,
+                  ))))));
 }
