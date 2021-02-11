@@ -61,7 +61,7 @@ class CollapsibleImage extends StatefulWidget {
       this.title,
       this.axis = Axis.horizontal,
       this.callback,
-      this.startExpanded = false,
+      this.startExpanded = true,
       this.audio = false});
 
   @override
@@ -255,7 +255,7 @@ void main() async {
                       numImages: 5,
                       sizes: (i) => Size(375, 0),
                       visible: (i) => true,
-                      images: (i) => 0,
+                      images: (i) => 5002,
                       titleFn: (i) => 'camera $i',
                       axis: Axis.horizontal,
                       callbacks: (exp, res) => print('expanded? $exp $res'))) //

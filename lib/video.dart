@@ -73,7 +73,7 @@ class _VideoStreamState extends State<VideoStream> {
 
   void initController() {
     PlayerController controller = PlayerController();
-    controller.initialize(1280, 1024, port: widget.src + 5002).then((_) {
+    controller.initialize(1280, 1024, port: widget.src).then((_) {
       // //TODO: init values from rigStatus
       // double ar = 1280 / 1024;
       // controller.initialize(1280, 1024, port: widget.src + 5002).then((_) {
@@ -100,6 +100,7 @@ class _VideoStreamState extends State<VideoStream> {
       //   } else {
       //     baseSize = size;
       //   }
+      if (widget.visible) controller.play();
 
       setState(() {
         // _rescale = rescale;
