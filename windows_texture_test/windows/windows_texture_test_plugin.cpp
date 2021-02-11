@@ -19,6 +19,7 @@
 #include <string>
 #include <system_error>
 #include <thread>
+#include <vector>
 
 namespace {
 void FillBlack(FlutterDesktopPixelBuffer *buffer) {
@@ -144,6 +145,7 @@ class TCPSocket {
    public:
     TCPSocket(const LPCWSTR address, unsigned short port)
         : address(address), port(port) {
+        std::wcout << "Creating TCP socket." << std::endl;
         size = sizeof(sockaddr_in);
         init();
     }
@@ -229,6 +231,7 @@ class SocketTexture {
 };
 
 SocketTexture::SocketTexture(size_t width, size_t height, uint16_t port) {
+    std::wcout << "Creating socket texture object." << std::endl;
     size_raw_ = width * height;
     size_ = size_raw_ * 4;
 
@@ -293,7 +296,7 @@ int SocketTexture::update() {
 }
 
 SocketTexture::~SocketTexture() {
-    // TODO: this seems to be setn out of order
+    // TODO: this seems to be sent out of order
     // socket_.SendTo(_T("127.0.0.1"), 5002, "done", 4);
 }
 
@@ -312,9 +315,11 @@ class WindowsTextureTestPlugin : public flutter::Plugin {
         const flutter::MethodCall<flutter::EncodableValue> &method_call,
         std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
 
-    flutter::TextureRegistrar *textures_;
-    std::unique_ptr<flutter::TextureVariant> texture_;
-    std::unique_ptr<SocketTexture> socket_texture_;
+    flutter::TextureRegistrar *registrar_;
+    // std::unique_ptr<flutter::TextureVariant> texture_;
+    // std::unique_ptr<SocketTexture> socket_texture_;
+    std::vector<flutter::TextureVariant *> textures_;
+    std::vector<SocketTexture *> sockets_;
 };
 
 // static
@@ -337,8 +342,8 @@ void WindowsTextureTestPlugin::RegisterWithRegistrar(
 }
 
 WindowsTextureTestPlugin::WindowsTextureTestPlugin(
-    flutter::TextureRegistrar *textures)
-    : textures_(textures) {}
+    flutter::TextureRegistrar *registrar)
+    : registrar_(registrar) {}
 
 WindowsTextureTestPlugin::~WindowsTextureTestPlugin() {}
 
@@ -346,22 +351,24 @@ void WindowsTextureTestPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
     const std::string &method_name = method_call.method_name();
+    std::wcout << "Got method call: " << method_name.c_str() << std::endl;
 
     if (method_name.compare("initialize") == 0) {
         uint16_t *args = (uint16_t *)method_call.arguments();
         // std::wcout << "arguments: " << args[0] << "," << args[1] << ","
         //            << args[2] << std::endl;
-        socket_texture_ =
-            std::make_unique<SocketTexture>(args[0], args[1], args[2]);
+        // socket_texture_ =
+        //     std::make_unique<SocketTexture>(args[0], args[1], args[2]);
+        size_t i = sockets_.size();
+        sockets_.push_back(new SocketTexture(args[0], args[1], args[2]));
+        textures_.push_back(
+            new flutter::TextureVariant(flutter::PixelBufferTexture(
+                [this, i](size_t width,
+                          size_t height) -> const FlutterDesktopPixelBuffer * {
+                    return sockets_[i]->CopyPixelBuffer(width, height);
+                })));
 
-        texture_ = std::make_unique<flutter::TextureVariant>(
-            flutter::PixelBufferTexture(
-                [this](size_t width,
-                       size_t height) -> const FlutterDesktopPixelBuffer * {
-                    return socket_texture_->CopyPixelBuffer(width, height);
-                }));
-
-        int64_t texture_id = textures_->RegisterTexture(texture_.get());
+        int64_t texture_id = registrar_->RegisterTexture(textures_[i]);
 
         auto response = flutter::EncodableValue(flutter::EncodableMap{
             {flutter::EncodableValue("textureId"),
@@ -372,13 +379,15 @@ void WindowsTextureTestPlugin::HandleMethodCall(
 
         // Update the texture @ 10 Hz
         // Setting this to 60 Hz might cause epileptic shocks :D
-        StartTimer(1000 / 20, [&, texture_id]() {
-            int ret = socket_texture_->update();
-            textures_->MarkTextureFrameAvailable(texture_id);
+        StartTimer(1000 / 20, [this, i, texture_id]() {
+            int ret = sockets_[i]->update();
+            registrar_->MarkTextureFrameAvailable(texture_id);
             return ret;
         });
 
     } else {
+        std::wcout << "Not implemented method: " << method_name.c_str()
+                   << std::endl;
         result->NotImplemented();
     }
 }
