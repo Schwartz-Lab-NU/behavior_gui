@@ -40,7 +40,8 @@ class VideoSection extends StatelessWidget {
             SizedBox(width: padding / 4),
             CollapsibleImage(
               size: Size(
-                  rigStatus['camera 0'].current['aspectRatio'].current * height,
+                  rigStatus['camera 0'].current['aspect ratio'].current *
+                      height,
                   0),
               visible: visible,
               src: rigStatus['camera 0'].current['port'].current,
@@ -59,7 +60,7 @@ class VideoSection extends StatelessWidget {
                         visible: (i) => visible,
                         sizes: (i) => Size(
                             rigStatus['camera ${i + 1}']
-                                    .current['aspectRatio']
+                                    .current['aspect ratio']
                                     .current *
                                 heightUpper,
                             0),

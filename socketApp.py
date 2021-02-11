@@ -10,18 +10,16 @@ socketio = SocketIO(app, cors_allowed_origins='*', async_mode='eventlet')
 
 @socketio.on('connect')
 def handle_new_connection():
-  # maintain some record of which clients have the display on
   emit('broadcast', status.update)
   print('new client registered')
 
 
-@ socketio.on('disconnect')
+@socketio.on('disconnect')
 def handle_closed_connection():
-  # remove the client from the display list
   pass
 
 
-@ socketio.on('get')
+@socketio.on('get')
 def parse_request(request_type):
   print('Requested resource: ' + request_type)
 
@@ -32,11 +30,8 @@ def parse_request(request_type):
   elif request_type == 'current':
     return status.update
 
-  # TODO: this is probably not the most efficient way to do this
-  # we probably want to store both response types rather than dynamically create one from the other
 
-
-@ socketio.on('post')
+@socketio.on('post')
 def parse_update(update):
   print('Requested change: ' + str(update))
   # the update is a dictionary of status:value pairs
