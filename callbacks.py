@@ -45,7 +45,7 @@ status['recording'].callback(recording)
 def rootfilename(state):
   # just temporary, for debugging. want to make sure order is consistent.
   #
-  print(f'attempted to set rootfilename to {state}')
+  print(f'attempted to set rootfilename to "{state}"')
 
 
 status['rootfilename'].callback(rootfilename)
