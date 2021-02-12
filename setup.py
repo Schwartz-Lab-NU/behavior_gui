@@ -28,3 +28,13 @@ global annotationsToGUI  # TODO: should be defined in socketApp.py??
 
 status = RigStatus(initialStatus)
 ag = AcquisitionGroup(status)
+
+# TODO: do this better
+for i in ag.nCameras:
+  status[f'camera {i}'].current['width'](ag.cameras[i].width)
+  status[f'camera {i}'].current['height'](ag.cameras[i].height)
+  status[f'camera {i}'].current['serial number'](
+      ag.cameras[i].device_serial_number)
+  status[f'camera {i}'].current['port'](ag.cameras[i].address[1])
+
+status['spectrogram'].current['port'](ag.nidaq.address[1])
