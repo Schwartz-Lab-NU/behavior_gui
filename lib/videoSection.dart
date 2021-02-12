@@ -57,6 +57,7 @@ class VideoSection extends StatelessWidget {
                   SizedBox(
                       height: heightUpper,
                       child: CollapsibleImageList(
+                        numImages: 3,
                         visible: (i) => visible,
                         sizes: (i) => Size(
                             rigStatus['camera ${i + 1}']
