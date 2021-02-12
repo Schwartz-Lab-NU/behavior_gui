@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'collapseImage.dart';
 import 'api.dart';
-// import 'video.dart';
+import 'video.dart';
 
 class VideoSection extends StatelessWidget {
   VideoSection(
@@ -44,7 +44,8 @@ class VideoSection extends StatelessWidget {
                       height,
                   height),
               visible: visible,
-              src: rigStatus['camera 0'].current['port'].current,
+              builder: (visible) =>
+                  VideoStream(rigStatus['camera 0'].current, visible),
               title: 'Top Camera',
               axis: Axis.horizontal,
               // callback: (visible) => callback(visible, 0),
@@ -66,9 +67,9 @@ class VideoSection extends StatelessWidget {
                                 heightUpper,
                             heightUpper),
                         axis: Axis.horizontal,
-                        images: (i) => rigStatus['camera ${i + 1}']
-                            .current['port']
-                            .current,
+                        // sources: (i) => rigStatus['camera ${i + 1}'].current,
+                        builders: (visible, i) => VideoStream(
+                            rigStatus['camera ${i + 1}'].current, visible),
                         titleFn: (i) => 'Side Camera ${i + 1}',
                         // callbacks: (visible, i) => callback(visible, i + 1)),
                       )),
@@ -81,7 +82,9 @@ class VideoSection extends StatelessWidget {
                                 height,
                         heightLower),
                     visible: visible,
-                    src: rigStatus['spectrogram'].current['port'].current,
+                    builder: (visible) => VideoStream(
+                        rigStatus['spectrogram'].current, visible,
+                        audio: true),
                     title: 'Audio Spectrogram',
                     axis: Axis.horizontal,
                     // callback: (visible) => callback(visible, 4),

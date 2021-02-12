@@ -4,13 +4,14 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 // import 'api.dart';
 // import 'video2.dart';
-import 'video.dart';
+// import 'video.dart';
 
 class CollapsibleImageList extends StatelessWidget {
   final Size Function(int) sizes;
   final Axis axis;
   final int numImages;
-  final int Function(int) images;
+  // final dynamic Function(int) sources;
+  final Widget Function(bool, int) builders;
   final String Function(int) titleFn;
   final bool Function(int) visible;
   final void Function(bool, int) callbacks;
@@ -18,7 +19,7 @@ class CollapsibleImageList extends StatelessWidget {
       {@required this.sizes,
       this.numImages = 1,
       this.visible = _evalTrue,
-      @required this.images,
+      @required this.builders,
       this.titleFn,
       this.axis = Axis.horizontal,
       this.callbacks = _defaultCallbacks});
@@ -38,7 +39,7 @@ class CollapsibleImageList extends StatelessWidget {
           return CollapsibleImage(
               size: this.sizes(i),
               title: this.titleFn(i),
-              src: this.images(i),
+              builder: (visible) => this.builders(visible, i),
               visible: this.visible(i),
               axis: this.axis,
               callback: (visible) => this.callbacks(visible, i));
@@ -49,22 +50,22 @@ class CollapsibleImageList extends StatelessWidget {
 class CollapsibleImage extends StatefulWidget {
   // final Widget child;
   final String title;
-  final int src;
+  // final dynamic src;
+  final Widget Function(bool) builder;
   final Axis axis;
   final bool visible;
   final void Function(bool) callback;
   // final bool startExpanded;
   final Size size;
-  final bool audio;
-  CollapsibleImage(
-      {@required this.src,
-      @required this.size,
-      this.visible = true,
-      this.title,
-      this.axis = Axis.horizontal,
-      this.callback = _defaultCallback,
-      // this.startExpanded = true,
-      this.audio = false});
+  CollapsibleImage({
+    @required this.builder,
+    @required this.size,
+    this.visible = true,
+    this.title,
+    this.axis = Axis.horizontal,
+    this.callback = _defaultCallback,
+    // this.startExpanded = true,
+  });
 
   static void _defaultCallback(bool expanded) {}
 
@@ -139,11 +140,7 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
             child: SizedBox(
                 width: widget.size.width == 0 ? null : widget.size.width,
                 height: widget.size.height == 0 ? null : widget.size.height,
-                child: VideoStream(
-                  widget.src,
-                  visible,
-                  audio: widget.audio,
-                )),
+                child: widget.builder(visible)),
             callback: doneAnimation,
             //
           ),
@@ -243,23 +240,23 @@ class _ExpandedImageState extends State<ExpandedImage>
   }
 }
 
-void main() async {
-  runApp(
-      //
-      MaterialApp(
-          //
-          home: Scaffold(
-              body: SizedBox(
-                  // width: 800,
-                  height: 300,
-                  child: CollapsibleImageList(
-                      numImages: 5,
-                      sizes: (i) => Size(375, 0),
-                      visible: (i) => true,
-                      images: (i) => 5002,
-                      titleFn: (i) => 'camera $i',
-                      axis: Axis.horizontal,
-                      callbacks: (exp, res) => print('expanded? $exp $res'))) //
-              ) //
-          ));
-}
+// void main() async {
+//   runApp(
+//       //
+//       MaterialApp(
+//           //
+//           home: Scaffold(
+//               body: SizedBox(
+//                   // width: 800,
+//                   height: 300,
+//                   child: CollapsibleImageList(
+//                       numImages: 5,
+//                       sizes: (i) => Size(375, 0),
+//                       visible: (i) => true,
+//                       images: (i) => 5002,
+//                       titleFn: (i) => 'camera $i',
+//                       axis: Axis.horizontal,
+//                       callbacks: (exp, res) => print('expanded? $exp $res'))) //
+//               ) //
+//           ));
+// }
