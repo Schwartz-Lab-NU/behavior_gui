@@ -208,7 +208,7 @@ class Annotater extends CustomPainter {
     if (listenable != null) {
       // debugPrint('listenable: ${listenable.value}');
       //x axis will go from -1/readRate to 0
-      for (int i = 1; i < 10; i++) {
+      for (int i = 0; i < 10; i++) {
         double x = size.width / 10 * i;
         canvas.drawLine(
             Offset(x, size.height), Offset(x, size.height - 8), marker);
