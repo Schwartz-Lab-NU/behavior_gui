@@ -197,9 +197,9 @@ class Annotater extends CustomPainter {
     debugPrint('repainting');
 
     Paint marker = Paint();
-    marker.color = Colors.red;
+    marker.color = Colors.white;
     marker.style = PaintingStyle.stroke;
-    TextStyle style = TextStyle(color: Colors.red, fontSize: 10);
+    TextStyle style = TextStyle(color: Colors.white, fontSize: 10);
 
     // canvas.drawLine(Offset(0, 0), Offset(size.width, size.height), marker);
     // canvas.drawCircle(
