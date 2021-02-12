@@ -73,7 +73,9 @@ class _VideoStreamState extends State<VideoStream> {
   void initController() {
     PlayerController controller = PlayerController();
     controller
-        .initialize(widget.src['width'].current, widget.src['height'].current,
+        // .initialize(widget.src['width'].current, widget.src['height'].current,
+        //     port: widget.src['port'].current)
+        .initialize(widget.src['height'].current, widget.src['width'].current,
             port: widget.src['port'].current)
         .then((_) {
       // //TODO: init values from rigStatus
