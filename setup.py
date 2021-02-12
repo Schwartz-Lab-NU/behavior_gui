@@ -41,7 +41,7 @@ for i in range(ag.nCameras):
   thisCamera['width'](ag.cameras[i].width)
   thisCamera['height'](ag.cameras[i].height)
   thisCamera['serial number'](
-      ag.cameras[i].device_serial_number)
+      int(ag.cameras[i].device_serial_number))
   thisCamera['port'](ag.cameras[i].address[1])
 
   thisCamera['width'].immutable()
