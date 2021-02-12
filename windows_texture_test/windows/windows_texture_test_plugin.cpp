@@ -283,10 +283,11 @@ const FlutterDesktopPixelBuffer *SocketTexture::CopyPixelBuffer(size_t width,
 
 int SocketTexture::update() {
     // std::cout << "Doing update" << std::endl;
-
     char *buffer = socket_buffer_.get();
+
     int ret = socket_->RecvFrom(buffer, (int)size_raw_);
     if (ret < 0) return 0;
+    std::wcout << "Got update from server." << std::endl;
 
     uint32_t *pix;
 
