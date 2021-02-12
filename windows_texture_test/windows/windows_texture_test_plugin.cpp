@@ -181,6 +181,7 @@ class TCPSocket {
 
     int RecvFrom(char *buffer, int len, int flags = 0) {
         int ret = -1;
+        // TODO: this may need a timeout
 
         while (ret < 0) {
             ret = recv(sock, buffer, len, flags);
@@ -287,7 +288,6 @@ int SocketTexture::update() {
 
     int ret = socket_->RecvFrom(buffer, (int)size_raw_);
     if (ret < 0) return 0;
-    std::wcout << "Got update from server." << std::endl;
 
     uint32_t *pix;
 
