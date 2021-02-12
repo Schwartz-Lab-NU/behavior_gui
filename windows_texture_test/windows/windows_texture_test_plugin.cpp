@@ -177,17 +177,29 @@ class TCPSocket {
             throw std::system_error(iResult, std::system_category(),
                                     "Error connecting to server.");
         }
+        DWORD timeout = 10;
+        iResult = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+                             (const char *)&timeout, sizeof(DWORD));
+        if (iResult == SOCKET_ERROR) {
+            std::wcout << "Error setting timeout with code: " << iResult
+                       << std::endl;
+            throw std::system_error(iResult, std::system_category(),
+                                    "Error setting timeout.");
+        }
     }
 
     int RecvFrom(char *buffer, int len, int flags = 0) {
         int ret = -1;
-        // TODO: this may need a timeout
 
         while (ret < 0) {
             ret = recv(sock, buffer, len, flags);
 
             if (ret < 0) {
                 int lastErr = WSAGetLastError();
+                if (lastErr == 10060) {
+                    // socket timed out
+                    return 0;
+                }
                 std::wcout << "Error receiving message with code: " << lastErr
                            << std::endl;
                 // throw std::system_error(lastErr, std::system_category(),
@@ -288,6 +300,7 @@ int SocketTexture::update() {
 
     int ret = socket_->RecvFrom(buffer, (int)size_raw_);
     if (ret < 0) return 0;
+    if (ret == 1) return -1;
 
     uint32_t *pix;
 
@@ -466,12 +479,16 @@ void WindowsTextureTestPlugin::HandleMethodCall(
                     delete textures_[i].runner;
                     textures_[i].socket->connect();
                     textures_[i].runner = new std::thread([this, i]() {
-                        bool running = true;
-                        while (running) {
-                            running = (textures_[i].socket->update() > 0) &&
-                                      (textures_[i].listener_count > 0);
-                            registrar_->MarkTextureFrameAvailable(
-                                textures_[i].texture_id);
+                        while (true) {
+                            int update = textures_[i].socket->update();
+                            if (update > 0) {
+                                // negative if we timed out
+                                registrar_->MarkTextureFrameAvailable(
+                                    textures_[i].texture_id);
+                            }
+                            if ((update == 0) ||
+                                textures_[i].listener_count == 0)
+                                return;
                         }
                     });
                 }
