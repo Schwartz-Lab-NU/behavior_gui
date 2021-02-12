@@ -30,7 +30,7 @@ status = RigStatus(initialStatus)
 ag = AcquisitionGroup(status)
 
 # TODO: do this better
-for i in ag.nCameras:
+for i in range(ag.nCameras):
   status[f'camera {i}'].current['width'](ag.cameras[i].width)
   status[f'camera {i}'].current['height'](ag.cameras[i].height)
   status[f'camera {i}'].current['serial number'](
