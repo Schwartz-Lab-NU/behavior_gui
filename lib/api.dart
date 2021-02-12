@@ -96,6 +96,10 @@ class RigStatusMap extends MapBase<String, RigStatusItem> {
       StreamController<RigStatusMap>.broadcast();
   static Stream<RigStatusMap> get onChange => _changeController.stream;
 
+  //TODO: initialized becomes a bool listenable...
+  //TODO: Api._socket.on('connection' -> instantiate singleton? -> initialized=true)
+  //TODO: Api._socket.on('disconnection' -> destruct singleton? -> initialized=false)
+
   //constructors
   RigStatusMap()
       : _isMutable = true,

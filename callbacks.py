@@ -15,6 +15,7 @@ status['initialization'].callback(initialization)
 
 
 def recording(state):
+  print(f'got to recording callback with state == {state}')
   if state:
     rootfilename = status['rootfilename'].current
     print(f'rootfilename was: {rootfilename}')
@@ -28,7 +29,9 @@ def recording(state):
     ag.run()
     status['initialization'].immutable()
     status['calibration'].immutable()
+    # TODO: make rootfilename and notes immutable here? and mutable below? for safety
   else:
+    print('got stop message')
     ag.stop()
     status['initialization'].mutable()
     status['calibration'].mutable()
@@ -38,10 +41,20 @@ status['recording'].callback(recording)
 
 
 def rootfilename(state):
+  # just temporary, for debugging. want to make sure order is consistent.
+  #
   print(f'attempted to set rootfilename to {state}')
 
 
 status['rootfilename'].callback(rootfilename)
+
+
+def notes(state):
+  # TODO: should save notes under rootfile
+  print(f'attempted to update notes')
+
+
+status['notes'].callback(notes)
 
 
 def calibration(state):
@@ -61,6 +74,8 @@ def spectrogram(state):
   ag.nidaq.parse_settings(status['spectrogram'].current)
   # TODO: trying to update _nx or _nfft will cause an error
   # that means we can only update log scaling and noise correction
+
+  # TODO: update the port number... if _nx or _nfft change
 
 
 status['spectrogram'].callback(spectrogram)
