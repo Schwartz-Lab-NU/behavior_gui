@@ -106,13 +106,13 @@ initialStatus = {  # just an example
                 'mutable': False,
                 'allowedValues': [100]
             },
+            'read rate': {
+                'category': 'Audio',
+                'current': 2,
+                'allowedValues': {'min': 2, 'max': 5},
+                'mutable': False,
+            },
         }
-    },
-    'read rate': {
-        'category': 'Audio',
-        'current': 2,
-        'allowedValues': {'min': 2, 'max': 5},
-        'mutable': False,
     },
     'camera count': {
         'category': 'Video',
