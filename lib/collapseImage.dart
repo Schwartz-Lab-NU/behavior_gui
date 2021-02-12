@@ -53,7 +53,7 @@ class CollapsibleImage extends StatefulWidget {
   final Axis axis;
   final bool visible;
   final void Function(bool) callback;
-  final bool startExpanded;
+  // final bool startExpanded;
   final Size size;
   final bool audio;
   CollapsibleImage(
@@ -63,7 +63,7 @@ class CollapsibleImage extends StatefulWidget {
       this.title,
       this.axis = Axis.horizontal,
       this.callback = _defaultCallback,
-      this.startExpanded = true,
+      // this.startExpanded = true,
       this.audio = false});
 
   static void _defaultCallback(bool expanded) {}
@@ -81,7 +81,8 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
   void initState() {
     super.initState();
 
-    expanded = widget.visible && widget.startExpanded;
+    // expanded = widget.visible && widget.startExpanded;
+    expanded = widget.visible;
     visible = expanded;
   }
 
@@ -113,11 +114,9 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
   void didUpdateWidget(CollapsibleImage oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.visible && !widget.visible) {
-      //if the video was closed and then opened without user input, keep it closed
-      //but if the video was open and is now forced close, close it here
+    if (oldWidget.visible != widget.visible) {
       setState(() {
-        expanded = false;
+        expanded = widget.visible;
       });
     }
   }
