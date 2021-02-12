@@ -71,18 +71,20 @@ class VideoSection extends StatelessWidget {
                         titleFn: (i) => 'Side Camera ${i + 1}',
                         // callbacks: (visible, i) => callback(visible, i + 1)),
                       )),
-                  LayoutBuilder(
-                      builder: //TODO: should we rebuild this whenever video0 is collapsed/expanded?
-                          (BuildContext context, BoxConstraints constraints) {
-                    return CollapsibleImage(
-                      size: Size(constraints.maxWidth, heightLower),
-                      visible: visible,
-                      src: rigStatus['spectrogram'].current['port'].current,
-                      title: 'Audio Spectrogram',
-                      axis: Axis.horizontal,
-                      // callback: (visible) => callback(visible, 4),
-                    );
-                  }),
+                  CollapsibleImage(
+                    size: Size(
+                        width -
+                            rigStatus['camera 0']
+                                    .current['aspect ratio']
+                                    .current *
+                                height,
+                        heightLower),
+                    visible: visible,
+                    src: rigStatus['spectrogram'].current['port'].current,
+                    title: 'Audio Spectrogram',
+                    axis: Axis.horizontal,
+                    // callback: (visible) => callback(visible, 4),
+                  ),
                 ])),
             SizedBox(width: padding / 4),
           ]),
