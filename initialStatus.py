@@ -149,7 +149,7 @@ initialStatus = {  # just an example
 # TODO: camera settings (serial number, width, height, etc.) should be read from pyspin...
 # in setup.py, use ag.cameras[i].device_serial_number, etc., to set status
 
-serialNumbers = [19287342, 17391304, 17391290, 19412282]
+serialNumbers = [17391304, 17391290, 19287342, 19412282]
 for i in range(4):
   initialStatus[f'camera {i}'] = {
       'category': 'Video',
