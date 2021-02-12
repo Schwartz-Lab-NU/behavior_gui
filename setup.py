@@ -35,7 +35,7 @@ for i in range(ag.nCameras):
     if status[f'camera {i}'].current['serial number'].current == int(ag.cameras[i].device_serial_number):
       thisCamera = status[f'camera {i}'].current
       break
-    if j == ag.nCameras:
+    if j == ag.nCameras-1:
       raise 'Could not match cameras'
 
   thisCamera['width'].mutable()
