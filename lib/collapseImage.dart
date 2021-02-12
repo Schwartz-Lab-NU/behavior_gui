@@ -144,13 +144,11 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
             callback: doneAnimation,
             //
           ),
-          LayoutBuilder(builder: (BuildContext _, BoxConstraints constraints) {
-            return Container(
-              width: isHorizontal ? 20 : constraints.maxWidth,
-              height: isHorizontal ? constraints.maxHeight : 20,
-              color: Theme.of(context).backgroundColor.withOpacity(0.6),
-            );
-          }),
+          Container(
+            width: isHorizontal ? 20 : widget.size.width,
+            height: isHorizontal ? widget.size.height : 20,
+            color: Theme.of(context).backgroundColor.withOpacity(0.6),
+          ),
           RotatedBox(
               quarterTurns: isHorizontal ? -1 : 0,
               child: Text(widget.title,
