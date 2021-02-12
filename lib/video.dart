@@ -125,6 +125,7 @@ class _VideoStreamState extends State<VideoStream> {
       if (widget.visible) {
         _controller.play();
       } else {
+        debugPrint("pausing controller");
         _controller.pause();
       }
       //we changed the visibility status
