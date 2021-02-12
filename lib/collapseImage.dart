@@ -21,9 +21,11 @@ class CollapsibleImageList extends StatelessWidget {
       @required this.images,
       this.titleFn,
       this.axis = Axis.horizontal,
-      this.callbacks});
+      this.callbacks = _defaultCallbacks});
 
   static bool _evalTrue(int index) => true;
+
+  static void _defaultCallbacks(bool expanded, int camera) {}
 
   @override
   Widget build(BuildContext context) {
@@ -60,9 +62,11 @@ class CollapsibleImage extends StatefulWidget {
       this.visible = true,
       this.title,
       this.axis = Axis.horizontal,
-      this.callback,
+      this.callback = _defaultCallback,
       this.startExpanded = true,
       this.audio = false});
+
+  static void _defaultCallback(bool expanded) {}
 
   @override
   _CollapsibleImageState createState() => _CollapsibleImageState();
