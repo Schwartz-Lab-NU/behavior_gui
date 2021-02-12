@@ -31,10 +31,24 @@ ag = AcquisitionGroup(status)
 
 # TODO: do this better
 for i in range(ag.nCameras):
-  status[f'camera {i}'].current['width'](ag.cameras[i].width)
-  status[f'camera {i}'].current['height'](ag.cameras[i].height)
-  status[f'camera {i}'].current['serial number'](
-      ag.cameras[i].device_serial_number)
-  status[f'camera {i}'].current['port'](ag.cameras[i].address[1])
+  thisCamera = status[f'camera {i}'].current
 
+  thisCamera['width'].mutable()
+  thisCamera['height'].mutable()
+  thisCamera['serial number'].mutable()
+  thisCamera['port'].mutable()
+
+  thisCamera['width'](ag.cameras[i].width)
+  thisCamera['height'](ag.cameras[i].height)
+  thisCamera['serial number'](
+      ag.cameras[i].device_serial_number)
+  thisCamera['port'](ag.cameras[i].address[1])
+
+  thisCamera['width'].immutable()
+  thisCamera['height'].immutable()
+  thisCamera['serial number'].immutable()
+  thisCamera['port'].immutable()
+
+status['spectrogram'].current['port'].mutable()
 status['spectrogram'].current['port'](ag.nidaq.address[1])
+status['spectrogram'].current['port'].immutable()
