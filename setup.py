@@ -33,22 +33,22 @@ ag = AcquisitionGroup(status)
 for i in range(ag.nCameras):
   for j in range(ag.nCameras):
     if status[f'camera {i}'].current['serial number'].current == int(ag.cameras[j].device_serial_number):
-      thisCamera = status[f'camera {i}'].current
+      # thisCamera = status[f'camera {i}'].current
       break
     if j == ag.nCameras-1:
       raise Exception('Could not match cameras')
 
-  thisCamera['width'].mutable()
-  thisCamera['height'].mutable()
-  thisCamera['port'].mutable()
+  status[f'camera {j}'].current['width'].mutable()
+  status[f'camera {j}'].current['height'].mutable()
+  status[f'camera {j}'].current['port'].mutable()
 
-  thisCamera['width'](ag.cameras[i].width)
-  thisCamera['height'](ag.cameras[i].height)
-  thisCamera['port'](ag.cameras[i].address[1])
+  status[f'camera {j}'].current['width'](ag.cameras[i].width)
+  status[f'camera {j}'].current['height'](ag.cameras[i].height)
+  status[f'camera {j}'].current['port'](ag.cameras[i].address[1])
 
-  thisCamera['width'].immutable()
-  thisCamera['height'].immutable()
-  thisCamera['port'].immutable()
+  status[f'camera {j}'].current['width'].immutable()
+  status[f'camera {j}'].current['height'].immutable()
+  status[f'camera {j}'].current['port'].immutable()
 
 status['spectrogram'].current['port'].mutable()
 status['spectrogram'].current['port'](ag.nidaq.address[1])
