@@ -268,6 +268,7 @@ void SocketTexture::disconnect() {
     if (socket_ != NULL) {
         delete socket_;
         socket_ = NULL;
+        std::wcout << "Socket is disconnected" << std::endl;
     }
 };
 
@@ -485,6 +486,8 @@ void WindowsTextureTestPlugin::HandleMethodCall(
 
     } else if (method_name.compare("pause") == 0) {
         int64_t *texture_id = (int64_t *)method_call.arguments();
+        std::wcout << "Attempting to pause texture #" << *texture_id
+                   << std::endl;
         auto response = flutter::EncodableValue(flutter::EncodableMap{
             {flutter::EncodableValue("playing"), flutter::EncodableValue(NULL)},
         });
@@ -494,8 +497,12 @@ void WindowsTextureTestPlugin::HandleMethodCall(
                 if (textures_[i].listener_count > 1) {
                     textures_[i].listener_count -= 1;
                 } else if (textures_[i].listener_count == 1) {
+                    std::wcout << "Texture has no more listeners, so "
+                                  "disconnecting socket. "
+                               << std::endl;
                     textures_[i].listener_count = 0;
                     textures_[i].runner->join();
+                    std::wcout << "Thread terminated." << std::endl;
                     textures_[i].socket->disconnect();
                 }
 
