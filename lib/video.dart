@@ -220,8 +220,8 @@ class Annotater extends CustomPainter {
         TextPainter tp =
             TextPainter(text: span, textDirection: TextDirection.ltr);
         tp.layout();
-        tp.paint(canvas, Offset(x - 2 - tp.width, size.height - tp.height));
-        tp.paint(canvas, Offset(x - 2 - tp.width, 0));
+        tp.paint(canvas, Offset(x + 2, size.height - tp.height));
+        tp.paint(canvas, Offset(x + 2, 0));
       }
 
       double fMin = listenable.value['fMin'] / 1000;
