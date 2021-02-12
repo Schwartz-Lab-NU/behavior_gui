@@ -273,22 +273,22 @@ class Annotater extends CustomPainter {
   bool shouldRebuildSemantics(CustomPainter old) => false;
 }
 
-void main() {
-  runApp(MaterialApp(
-      home: Scaffold(
-          body: SizedBox(
-              width: 800,
-              height: 400,
-              child: DecoratedBox(
-                  decoration: BoxDecoration(color: Colors.red),
-                  // child: SizedBox(
-                  //     width: 700,
-                  //     height: 300,
-                  //     child: DecoratedBox(
-                  //         decoration: BoxDecoration(color: Colors.green),
-                  //         child: Container())))))));
-                  child: VideoStream(
-                    0,
-                    true,
-                  ))))));
-}
+// void main() {
+//   runApp(MaterialApp(
+//       home: Scaffold(
+//           body: SizedBox(
+//               width: 800,
+//               height: 400,
+//               child: DecoratedBox(
+//                   decoration: BoxDecoration(color: Colors.red),
+//                   // child: SizedBox(
+//                   //     width: 700,
+//                   //     height: 300,
+//                   //     child: DecoratedBox(
+//                   //         decoration: BoxDecoration(color: Colors.green),
+//                   //         child: Container())))))));
+//                   child: VideoStream(
+//                     0,
+//                     true,
+//                   ))))));
+// }
