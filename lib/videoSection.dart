@@ -42,7 +42,7 @@ class VideoSection extends StatelessWidget {
               size: Size(
                   rigStatus['camera 0'].current['aspect ratio'].current *
                       height,
-                  0),
+                  height),
               visible: visible,
               src: rigStatus['camera 0'].current['port'].current,
               title: 'Top Camera',
@@ -63,7 +63,7 @@ class VideoSection extends StatelessWidget {
                                     .current['aspect ratio']
                                     .current *
                                 heightUpper,
-                            0),
+                            heightUpper),
                         axis: Axis.horizontal,
                         images: (i) => rigStatus['camera ${i + 1}']
                             .current['port']
@@ -75,7 +75,7 @@ class VideoSection extends StatelessWidget {
                       builder: //TODO: should we rebuild this whenever video0 is collapsed/expanded?
                           (BuildContext context, BoxConstraints constraints) {
                     return CollapsibleImage(
-                      size: Size(constraints.maxWidth, 0),
+                      size: Size(constraints.maxWidth, heightLower),
                       visible: visible,
                       src: rigStatus['spectrogram'].current['port'].current,
                       title: 'Audio Spectrogram',
