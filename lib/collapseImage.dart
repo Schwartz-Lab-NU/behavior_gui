@@ -118,6 +118,7 @@ class _CollapsibleImageState extends State<CollapsibleImage> {
     if (oldWidget.visible != widget.visible) {
       setState(() {
         expanded = widget.visible;
+        visible = widget.visible;
       });
     }
   }
