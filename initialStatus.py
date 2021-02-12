@@ -93,7 +93,19 @@ initialStatus = {  # just an example
                 'category': 'Audio',
                 'current': True,
                 'mutable': False
-            }
+            },
+            'width': {
+                'category': 'Video',
+                'current': 478,
+                'mutable': False,
+                'allowedValues': [478]
+            },
+            'height': {  # same as frequency resolution...
+                'category': 'Video',
+                'current': 100,
+                'mutable': False,
+                'allowedValues': [100]
+            },
         }
     },
     'read rate': {
@@ -133,6 +145,10 @@ initialStatus = {  # just an example
     }
 }
 
+# TODO: last calibration should be read from file
+# TODO: camera settings (serial number, width, height, etc.) should be read from pyspin...
+# in setup.py, use ag.cameras[i].device_serial_number, etc., to set status
+
 serialNumbers = [17391304, 17391290, 19287342, 19412282]
 for i in range(4):
   initialStatus[f'camera {i}'] = {
@@ -142,7 +158,6 @@ for i in range(4):
           'serial number': {
               'category': 'Video',
               'mutable': False,
-              # TODO: just an example, obviously we would want to match these on assignment
               'current': serialNumbers[i],
               'allowedValues': serialNumbers,
           },
@@ -163,6 +178,18 @@ for i in range(4):
               'current': 5003 + i,
               'mutable': False,
               'allowedValues': {'min': 5002, 'max': 5100}
+          },
+          'width': {
+              'category': 'Video',
+              'current': 1280,
+              'mutable': False,
+              'allowedValues': [1280]
+          },
+          'height': {
+              'category': 'Video',
+              'current': 1024,
+              'mutable': False,
+              'allowedValues': [1024]
           },
           'aspect ratio': {
               'category': 'Video',

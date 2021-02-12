@@ -16,7 +16,7 @@ class VideoStream extends StatefulWidget {
     this.visible, {
     this.audio = false,
   });
-  final int src;
+  final RigStatusMap src;
   final bool visible;
   final bool audio;
 
@@ -46,16 +46,15 @@ class _VideoStreamState extends State<VideoStream> {
 
     if (widget.audio) {
       ValueNotifier changedAudioSettings = ValueNotifier(null);
-      RigStatusMap rigStatus = RigStatusMap.live();
+      // RigStatusMap rigStatus = RigStatusMap.live();
 
       Function updateAudio = (_) {
         debugPrint('updating audio settings for axes');
         changedAudioSettings.value = {
-          'fMin': rigStatus['spectrogram'].current['minimum frequency'].current,
-          'fMax': rigStatus['spectrogram'].current['maximum frequency'].current,
-          'isLogScaled':
-              rigStatus['spectrogram'].current['log scaling'].current,
-          'readRate': rigStatus['read rate'].current
+          'fMin': widget.src['minimum frequency'].current,
+          'fMax': widget.src['maximum frequency'].current,
+          'isLogScaled': widget.src['log scaling'].current,
+          'readRate': widget.src['read rate'].current
         };
       };
       updateAudio(null);
@@ -73,7 +72,10 @@ class _VideoStreamState extends State<VideoStream> {
 
   void initController() {
     PlayerController controller = PlayerController();
-    controller.initialize(1280, 1024, port: widget.src).then((_) {
+    controller
+        .initialize(widget.src['width'].current, widget.src['height'].current,
+            port: widget.src['port'].current)
+        .then((_) {
       // //TODO: init values from rigStatus
       // double ar = 1280 / 1024;
       // controller.initialize(1280, 1024, port: widget.src + 5002).then((_) {
