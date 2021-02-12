@@ -24,6 +24,7 @@ def recording(state):
       camera_list.append(ag.cameras[i].device_serial_number)
     filepaths = pop.reformat_filepath('', rootfilename, camera_list)
     # still need the filepaths he for the temp videos?
+    ag.stop()
     ag.start(filepaths=filepaths)
 
     ag.run()
@@ -35,6 +36,7 @@ def recording(state):
     ag.stop()
     status['initialization'].mutable()
     status['calibration'].mutable()
+    status['rootfilename']('')  # to make sure we don't accidentally
 
 
 status['recording'].callback(recording)
