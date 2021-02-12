@@ -32,11 +32,12 @@ ag = AcquisitionGroup(status)
 # TODO: do this better
 for i in range(ag.nCameras):
   for j in range(ag.nCameras):
+    print(f'{status[f'camera {i}'].current['serial number'].current} == {int(ag.cameras[i].device_serial_number)}?')
     if status[f'camera {i}'].current['serial number'].current == int(ag.cameras[i].device_serial_number):
       thisCamera = status[f'camera {i}'].current
       break
     if j == ag.nCameras-1:
-      raise 'Could not match cameras'
+      raise Exception('Could not match cameras')
 
   thisCamera['width'].mutable()
   thisCamera['height'].mutable()
