@@ -301,12 +301,18 @@ int SocketTexture::update() {
     // // ABGR
 
     for (size_t i = 0; i < ret; i++) {
-        uint32_t v = *reinterpret_cast<uint32_t *>(buffer);
+        uint32_t v = (uint32_t)*buffer;
         *(pix++) = (v << 16) + (v << 8) + v + 0xFF000000;
         // *(pix++) = 0xFF000000 + ((i % 256) << 16) + (((2 * i) % 256) << 8) +
         //            (((4 * i) % 256) << 0);
         buffer++;
     }
+
+    if (recv_mod_ != 0) {
+        std::wcout << "Completing frame? Now at " << recv_mod_ + ret
+                   << " pixels." << std::endl;
+    }
+
     recv_mod_ = (recv_mod_ + ret);  // % size_raw_;
     if (recv_mod_ == size_raw_) {
         recv_mod_ = 0;
