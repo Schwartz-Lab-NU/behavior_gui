@@ -476,6 +476,7 @@ void WindowsTextureTestPlugin::HandleMethodCall(
                                 return;  // we had an error or we're closing the
                                          // socket
                             else if (update > 0) {
+                                std::wcout << "Marking available" << std::endl;
                                 registrar_->MarkTextureFrameAvailable(
                                     textures_[i].texture_id);
                             }
