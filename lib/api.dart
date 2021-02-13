@@ -109,7 +109,6 @@ class RigStatusMap extends MapBase<String, RigStatusItem> {
     Api._socket.onDisconnect((_) => _teardown());
     Api._socket.onConnect((_) => _instantiate());
     Api._socket.on('broadcast', (data) => _update(data));
-    print('created rig status global instance');
   }
   factory RigStatusMap.live() => _globalInstance;
   RigStatusMap._instance() : _isMutable = false {
@@ -158,7 +157,6 @@ class RigStatusMap extends MapBase<String, RigStatusItem> {
 
   //extras
   static void _instantiate() async {
-    print('got connection message');
     RigStatusMap parse(Map<String, dynamic> json, RigStatusMap instance) {
       RigStatusMap result = RigStatusMap._fromInstance(instance);
 
@@ -224,7 +222,6 @@ class RigStatusMap extends MapBase<String, RigStatusItem> {
   }
 
   static void _teardown() async {
-    print('got disconnect message');
     _globalInstance._map.clear();
     _isInitialized = false;
     _initializationController.add(false);
