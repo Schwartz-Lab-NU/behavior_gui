@@ -166,24 +166,24 @@ class _VideoStreamState extends State<VideoStream> {
 
   @override
   Widget build(BuildContext context) {
-    Widget child;
+    // Widget child;
     if (_controller != null && widget.visible) {
       // _rescale[0] = .5;
       if (widget.audio) {
-        child = CustomPaint(
+        return CustomPaint(
             size: Size(1280, 1024), //TODO: what to set this to?
             foregroundPainter: _annotater,
             child: PlayerView(_controller));
       } else {
-        child = PlayerView(_controller);
+        return PlayerView(_controller);
       }
     } else if (widget.visible) {
-      child = Center(child: CircularProgressIndicator());
+      return Center(child: CircularProgressIndicator());
     } else {
-      child = Container();
+      return Container();
     }
     // return SizedBox(width: _size.width, height: _size.height, child: child);
-    return child;
+    // return child;
   }
 }
 
