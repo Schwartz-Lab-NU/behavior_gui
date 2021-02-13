@@ -289,37 +289,24 @@ int SocketTexture::update() {
 
     uint32_t *pix;
 
-    if (recv_count_++ % 2 == 0) {
+    if (recv_count_ % 2 == 0) {
         pix = (uint32_t *)pixels2_.get() + recv_mod_;
-        //     FillRGB(buffer2_.get(), 0, 0, 255);
     } else {
         pix = (uint32_t *)pixels1_.get() + recv_mod_;
-        // FillRGB(buffer1_.get(), 0, 255, 0);
     }
-
-    // auto color = 0xFF000000 + R + ((uint32_t)G << 8) + ((uint32_t)B << 16);
-    // // ABGR
 
     for (size_t i = 0; i < ret; i++) {
         uint32_t v = (uint32_t)*buffer;
         *(pix++) = (v << 16) + (v << 8) + v + 0xFF000000;
-        // *(pix++) = 0xFF000000 + ((i % 256) << 16) + (((2 * i) % 256) << 8) +
-        //            (((4 * i) % 256) << 0);
         buffer++;
     }
 
-    if (recv_mod_ != 0) {
-        std::wcout << "Completing frame? Now at " << recv_mod_ + ret
-                   << " pixels." << std::endl;
-    }
-
-    recv_mod_ = (recv_mod_ + ret);  // % size_raw_;
-    if (recv_mod_ == size_raw_) {
-        recv_mod_ = 0;
+    recv_mod_ = (recv_mod_ + ret) % size_raw_;
+    if (recv_mod_ == 0) {
+        // we've completed the frame
+        recv_count_++;
         return 1;
     } else {
-        std::wcout << "Frame incomplete. Had received " << recv_mod_ - ret
-                   << " pixels, then got " << ret << " more." << std::endl;
         return 0;
     }
 }
