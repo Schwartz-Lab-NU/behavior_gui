@@ -99,10 +99,6 @@ class RigStatusMap extends MapBase<String, RigStatusItem> {
       StreamController<RigStatusMap>.broadcast();
   static Stream<RigStatusMap> get onChange => _changeController.stream;
 
-  //TODO: initialized becomes a bool listenable...
-  //TODO: Api._socket.on('connection' -> instantiate singleton? -> initialized=true)
-  //TODO: Api._socket.on('disconnection' -> destruct singleton? -> initialized=false)
-
   //constructors
   RigStatusMap()
       : _isMutable = true,
@@ -110,8 +106,8 @@ class RigStatusMap extends MapBase<String, RigStatusItem> {
   RigStatusMap._singleton() : _isMutable = false {
     _initializationController.add(false);
     _localInstance = this;
-    Api._socket.on('disconnect', (_) => _teardown());
-    Api._socket.on('connection', (_) => _instantiate());
+    Api._socket.onDisconnect((_) => _teardown());
+    Api._socket.onConnect((_) => _instantiate());
     Api._socket.on('broadcast', (data) => _update(data));
   }
   factory RigStatusMap.live() => _globalInstance;
@@ -161,6 +157,7 @@ class RigStatusMap extends MapBase<String, RigStatusItem> {
 
   //extras
   static void _instantiate() async {
+    print('got connection message');
     RigStatusMap parse(Map<String, dynamic> json, RigStatusMap instance) {
       RigStatusMap result = RigStatusMap._fromInstance(instance);
 
@@ -226,6 +223,7 @@ class RigStatusMap extends MapBase<String, RigStatusItem> {
   }
 
   static void _teardown() async {
+    print('got disconnect message');
     _globalInstance._map.clear();
     _isInitialized = false;
     _initializationController.add(false);
