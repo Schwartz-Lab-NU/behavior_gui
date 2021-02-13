@@ -90,7 +90,10 @@ class RigStatusMap extends MapBase<String, RigStatusItem> {
   final Map<String, RigStatusItem> _map = Map<String, RigStatusItem>();
   final bool _isMutable;
 
-  static Completer<void> initialized = Completer();
+  static bool _isInitialized = false;
+  static final StreamController<bool> _initializationController =
+      StreamController<bool>.broadcast();
+  static Stream<bool> get onInitialization => _initializationController.stream;
 
   static final StreamController<RigStatusMap> _changeController =
       StreamController<RigStatusMap>.broadcast();
@@ -105,8 +108,10 @@ class RigStatusMap extends MapBase<String, RigStatusItem> {
       : _isMutable = true,
         _localInstance = _globalInstance;
   RigStatusMap._singleton() : _isMutable = false {
+    _initializationController.add(false);
     _localInstance = this;
-    _instantiate();
+    Api._socket.on('disconnect', (_) => _teardown());
+    Api._socket.on('connection', (_) => _instantiate());
     Api._socket.on('broadcast', (data) => _update(data));
   }
   factory RigStatusMap.live() => _globalInstance;
@@ -216,11 +221,19 @@ class RigStatusMap extends MapBase<String, RigStatusItem> {
     }
 
     _changeController.add(parse(await Api._get('allowed'), _globalInstance));
-    initialized.complete();
+    _isInitialized = true;
+    _initializationController.add(true);
+  }
+
+  static void _teardown() async {
+    _globalInstance._map.clear();
+    _isInitialized = false;
+    _initializationController.add(false);
+    _changeController.add(_globalInstance);
   }
 
   static RigStatusMap _update(Map<String, dynamic> update) {
-    if (!initialized.isCompleted) return null;
+    if (!_isInitialized) return null;
     RigStatusMap result = _parse(update, _globalInstance);
     _changeController.add(result);
     return result;
@@ -321,7 +334,9 @@ class Api {
 
 void main() async {
   RigStatusMap dynamicmap = RigStatusMap.live();
-  await RigStatusMap.initialized.future;
+  await for (bool init in RigStatusMap.onInitialization) {
+    if (init) break;
+  }
   print('got dynamic map: $dynamicmap');
 
   RigStatusMap staticmap = RigStatusMap();
