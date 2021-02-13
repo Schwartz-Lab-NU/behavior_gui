@@ -221,7 +221,7 @@ class SocketTexture {
     std::unique_ptr<uint8_t> pixels1_;
     std::unique_ptr<uint8_t> pixels2_;
     uint16_t port;
-    size_t request_count_;
+    // size_t request_count_;
     size_t recv_count_;
     size_t recv_mod_;
     size_t size_raw_;
@@ -262,7 +262,7 @@ SocketTexture::SocketTexture(size_t width, size_t height, uint16_t port)
 void SocketTexture::connect() {
     disconnect();
     recv_count_ = 0;
-    request_count_ = 0;
+    // request_count_ = 0;
     recv_mod_ = 0;
     socket_ = new TCPSocket(L"127.0.0.1", port);
 }
@@ -276,11 +276,11 @@ void SocketTexture::disconnect() {
 
 const FlutterDesktopPixelBuffer *SocketTexture::CopyPixelBuffer(size_t width,
                                                                 size_t height) {
-    std::wcout << "Reading pixels" << 2 - (request_count_ % 2) << std::endl;
-    if (request_count_++ % 2 == 0) {
-        return buffer2_.get();
+    std::wcout << "Reading pixels" << 1 + (recv_count_ % 2) << std::endl;
+    if (recv_count_ % 2 == 0) {
+        return buffer1_.get();
     }
-    return buffer1_.get();
+    return buffer2_.get();
 }
 
 int SocketTexture::update() {
