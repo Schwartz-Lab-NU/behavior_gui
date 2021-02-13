@@ -221,9 +221,9 @@ class SocketTexture {
     std::unique_ptr<uint8_t> pixels1_;
     std::unique_ptr<uint8_t> pixels2_;
     uint16_t port;
-    size_t request_count_ = 0;
-    size_t recv_count_ = 0;
-    size_t recv_mod_ = 0;
+    size_t request_count_;
+    size_t recv_count_;
+    size_t recv_mod_;
     size_t size_raw_;
     size_t size_;
     WSASession session_;
@@ -261,6 +261,9 @@ SocketTexture::SocketTexture(size_t width, size_t height, uint16_t port)
 
 void SocketTexture::connect() {
     disconnect();
+    recv_count_ = 0;
+    request_count_ = 0;
+    recv_mod_ = 0;
     socket_ = new TCPSocket(L"127.0.0.1", port);
 }
 void SocketTexture::disconnect() {
@@ -290,9 +293,9 @@ int SocketTexture::update() {
     uint32_t *pix;
 
     if (recv_count_ % 2 == 0) {
-        pix = (uint32_t *)pixels1_.get() + recv_mod_;
-    } else {
         pix = (uint32_t *)pixels2_.get() + recv_mod_;
+    } else {
+        pix = (uint32_t *)pixels1_.get() + recv_mod_;
     }
 
     for (size_t i = 0; i < ret; i++) {
