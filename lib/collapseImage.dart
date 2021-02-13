@@ -177,7 +177,9 @@ class ExpandedImage extends StatefulWidget {
       this.duration = 500,
       this.delayForward = 0,
       this.delayReverse = 0,
-      this.callback});
+      this.callback = _defaultCallback});
+
+  static void _defaultCallback() {}
 
   @override
   _ExpandedImageState createState() => _ExpandedImageState();
