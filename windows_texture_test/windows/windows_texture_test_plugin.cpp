@@ -189,31 +189,16 @@ class TCPSocket {
     }
 
     int RecvFrom(char *buffer, int len, int flags = 0) {
-        int ret = -1;
+        int ret = recv(sock, buffer, len, flags);
 
-        while (ret < 0) {
-            ret = recv(sock, buffer, len, flags);
-
-            if (ret < 0) {
-                int lastErr = WSAGetLastError();
-                if (lastErr == 10060) {
-                    // socket timed out
-                    return 0;
-                }
-                std::wcout << "Error receiving message with code: " << lastErr
-                           << std::endl;
-                // throw std::system_error(lastErr, std::system_category(),
-                //                         "recvfrom failed.");
-                // if (lastErr == WSAENOTSOCK) {
-                //     std::wcout << "Returning from 10038 status" << std::endl;
-                //     return ret;
-                // } else if ((lastErr == WSAECONNRESET) ||
-                //            lastErr == WSAECONNABORTED) {
-                //     closesocket(sock);
-                //     init();
-                // }
-                return ret;
+        if (ret < 0) {
+            int lastErr = WSAGetLastError();
+            if (lastErr == 10060) {
+                // socket timed out
+                return 0;
             }
+            std::wcout << "Error receiving message with code: " << lastErr
+                       << std::endl;
         }
 
         return ret;
@@ -238,6 +223,7 @@ class SocketTexture {
     uint16_t port;
     size_t request_count_ = 0;
     size_t recv_count_ = 0;
+    size_t recv_mod_ = 0;
     size_t size_raw_;
     size_t size_;
     WSASession session_;
@@ -299,30 +285,33 @@ int SocketTexture::update() {
     char *buffer = socket_buffer_.get();
 
     int ret = socket_->RecvFrom(buffer, (int)size_raw_);
-    if (ret < 0) return 0;
-    if (ret == 1) return -1;
+    if (ret <= 0) return ret;
 
     uint32_t *pix;
 
     if (recv_count_++ % 2 == 0) {
-        pix = (uint32_t *)pixels2_.get();
+        pix = (uint32_t *)pixels2_.get() + recv_mod_;
         //     FillRGB(buffer2_.get(), 0, 0, 255);
     } else {
-        pix = (uint32_t *)pixels1_.get();
+        pix = (uint32_t *)pixels1_.get() + recv_mod_;
         // FillRGB(buffer1_.get(), 0, 255, 0);
     }
 
     // auto color = 0xFF000000 + R + ((uint32_t)G << 8) + ((uint32_t)B << 16);
     // // ABGR
 
-    for (size_t i = 0; i < size_raw_; i++) {
+    for (size_t i = 0; i < ret; i++) {
         char v = *buffer;
         *(pix++) = ((uint32_t)v << 16) + ((uint32_t)v << 8) + v + 0xFF000000;
         // *(pix++) = 0xFF000000 + ((i % 256) << 16) + (((2 * i) % 256) << 8) +
         //            (((4 * i) % 256) << 0);
         buffer++;
     }
-    return 1;
+    recv_mod_ = (recv_mod_ + ret) % size_raw_;
+    if (recv_mod_ == 0)
+        return 1;
+    else
+        return 0;
 }
 
 SocketTexture::~SocketTexture() {
@@ -481,14 +470,16 @@ void WindowsTextureTestPlugin::HandleMethodCall(
                     textures_[i].runner = new std::thread([this, i]() {
                         while (true) {
                             int update = textures_[i].socket->update();
-                            if (update > 0) {
-                                // negative if we timed out
-                                registrar_->MarkTextureFrameAvailable(
-                                    textures_[i].texture_id);
-                            }
-                            if ((update == 0) ||
+                            if ((update < 0) ||
                                 textures_[i].listener_count == 0)
-                                return;
+                                return;  // we had an error or we're closing the
+                                         // socket
+                            else if (update > 0)
+                                registrar_->MarkTextureFrameAvailable(
+                                    textures_[i]
+                                        .texture_id);  // we finished writing
+                                                       // the frame
+                            // else we're in the middle of a frame
                         }
                     });
                 }
