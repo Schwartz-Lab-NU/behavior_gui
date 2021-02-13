@@ -276,10 +276,10 @@ void SocketTexture::disconnect() {
 
 const FlutterDesktopPixelBuffer *SocketTexture::CopyPixelBuffer(size_t width,
                                                                 size_t height) {
+    std::wcout << "Reading pixels" << 2 - (request_count_ % 2) << std::endl;
     if (request_count_++ % 2 == 0) {
         return buffer2_.get();
     }
-
     return buffer1_.get();
 }
 
@@ -307,6 +307,7 @@ int SocketTexture::update() {
     recv_mod_ = (recv_mod_ + ret) % size_raw_;
     if (recv_mod_ == 0) {
         // we've completed the frame
+        std::wcout << "Flushing pixels" << 2 - (recv_count_ % 2) << std::endl;
         recv_count_++;
         return 1;
     } else {
@@ -478,8 +479,8 @@ void WindowsTextureTestPlugin::HandleMethodCall(
                                 registrar_->MarkTextureFrameAvailable(
                                     textures_[i].texture_id);
                             }
-                            std::this_thread::sleep_for(
-                                std::chrono::milliseconds(16));
+                            // std::this_thread::sleep_for(
+                            //     std::chrono::milliseconds(16));
                         }
                     });
                 }
