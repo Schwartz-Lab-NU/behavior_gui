@@ -290,9 +290,9 @@ int SocketTexture::update() {
     uint32_t *pix;
 
     if (recv_count_ % 2 == 0) {
-        pix = (uint32_t *)pixels2_.get() + recv_mod_;
-    } else {
         pix = (uint32_t *)pixels1_.get() + recv_mod_;
+    } else {
+        pix = (uint32_t *)pixels2_.get() + recv_mod_;
     }
 
     for (size_t i = 0; i < ret; i++) {
