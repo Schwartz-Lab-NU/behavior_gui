@@ -474,12 +474,12 @@ void WindowsTextureTestPlugin::HandleMethodCall(
                                 textures_[i].listener_count == 0)
                                 return;  // we had an error or we're closing the
                                          // socket
-                            else if (update > 0)
+                            else if (update > 0) {
                                 registrar_->MarkTextureFrameAvailable(
-                                    textures_[i]
-                                        .texture_id);  // we finished writing
-                                                       // the frame
-                            // else we're in the middle of a frame
+                                    textures_[i].texture_id);
+                            } else {
+                                std::wcout << "Frame incomplete" << std::endl;
+                            }
                         }
                     });
                 }
