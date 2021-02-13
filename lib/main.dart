@@ -6,7 +6,7 @@ import 'videoSection.dart';
 // import 'package:flutter/rendering.dart' show debugPaintSizeEnabled;
 
 void main() {
-  // RigStatusMap.live();
+  RigStatusMap.live();
   runApp(MaterialApp(
       home: MyApp(),
       theme: ThemeData(
