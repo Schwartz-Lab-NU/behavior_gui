@@ -109,6 +109,7 @@ class RigStatusMap extends MapBase<String, RigStatusItem> {
     Api._socket.onDisconnect((_) => _teardown());
     Api._socket.onConnect((_) => _instantiate());
     Api._socket.on('broadcast', (data) => _update(data));
+    print('created rig status global instance');
   }
   factory RigStatusMap.live() => _globalInstance;
   RigStatusMap._instance() : _isMutable = false {
