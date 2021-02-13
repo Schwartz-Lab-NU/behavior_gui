@@ -478,6 +478,8 @@ void WindowsTextureTestPlugin::HandleMethodCall(
                                 registrar_->MarkTextureFrameAvailable(
                                     textures_[i].texture_id);
                             }
+                            std::this_thread::sleep_for(
+                                std::chrono::milliseconds(16));
                         }
                     });
                 }
