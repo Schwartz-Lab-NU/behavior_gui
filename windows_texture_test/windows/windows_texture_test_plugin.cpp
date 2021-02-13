@@ -301,17 +301,21 @@ int SocketTexture::update() {
     // // ABGR
 
     for (size_t i = 0; i < ret; i++) {
-        char v = *buffer;
-        *(pix++) = ((uint32_t)v << 16) + ((uint32_t)v << 8) + v + 0xFF000000;
+        uint32_t v = *reinterpret_cast<uint32_t *>(buffer);
+        *(pix++) = (v << 16) + (v << 8) + v + 0xFF000000;
         // *(pix++) = 0xFF000000 + ((i % 256) << 16) + (((2 * i) % 256) << 8) +
         //            (((4 * i) % 256) << 0);
         buffer++;
     }
-    recv_mod_ = (recv_mod_ + ret) % size_raw_;
-    if (recv_mod_ == 0)
+    recv_mod_ = (recv_mod_ + ret);  // % size_raw_;
+    if (recv_mod_ == size_raw_) {
+        recv_mod_ = 0;
         return 1;
-    else
+    } else {
+        std::wcout << "Frame incomplete. Had received " << recv_mod_ - ret
+                   << " pixels, then got " << ret << " more." << std::endl;
         return 0;
+    }
 }
 
 SocketTexture::~SocketTexture() {
@@ -477,8 +481,6 @@ void WindowsTextureTestPlugin::HandleMethodCall(
                             else if (update > 0) {
                                 registrar_->MarkTextureFrameAvailable(
                                     textures_[i].texture_id);
-                            } else {
-                                std::wcout << "Frame incomplete" << std::endl;
                             }
                         }
                     });
