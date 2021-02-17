@@ -23,7 +23,7 @@ def recording(state):
     for i in range(ag.nCameras):
       camera_list.append(ag.cameras[i].device_serial_number)
     filepaths = pop.reformat_filepath('', rootfilename, camera_list)
-    # still need the filepaths he for the temp videos?
+
     ag.stop()
     ag.start(filepaths=filepaths)
 
@@ -34,6 +34,9 @@ def recording(state):
   else:
     print('got stop message')
     ag.stop()
+    ag.start() #restart without saving
+    ag.run()
+
     status['initialization'].mutable()
     status['calibration'].mutable()
     status['rootfilename']('')  # to make sure we don't accidentally
@@ -53,6 +56,7 @@ status['rootfilename'].callback(rootfilename)
 
 def notes(state):
   # TODO: should save notes under rootfile
+  # status['rootfilename'].current
   print(f'attempted to update notes')
 
 
@@ -60,6 +64,14 @@ status['notes'].callback(notes)
 
 
 def calibration(state):
+
+  # state['is calibrating'].current
+  # state['camera serial number'].current
+  # state['type'].current == 'Intrinsic'
+
+  #must be background thread
+  #Threading.thread(ag.cameras[cameraId].doCalibration(intrinsicOrExtrinsic)
+
   if state == 'calibrating':
     status['initialization'].immutable()
     status['calibration'].immutable()
@@ -81,3 +93,16 @@ def spectrogram(state):
 
 
 status['spectrogram'].callback(spectrogram)
+
+#def camera(state):
+  #cameraId = state['camera index'].current
+  #if state['serial number'].current != status[f'camera {cameraId}'].current['serial number'].current:
+  #  temp1 = status[f'camera {cameraId].current.copy()
+  #  temp2 = status[f'camera {camera where serialNumber == requested...
+
+  # status[f'camera {cameraId}].current = temp2
+  #...
+
+
+#for i in range(4):
+#  status[f'camera {i}'].callback(camera)

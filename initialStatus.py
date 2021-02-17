@@ -1,3 +1,4 @@
+serialNumbers = [17391304, 17391290, 19287342, 19412282]
 initialStatus = {  # just an example
     'initialization': {
         'allowedValues': ['uninitialized', 'initialized', 'deinitialized'],
@@ -129,11 +130,11 @@ initialStatus = {  # just an example
                 'mutable': True,
                 'current': False
             },
-            'camera number': {
+            'camera serial number': {
                 'category': 'Video',
                 'mutable': True,
-                'current': 0,
-                'allowedValues': {'min': 0, 'max': 6}
+                'current': serialNumbers[0],
+                'allowedValues': serialNumbers
             },
             'calibration type': {
                 'category': 'Video',
@@ -149,15 +150,20 @@ initialStatus = {  # just an example
 # TODO: camera settings (serial number, width, height, etc.) should be read from pyspin...
 # in setup.py, use ag.cameras[i].device_serial_number, etc., to set status
 
-serialNumbers = [17391304, 17391290, 19287342, 19412282]
 for i in range(4):
   initialStatus[f'camera {i}'] = {
       'category': 'Video',
       'mutable': True,
       'current': {  # create a nested dict
-          'serial number': {
+          'camera index' : {
               'category': 'Video',
               'mutable': False,
+              'allowedValues': [0,1,2,3],
+              'current': i
+          },
+          'serial number': {
+              'category': 'Video',
+              'mutable': True, #TODO: currently broken
               'current': serialNumbers[i],
               'allowedValues': serialNumbers,
           },

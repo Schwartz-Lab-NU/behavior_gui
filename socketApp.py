@@ -27,6 +27,10 @@ def parse_request(request_type):
     print('sending allowed settings dictionary')
     return status.allowed
 
+  # if request_type == 'processed':
+    #return someDictionaryOfWhichFilesAreProcessed
+    # {'mouseABC_yesterday': {'video1ffmpeg':True, 'video2ffmpeg':None, 'video3ffmpeg':False}}
+
   elif request_type == 'current':
     return status.update
 
@@ -40,8 +44,8 @@ def parse_update(update):
     status[k](v)
 
   # optional: send a string message to all clients that gets displayed on the gui
-  emit('message',
-       'Requested change: ' + str(update), broadcast=True)
+  emit('message', 'Recording started.')
+       # 'Requested change: ' + str(update), broadcast=True)
 
   # send the new status to all other clients as a 'broadcast' event
   emit('broadcast', status.update, broadcast=True, include_self=False)
