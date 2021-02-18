@@ -106,13 +106,17 @@ class _VideoStreamState extends State<VideoStream> {
       //   }
       if (widget.visible) controller.play();
 
-      setState(() {
-        // _rescale = rescale;
-        // _size = size;
-        // _baseSize = baseSize;
-        // _isDisplaying = true;
-        _controller = controller;
-      });
+      if (this.mounted) {
+        setState(() {
+          // _rescale = rescale;
+          // _size = size;
+          // _baseSize = baseSize;
+          // _isDisplaying = true;
+          _controller = controller;
+        });
+      } else {
+        debugPrint('Tried to set state of unmounted video');
+      }
     });
   }
 
