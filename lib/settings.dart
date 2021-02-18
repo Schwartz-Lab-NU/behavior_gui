@@ -515,12 +515,15 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
           (data) => _showDialog(context, true));
     }
 
+    bool isCalibrating =
+        _rigStatus['calibration'].current['is calibrating'].current;
+
     Widget calibrationButton = _buildButtonColumn(
         widget.width / 4,
         _rigStatus['calibration'].mutable,
         context,
-        Icons.build,
-        'CALIBRATE',
+        isCalibrating ? Icons.not_interested : Icons.build,
+        isCalibrating ? 'STOP' : 'CALIBRATE',
         (arg) => _toggleCalibrate());
 
     Widget processButton = _buildButtonColumn(widget.width / 4, true, context,
@@ -529,18 +532,14 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     Widget logsButton = _buildButtonColumn(
         widget.width / 4, true, context, Icons.info, 'LOGS', callback);
 
+    Widget postButton = _buildButtonColumn(
+        widget.width / 4, true, context, Icons.computer, 'POST', callback);
+
     List<Widget> children;
     children = [
       recordButton,
       calibrationButton,
       processButton,
-      logsButton,
-      SizedBox(
-          width: widget.width,
-          child: Text(
-            _lastMessage,
-            style: TextStyle(color: active),
-          )),
     ];
 
     Widget initButton;
@@ -578,7 +577,15 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
               // child: widget.child,
               axis: Axis.horizontal,
               axisAlignment: 1.0,
-            )
+            ),
+            postButton,
+            logsButton,
+            SizedBox(
+                width: widget.width,
+                child: Text(
+                  _lastMessage,
+                  style: TextStyle(color: active),
+                )),
           ])),
       SizeTransition(
         sizeFactor: _animationCalib,
