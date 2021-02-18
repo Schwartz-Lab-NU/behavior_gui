@@ -295,7 +295,7 @@ class Api {
   static final StreamController<String> _changeController =
       StreamController<String>.broadcast();
   static bool _hasSetupMessage = false;
-  static Queue<String> messageQueue;
+  static Queue<String> messageQueue = Queue<String>();
 
   static Stream<String> get onMessage {
     if (!Api._hasSetupMessage) {
