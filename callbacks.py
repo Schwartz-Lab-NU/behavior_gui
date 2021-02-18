@@ -1,5 +1,4 @@
 from behavior_gui.setup import ag, status
-# from initialStatus import status
 from utils import path_operation_utils as pop
 
 
@@ -34,7 +33,7 @@ def recording(state):
   else:
     print('got stop message')
     ag.stop()
-    ag.start() #restart without saving
+    ag.start()  # restart without saving
     ag.run()
 
     status['initialization'].mutable()
@@ -58,6 +57,9 @@ def notes(state):
   # TODO: should save notes under rootfile
   # status['rootfilename'].current
   print(f'attempted to update notes')
+  print(state)
+  print(ag.filepaths)
+  pop.save_notes(state, ag.filepaths)
 
 
 status['notes'].callback(notes)
