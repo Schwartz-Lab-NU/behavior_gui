@@ -741,7 +741,9 @@ void main() async {
                             'Intrinsic Calibration',
                             'Determines the undistortion parameters of each camera by collecting images of a calibration board.',
                             [0, 1, 2, 3],
-                            CalibrationType.intrinsic)),
+                            CalibrationType.intrinsic,
+                            (ind, type) =>
+                                print('setting camera $ind to $type'))),
                     SizedBox(width: 10),
                     Container(
                         color: Colors.red,
@@ -750,7 +752,9 @@ void main() async {
                             'Top Camera Alignment',
                             'Aligns the top camera to the arena by detecting the location of the fixed calibration markers.',
                             [0],
-                            CalibrationType.extrinsic)),
+                            CalibrationType.extrinsic,
+                            (ind, type) =>
+                                print('setting camera $ind to $type'))),
                     SizedBox(width: 10),
                     Container(
                         color: Colors.red,
@@ -759,6 +763,8 @@ void main() async {
                             'Side Camera Alignment',
                             'Aligns a side camera to the top camera by detecting the location of a mobile calibration board visible to both cameras.',
                             [1, 2, 3],
-                            CalibrationType.extrinsic)),
+                            CalibrationType.extrinsic,
+                            (ind, type) =>
+                                print('setting camera $ind to $type'))),
                   ]))))));
 }
