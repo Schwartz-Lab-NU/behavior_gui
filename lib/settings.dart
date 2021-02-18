@@ -445,6 +445,23 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     });
   }
 
+  void _doCalibration(int ind, CalibrationType type) {
+    RigStatusMap rigStatus = RigStatusMap();
+    rigStatus['calibration'].current['is calibrating'].current = true;
+    rigStatus['calibration'].current['camera serial number'].current =
+        _rigStatus['camera $ind'].current['serial number'].current;
+    rigStatus['calibration'].current['calibration type'].current =
+        type.toString().split('.').last;
+    RigStatusMap.apply(rigStatus);
+    _toggleCalibrate();
+  }
+
+  void _stopCalibration() {
+    RigStatusMap rigStatus = RigStatusMap();
+    rigStatus['calibration'].current['is calibrating'].current = false;
+    RigStatusMap.apply(rigStatus);
+  }
+
   void _prepareAnimations() {
     _controllerStatus =
         AnimationController(vsync: this, duration: Duration(milliseconds: 500));
@@ -524,7 +541,9 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         context,
         isCalibrating ? Icons.not_interested : Icons.build,
         isCalibrating ? 'STOP' : 'CALIBRATE',
-        (arg) => _toggleCalibrate());
+        isCalibrating
+            ? (arg) => _stopCalibration()
+            : (arg) => _toggleCalibrate());
 
     Widget processButton = _buildButtonColumn(widget.width / 4, true, context,
         Icons.leaderboard, 'ANALYSIS', callback);
@@ -602,7 +621,8 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                       'Intrinsic Calibration',
                       'Determines the undistortion parameters of each camera by collecting images of a calibration board.',
                       camList,
-                      CalibrationType.intrinsic)),
+                      CalibrationType.intrinsic,
+                      _doCalibration)),
               SizedBox(width: 10),
               Container(
                   // color: Colors.red,
@@ -611,7 +631,8 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                       'Top Camera Alignment',
                       'Aligns the top camera to the arena by detecting the location of the fixed calibration markers.',
                       [0],
-                      CalibrationType.extrinsic)),
+                      CalibrationType.extrinsic,
+                      _doCalibration)),
               SizedBox(width: 10),
               Container(
                   // color: Colors.red,
@@ -620,7 +641,8 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                       'Side Camera Alignment',
                       'Aligns a side camera to the top camera by detecting the location of a calibration board visible to both.',
                       camList.sublist(1),
-                      CalibrationType.extrinsic)),
+                      CalibrationType.extrinsic,
+                      _doCalibration)),
               SizedBox(width: 10),
             ])),
         // axisAlignment: 1.0,
@@ -637,12 +659,13 @@ Map<String, IconData> icons = {
 };
 
 class _CalibrationBox extends StatelessWidget {
-  _CalibrationBox(
-      this.title, this.subtitle, this.cameraIndex, this.calibrationType);
+  _CalibrationBox(this.title, this.subtitle, this.cameraIndex,
+      this.calibrationType, this.callback);
   final String title;
   final String subtitle;
   final List<int> cameraIndex;
   final CalibrationType calibrationType;
+  final void Function(int, CalibrationType) callback;
 
   @override
   Widget build(BuildContext context) {
@@ -687,7 +710,7 @@ class _CalibrationBox extends StatelessWidget {
                       context,
                       Icons.play_arrow,
                       'CALIBRATE',
-                      (arg) => debugPrint('registered tap')),
+                      (arg) => this.callback(ind, calibrationType)),
                 );
               }),
         )
