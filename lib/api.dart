@@ -1,10 +1,10 @@
 import 'dart:collection';
 import 'dart:async';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 const String socketHostname = 'http://localhost:5001';
-const String mainHostname = 'http://localhost:5000';
+// const String mainHostname = 'http://localhost:5000';
 
 class Range<T> {
   T min;
@@ -321,14 +321,15 @@ class Api {
     return c.future;
   }
 
-  static Future<http.StreamedResponse> video(int id) async {
-    http.MultipartRequest request =
-        new http.MultipartRequest('GET', Uri.parse('$mainHostname/video/$id'));
-    return request.send();
-  }
+  // static Future<http.StreamedResponse> video(int id) async {
+  //   http.MultipartRequest request =
+  //       new http.MultipartRequest('GET', Uri.parse('$mainHostname/video/$id'));
+  //   return request.send();
+  // }
 }
 
 void main() async {
+  print('awaiting connection');
   RigStatusMap dynamicmap = RigStatusMap.live();
   await for (bool init in RigStatusMap.onInitialization) {
     if (init) break;
