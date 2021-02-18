@@ -295,11 +295,14 @@ class Api {
   static final StreamController<String> _changeController =
       StreamController<String>.broadcast();
   static bool _hasSetupMessage = false;
+  static Queue<String> messageQueue;
 
   static Stream<String> get onMessage {
     if (!Api._hasSetupMessage) {
-      Api._socket
-          .on('message', (message) => Api._changeController.add(message));
+      Api._socket.on('message', (message) {
+        Api.messageQueue.add(message);
+        Api._changeController.add(message);
+      });
       Api._hasSetupMessage = true;
     }
     return _changeController.stream;

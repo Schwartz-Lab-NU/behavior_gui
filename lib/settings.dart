@@ -474,9 +474,23 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         CurvedAnimation(parent: _controllerCalib, curve: Curves.fastOutSlowIn);
   }
 
+  void _showMessageLog(BuildContext context) async {
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            title: Text('Message Log'),
+            children: Api.messageQueue.map<Widget>((text) {
+              return SimpleDialogOption(
+                  onPressed: () => Navigator.pop(context), child: Text(text));
+            }).toList(),
+          );
+        });
+  }
+
   void _showDialog(BuildContext context, doRecording) async {
     String oldText = _text.text;
-    await showDialog<String>(
+    await showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
@@ -490,13 +504,13 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                           hintText: 'e.g., 01012021_mouse666')))
             ]),
             actions: [
-              FlatButton(
+              TextButton(
                   child: Text('CANCEL'),
                   onPressed: () {
                     _text.text = oldText;
                     Navigator.pop(context);
                   }),
-              FlatButton(
+              TextButton(
                   child: Text(doRecording ? 'RECORD' : 'APPLY'),
                   onPressed: () {
                     if (doRecording) {
