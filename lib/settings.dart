@@ -562,8 +562,8 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     Widget processButton = _buildButtonColumn(widget.width / 4, true, context,
         Icons.leaderboard, 'ANALYSIS', callback);
 
-    Widget logsButton = _buildButtonColumn(
-        widget.width / 4, true, context, Icons.info, 'LOGS', callback);
+    Widget logsButton = _buildButtonColumn(widget.width / 4, true, context,
+        Icons.info, 'LOGS', (arg) => _showMessageLog(context));
 
     Widget postButton = _buildButtonColumn(
         widget.width / 4, true, context, Icons.computer, 'POST', callback);
