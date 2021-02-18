@@ -54,11 +54,7 @@ status['rootfilename'].callback(rootfilename)
 
 
 def notes(state):
-  # TODO: should save notes under rootfile
-  # status['rootfilename'].current
   print(f'attempted to update notes')
-  print(state)
-  print(ag.filepaths)
   pop.save_notes(state, ag.filepaths)
 
 
