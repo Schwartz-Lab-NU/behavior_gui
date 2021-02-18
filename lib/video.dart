@@ -198,7 +198,7 @@ class Annotater extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    debugPrint('repainting');
+    // debugPrint('repainting');
 
     Paint marker = Paint();
     marker.color = Colors.white;
