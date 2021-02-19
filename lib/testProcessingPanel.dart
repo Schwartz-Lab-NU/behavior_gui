@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'api.dart';
 
 class ShrinkGrow extends StatefulWidget {
   final IconData icon;
@@ -48,19 +49,17 @@ List<Widget> _buildCells(List<Widget> children) {
   }).toList();
 }
 
-Widget _buildHeader(Color titleColor) {
+Widget _buildHeader(Color titleColor, List<String> columns) {
   return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: _buildCells(
-          <Widget>[Text('SESSION', style: TextStyle(color: titleColor))] +
-              _processingSteps.keys.map<Widget>((title) {
-                return Text(title, style: TextStyle(color: titleColor));
-              }).toList()));
+      children: _buildCells(columns.map<Widget>((title) {
+        return Text(title, style: TextStyle(color: titleColor));
+      }).toList()));
 }
 
-Widget _buildRow(
-    String session, BuildContext context, List<List<bool>> completed) {
+Widget _buildRow(String session, BuildContext context,
+    List<List<bool>> completed, List<List<ProcessTag>> tags) {
   int i = 0;
   Color completeColor = Theme.of(context).buttonColor;
   Color incompleteColor = Theme.of(context).unselectedWidgetColor;
@@ -74,13 +73,13 @@ Widget _buildRow(
                 Text(session,
                     style: TextStyle(color: Theme.of(context).primaryColor)),
               ] +
-              _processingSteps.values.map<Widget>((icons) {
-                List<Widget> children = List.filled(icons.length, null);
-                for (int j = 0; j < icons.length; j++) {
+              tags.map<Widget>((tagGroup) {
+                List<Widget> children = List.filled(tagGroup.length, null);
+                for (int j = 0; j < tagGroup.length; j++) {
                   if (completed[i][j] == null) {
-                    children[j] = ShrinkGrow(icons[j], incompleteColor);
+                    children[j] = ShrinkGrow(tagGroup[j].icon, incompleteColor);
                   } else {
-                    children[j] = Icon(icons[j],
+                    children[j] = Icon(tagGroup[j].icon,
                         color:
                             completed[i][j] ? completeColor : incompleteColor);
                   }
@@ -94,8 +93,6 @@ Widget _buildRow(
 }
 
 void _showDialog(BuildContext context) async {
-  int currentlyProcessing = 12;
-
   await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -110,9 +107,10 @@ void _showDialog(BuildContext context) async {
                 //     child:
                 SizedBox(
                     width: 750,
+                    height: 500,
                     // child: Expanded(
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      _buildHeader(theme.buttonColor),
+                      _buildHeader(theme.buttonColor, ProcessingStatus.columns),
                       _Table(),
                       SizedBox(height: 10),
                       SizedBox(
@@ -160,32 +158,42 @@ class _Table extends StatefulWidget {
 class _TableState extends State<_Table> {
   ScrollController _scrollController = ScrollController();
   bool _done = false;
-  int _totalCount = 15;
+  int _length = ProcessingStatus().length;
+  ProcessingStatus _processingStatus = ProcessingStatus();
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
-          _scrollController.position.maxScrollExtent) {
+              _scrollController.position.maxScrollExtent &&
+          !_done) {
         print('reached end of page');
-        //request next ~30 from server, then setState:
-        //  set done to true if no more
-        //  increment totalcount
+        Future.wait([
+          ProcessingStatus.next(15),
+          Future.delayed(Duration(seconds: 1)),
+        ]).then((_) {
+          print('new status length: ${_processingStatus.length}');
+          setState(() {
+            _done = _processingStatus.length < _length + 15;
+            _length = _processingStatus.length;
+          });
+        });
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    List<List<ProcessTag>> tags = ProcessingStatus.processTags.sublist(1);
     return Expanded(
       // height: 500,
       child: ListView.builder(
           controller: _scrollController,
           shrinkWrap: true,
-          itemCount: _totalCount + 1,
+          itemCount: _length + 1,
           itemBuilder: (BuildContext ctx, int index) {
-            if (index == _totalCount) {
+            if (index == _length) {
               if (_done) {
                 return Container();
               } else {
@@ -199,28 +207,30 @@ class _TableState extends State<_Table> {
                     )));
               }
             }
-            List<List<bool>> completed =
-                List.filled(_processingSteps.length, null);
 
-            for (int i = 0; i < _processingSteps.length; i++) {
-              int nValues = _processingSteps.values.toList()[i].length;
-              List<bool> thisCompleted = List.filled(nValues, true);
-              for (int j = 0; j < nValues; j++) {
-                if (index >= 12) {
-                  thisCompleted[j] = false;
-                }
-                if ((index == 12) && (i == 0)) {
-                  if (j < 1) {
-                    thisCompleted[j] = true;
-                  } else if (j == 1) {
-                    thisCompleted[j] = null;
-                  }
-                }
-              }
+            // List<List<bool>> completed =
+            //     List.filled(_processingSteps.length, null);
 
-              completed[i] = thisCompleted;
-            }
-            return _buildRow('mouse $index', ctx, completed);
+            // for (int i = 0; i < _processingSteps.length; i++) {
+            //   int nValues = _processingSteps.values.toList()[i].length;
+            //   List<bool> thisCompleted = List.filled(nValues, true);
+            //   for (int j = 0; j < nValues; j++) {
+            //     if (index >= 12) {
+            //       thisCompleted[j] = false;
+            //     }
+            //     if ((index == 12) && (i == 0)) {
+            //       if (j < 1) {
+            //         thisCompleted[j] = true;
+            //       } else if (j == 1) {
+            //         thisCompleted[j] = null;
+            //       }
+            //     }
+            //   }
+
+            //   completed[i] = thisCompleted;
+            // }
+            return _buildRow(_processingStatus[index].key, ctx,
+                _processingStatus[index].value, tags);
           }),
     );
   }
@@ -261,18 +271,6 @@ class _CheckBoxState extends State<_CheckBox> {
   }
 }
 
-Map<String, List<IconData>> _processingSteps = {
-  'CALIBRATION': [
-    Icons.file_copy,
-    Icons.blur_on,
-    Icons.center_focus_weak,
-    Icons.qr_code_scanner,
-  ],
-  'DEEPSQUEAK': [Icons.graphic_eq],
-  'DEEPLABCUT': [Icons.scatter_plot, Icons.view_in_ar],
-  'MIGRATION': [Icons.cloud_done, Icons.save]
-};
-
 class DialogButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -285,6 +283,7 @@ class DialogButton extends StatelessWidget {
 }
 
 void main() {
+  ProcessingStatus();
   runApp(MaterialApp(
       home: Scaffold(body: DialogButton()),
       theme: ThemeData(
