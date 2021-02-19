@@ -30,6 +30,12 @@ class _ShrinkGrowState extends State<ShrinkGrow>
   }
 
   @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ScaleTransition(
         scale: animation, child: Icon(widget.icon, color: widget.color));
@@ -104,44 +110,10 @@ void _showDialog(BuildContext context) async {
                 //     child:
                 SizedBox(
                     width: 750,
-                    child: Expanded(
-                        child:
-                            Column(mainAxisSize: MainAxisSize.min, children: [
+                    // child: Expanded(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
                       _buildHeader(theme.buttonColor),
-                      Expanded(
-                        // height: 500,
-                        child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: 15,
-                            itemBuilder: (BuildContext ctx, int index) {
-                              List<List<bool>> completed =
-                                  List.filled(_processingSteps.length, null);
-
-                              for (int i = 0;
-                                  i < _processingSteps.length;
-                                  i++) {
-                                int nValues =
-                                    _processingSteps.values.toList()[i].length;
-                                List<bool> thisCompleted =
-                                    List.filled(nValues, true);
-                                for (int j = 0; j < nValues; j++) {
-                                  if (index >= 12) {
-                                    thisCompleted[j] = false;
-                                  }
-                                  if ((index == 12) && (i == 0)) {
-                                    if (j < 1) {
-                                      thisCompleted[j] = true;
-                                    } else if (j == 1) {
-                                      thisCompleted[j] = null;
-                                    }
-                                  }
-                                }
-
-                                completed[i] = thisCompleted;
-                              }
-                              return _buildRow('mouse $index', ctx, completed);
-                            }),
-                      ),
+                      _Table(),
                       SizedBox(height: 10),
                       SizedBox(
                           height: 50,
@@ -151,6 +123,7 @@ void _showDialog(BuildContext context) async {
                             children: [
                               SizedBox(
                                   width: 250,
+                                  // child: _CheckBox('Enable DeepSqueak')
                                   child: CheckboxListTile(
                                       title: Text('Enable DeepSqueak',
                                           style: TextStyle(
@@ -173,10 +146,119 @@ void _showDialog(BuildContext context) async {
                                           'dlc ${running ? "on" : "false"}')))
                             ],
                           )))
-                    ])))
+                    ])) //)
             // ),
             );
       });
+}
+
+class _Table extends StatefulWidget {
+  @override
+  _TableState createState() => _TableState();
+}
+
+class _TableState extends State<_Table> {
+  ScrollController _scrollController = ScrollController();
+  bool _done = false;
+  int _totalCount = 15;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+          _scrollController.position.maxScrollExtent) {
+        print('reached end of page');
+        //request next ~30 from server, then setState:
+        //  set done to true if no more
+        //  increment totalcount
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      // height: 500,
+      child: ListView.builder(
+          controller: _scrollController,
+          shrinkWrap: true,
+          itemCount: _totalCount + 1,
+          itemBuilder: (BuildContext ctx, int index) {
+            if (index == _totalCount) {
+              if (_done) {
+                return Container();
+              } else {
+                print('returning progress wheel');
+                return SizedBox(
+                    height: 36,
+                    child: Center(
+                        child: LinearProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(ctx).buttonColor),
+                    )));
+              }
+            }
+            List<List<bool>> completed =
+                List.filled(_processingSteps.length, null);
+
+            for (int i = 0; i < _processingSteps.length; i++) {
+              int nValues = _processingSteps.values.toList()[i].length;
+              List<bool> thisCompleted = List.filled(nValues, true);
+              for (int j = 0; j < nValues; j++) {
+                if (index >= 12) {
+                  thisCompleted[j] = false;
+                }
+                if ((index == 12) && (i == 0)) {
+                  if (j < 1) {
+                    thisCompleted[j] = true;
+                  } else if (j == 1) {
+                    thisCompleted[j] = null;
+                  }
+                }
+              }
+
+              completed[i] = thisCompleted;
+            }
+            return _buildRow('mouse $index', ctx, completed);
+          }),
+    );
+  }
+}
+
+class _CheckBox extends StatefulWidget {
+  _CheckBox(this.title, this.listenable, this.callback);
+  final String title;
+  final Stream<bool> listenable;
+  final void Function(bool) callback;
+
+  @override
+  _CheckBoxState createState() => _CheckBoxState();
+}
+
+class _CheckBoxState extends State<_CheckBox> {
+  bool _isChecked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.listenable.listen((isRunning) {
+      setState(() {
+        _isChecked = isRunning;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ThemeData theme = Theme.of(context);
+    return CheckboxListTile(
+        title: Text(widget.title, style: TextStyle(color: theme.primaryColor)),
+        value: _isChecked,
+        checkColor: theme.buttonColor,
+        activeColor: theme.backgroundColor,
+        onChanged: widget.callback);
+  }
 }
 
 Map<String, List<IconData>> _processingSteps = {
