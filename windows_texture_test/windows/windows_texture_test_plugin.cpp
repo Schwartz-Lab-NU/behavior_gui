@@ -193,8 +193,11 @@ class TCPSocket {
 
         if (ret < 0) {
             int lastErr = WSAGetLastError();
-            if (lastErr == 10060) {
+            if (lastErr == WSAETIMEDOUT) {
                 // socket timed out
+                return 0;
+            } else if (lastErr == WSA_IO_PENDING) {
+                // windows was writing to the buffer as we tried to read??
                 return 0;
             }
             std::wcout << "Error receiving message with code: " << lastErr
