@@ -38,7 +38,7 @@ class _ShrinkGrowState extends State<ShrinkGrow>
 
 List<Widget> _buildCells(List<Widget> children) {
   return children.map<Widget>((child) {
-    return SizedBox(child: Center(child: child), width: 100, height: 20);
+    return SizedBox(child: Center(child: child), width: 120, height: 20);
   }).toList();
 }
 
@@ -53,22 +53,37 @@ Widget _buildHeader(Color titleColor) {
               }).toList()));
 }
 
-Widget _buildRow(String session, List<Color> colors, int animating) {
+Widget _buildRow(
+    String session, BuildContext context, List<List<bool>> completed) {
   int i = 0;
+  Color completeColor = Theme.of(context).buttonColor;
+  Color incompleteColor = Theme.of(context).unselectedWidgetColor;
+
   return Padding(
       padding: EdgeInsets.fromLTRB(0, 8, 0, 8),
       child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: _buildCells(<Widget>[
-                Text(session, style: TextStyle(color: colors[0])),
+                Text(session,
+                    style: TextStyle(color: Theme.of(context).primaryColor)),
               ] +
-              _processingSteps.values.map<Widget>((icon) {
-                i += 1;
-                if (i == animating) {
-                  return ShrinkGrow(icon, colors[i]);
+              _processingSteps.values.map<Widget>((icons) {
+                List<Widget> children = List.filled(icons.length, null);
+                for (int j = 0; j < icons.length; j++) {
+                  if (completed[i][j] == null) {
+                    children[j] = ShrinkGrow(icons[j], incompleteColor);
+                  } else {
+                    children[j] = Icon(icons[j],
+                        color:
+                            completed[i][j] ? completeColor : incompleteColor);
+                  }
                 }
-                return Icon(icon, color: colors[i]);
+                i += 1;
+
+                return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: children);
               }).toList())));
 }
 
@@ -88,34 +103,43 @@ void _showDialog(BuildContext context) async {
                 //     padding: EdgeInsets.fromLTRB(24, 20, 24, 36),
                 //     child:
                 SizedBox(
-                    width: 700,
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    width: 750,
+                    child: Expanded(
+                        child:
+                            Column(mainAxisSize: MainAxisSize.min, children: [
                       _buildHeader(theme.buttonColor),
-                      SizedBox(
-                        height: 500,
+                      Expanded(
+                        // height: 500,
                         child: ListView.builder(
                             shrinkWrap: true,
                             itemCount: 15,
                             itemBuilder: (BuildContext ctx, int index) {
-                              List<Color> colors;
-                              int animating;
-                              if (index < currentlyProcessing) {
-                                colors = [theme.primaryColor] +
-                                    List<Color>.filled(4, theme.buttonColor);
-                                // List<Color>.filled(4, Colors.lightBlue);
-                              } else if (index == currentlyProcessing) {
-                                colors = [theme.primaryColor] +
-                                    List<Color>.filled(2, theme.buttonColor) +
-                                    List<Color>.filled(
-                                        2, theme.unselectedWidgetColor);
-                                animating = 3;
-                              } else {
-                                colors = [theme.primaryColor] +
-                                    List<Color>.filled(
-                                        4, theme.unselectedWidgetColor);
+                              List<List<bool>> completed =
+                                  List.filled(_processingSteps.length, null);
+
+                              for (int i = 0;
+                                  i < _processingSteps.length;
+                                  i++) {
+                                int nValues =
+                                    _processingSteps.values.toList()[i].length;
+                                List<bool> thisCompleted =
+                                    List.filled(nValues, true);
+                                for (int j = 0; j < nValues; j++) {
+                                  if (index >= 12) {
+                                    thisCompleted[j] = false;
+                                  }
+                                  if ((index == 12) && (i == 0)) {
+                                    if (j < 1) {
+                                      thisCompleted[j] = true;
+                                    } else if (j == 1) {
+                                      thisCompleted[j] = null;
+                                    }
+                                  }
+                                }
+
+                                completed[i] = thisCompleted;
                               }
-                              return _buildRow(
-                                  'mouse $index', colors, animating);
+                              return _buildRow('mouse $index', ctx, completed);
                             }),
                       ),
                       SizedBox(height: 10),
@@ -149,17 +173,22 @@ void _showDialog(BuildContext context) async {
                                           'dlc ${running ? "on" : "false"}')))
                             ],
                           )))
-                    ]))
+                    ])))
             // ),
             );
       });
 }
 
-Map<String, IconData> _processingSteps = {
-  'UNDISTORTED': Icons.qr_code_scanner,
-  'DEEPSQUEAK': Icons.graphic_eq,
-  'DEEPLABCUT': Icons.scatter_plot,
-  'UPLOADED': Icons.cloud_done
+Map<String, List<IconData>> _processingSteps = {
+  'CALIBRATION': [
+    Icons.file_copy,
+    Icons.blur_on,
+    Icons.center_focus_weak,
+    Icons.qr_code_scanner,
+  ],
+  'DEEPSQUEAK': [Icons.graphic_eq],
+  'DEEPLABCUT': [Icons.scatter_plot, Icons.view_in_ar],
+  'MIGRATION': [Icons.cloud_done, Icons.save]
 };
 
 class DialogButton extends StatelessWidget {
