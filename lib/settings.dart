@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api.dart';
 import 'dart:async';
+import 'messageLog.dart';
 
 RigStatusMap _rigStatus = RigStatusMap.live();
 
@@ -474,28 +475,6 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         CurvedAnimation(parent: _controllerCalib, curve: Curves.fastOutSlowIn);
   }
 
-  void _showMessageLog(BuildContext context) async {
-    await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          ThemeData theme = Theme.of(context);
-          return SimpleDialog(
-            title: Center(
-                child: Text('Message Log',
-                    style: TextStyle(color: theme.buttonColor))),
-            children: Api.messageQueue.map<Widget>((text) {
-              return SimpleDialogOption(
-                  // onPressed: () => Navigator.pop(context),
-                  child: Row(children: [
-                Text('[${text.key}]',
-                    style: TextStyle(color: theme.buttonColor)),
-                Text(text.value, style: TextStyle(color: theme.primaryColor))
-              ]));
-            }).toList(),
-          );
-        });
-  }
-
   void _showDialog(BuildContext context, doRecording) async {
     String oldText = _text.text;
     await showDialog(
@@ -579,7 +558,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         Icons.leaderboard, 'ANALYSIS', callback);
 
     Widget logsButton = _buildButtonColumn(widget.width / 4, true, context,
-        Icons.info, 'LOGS', (arg) => _showMessageLog(context));
+        Icons.info, 'LOGS', (arg) => showMessageLog(context));
 
     Widget postButton = _buildButtonColumn(
         widget.width / 4, true, context, Icons.computer, 'POST', callback);
