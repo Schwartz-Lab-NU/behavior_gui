@@ -13,6 +13,7 @@ void main() {
       theme: ThemeData(
         brightness: Brightness.dark,
         backgroundColor: Colors.white,
+        dialogBackgroundColor: Colors.white,
         primaryColor: Color.fromARGB(255, 50, 50, 50),
         accentColor: Colors.cyan,
         buttonColor: Colors.lightBlue,

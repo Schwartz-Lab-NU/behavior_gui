@@ -478,11 +478,15 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     await showDialog(
         context: context,
         builder: (BuildContext context) {
+          ThemeData theme = Theme.of(context);
           return SimpleDialog(
-            title: Text('Message Log'),
+            title:
+                Text('Message Log', style: TextStyle(color: theme.buttonColor)),
             children: Api.messageQueue.map<Widget>((text) {
               return SimpleDialogOption(
-                  onPressed: () => Navigator.pop(context), child: Text(text));
+                  // onPressed: () => Navigator.pop(context),
+                  child:
+                      Text(text, style: TextStyle(color: theme.primaryColor)));
             }).toList(),
           );
         });
@@ -493,25 +497,33 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     await showDialog(
         context: context,
         builder: (BuildContext context) {
+          ThemeData theme = Theme.of(context);
+          TextStyle buttonStyle = TextStyle(color: theme.buttonColor);
+          TextStyle primaryStyle = TextStyle(color: theme.primaryColor);
           return AlertDialog(
             content: Row(children: [
               Expanded(
                   child: TextField(
                       controller: _text,
+                      style: primaryStyle,
                       autofocus: true,
                       decoration: InputDecoration(
-                          labelText: 'Input root file name',
-                          hintText: 'e.g., 01012021_mouse666')))
+                        labelText: 'Input root file name',
+                        // labelStyle: buttonStyle,
+                        hintText: 'e.g., 01012021_mouse666',
+                        // hintStyle: primaryStyle,
+                      )))
             ]),
             actions: [
               TextButton(
-                  child: Text('CANCEL'),
+                  child: Text('CANCEL', style: buttonStyle),
                   onPressed: () {
                     _text.text = oldText;
                     Navigator.pop(context);
                   }),
               TextButton(
-                  child: Text(doRecording ? 'RECORD' : 'APPLY'),
+                  child: Text(doRecording ? 'RECORD' : 'APPLY',
+                      style: buttonStyle),
                   onPressed: () {
                     if (doRecording) {
                       widget.recordCallback(_text.text);
