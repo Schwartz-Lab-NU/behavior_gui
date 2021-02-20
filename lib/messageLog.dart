@@ -20,6 +20,7 @@ void showMessageLog(BuildContext context) async {
                           initialData: null,
                           builder: (context, snapshot) {
                             return ListView.builder(
+                              shrinkWrap: true,
                               itemCount: Api.messageQueue.length,
                               itemBuilder: (context, index) {
                                 MapEntry<DateTime, String> entry =
