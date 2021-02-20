@@ -26,15 +26,18 @@ void showMessageLog(BuildContext context) async {
                               itemBuilder: (context, index) {
                                 MapEntry<DateTime, String> entry =
                                     Api.messageQueue.elementAt(index);
-                                return Row(children: [
-                                  Text('[${entry.key}] ',
-                                      style:
-                                          TextStyle(color: theme.buttonColor)),
-                                  Flexible(
-                                      child: Text(entry.value,
+                                return Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text('[${entry.key}] ',
                                           style: TextStyle(
-                                              color: theme.primaryColor)))
-                                ]);
+                                              color: theme.buttonColor)),
+                                      Flexible(
+                                          child: Text(entry.value,
+                                              style: TextStyle(
+                                                  color: theme.primaryColor)))
+                                    ]);
                               },
                             );
                           })))
