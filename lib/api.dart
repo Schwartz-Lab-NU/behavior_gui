@@ -409,7 +409,8 @@ class Api {
   static final StreamController<MapEntry<DateTime, String>> _changeController =
       StreamController<MapEntry<DateTime, String>>.broadcast();
   static bool _hasSetupMessage = false;
-  static ListQueue<MapEntry<DateTime, String>> messageQueue = [];
+  static ListQueue<MapEntry<DateTime, String>> messageQueue =
+      ListQueue<MapEntry<DateTime, String>>();
 
   static Stream<MapEntry<DateTime, String>> get onMessage {
     if (!Api._hasSetupMessage) {
