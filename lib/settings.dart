@@ -368,7 +368,7 @@ class StatusBar extends StatefulWidget {
 class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
   DateTime _lastUpdate = DateTime.now();
   // bool _expanded;
-  MapEntry<DateTime, String> _lastMessage = Api.messageQueue.last;
+  MapEntry<DateTime, String> _lastMessage;
   StreamSubscription<void> statusSub;
   StreamSubscription<MapEntry<DateTime, String>> messageSub;
 
@@ -403,6 +403,13 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         // _expanded = _rigStatus['initialization'] == 'initialized';
       });
     });
+
+    try {
+      _lastMessage = Api.messageQueue.first;
+    } catch (_) {
+      _lastMessage = MapEntry<DateTime, String>(null, '');
+    }
+
     messageSub = Api.onMessage.listen((message) {
       setState(() {
         _lastMessage = message;
