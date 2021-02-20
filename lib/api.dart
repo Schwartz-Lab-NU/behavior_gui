@@ -406,8 +406,8 @@ class Api {
     'transports': ['websocket']
   });
 
-  static final StreamController<void> _changeController =
-      StreamController<void>.broadcast();
+  static final StreamController<MapEntry<DateTime, String>> _changeController =
+      StreamController<MapEntry<DateTime, String>>.broadcast();
   static bool _hasSetupMessage = false;
   static List<MapEntry<DateTime, String>> messageQueue = [];
 
@@ -417,7 +417,7 @@ class Api {
         MapEntry<DateTime, String> entry =
             MapEntry<DateTime, String>(DateTime.now(), message);
         Api.messageQueue.add(entry);
-        Api._changeController.add(null);
+        Api._changeController.add(entry);
       });
       Api._hasSetupMessage = true;
     }
