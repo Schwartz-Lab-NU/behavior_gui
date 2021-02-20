@@ -14,7 +14,8 @@ void showMessageLog(BuildContext context) async {
               SizedBox(
                   height: 500,
                   width: 750,
-                  child: Expanded(
+                  child: Padding(
+                      padding: EdgeInsets.fromLTRB(24, 20, 24, 24),
                       child: StreamBuilder(
                           stream: Api.onMessage,
                           initialData: null,
@@ -29,9 +30,10 @@ void showMessageLog(BuildContext context) async {
                                   Text('[${entry.key}] ',
                                       style:
                                           TextStyle(color: theme.buttonColor)),
-                                  Text(entry.value,
-                                      style:
-                                          TextStyle(color: theme.primaryColor))
+                                  Flexible(
+                                      child: Text(entry.value,
+                                          style: TextStyle(
+                                              color: theme.primaryColor)))
                                 ]);
                               },
                             );
