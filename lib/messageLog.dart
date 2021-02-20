@@ -14,28 +14,30 @@ void showMessageLog(BuildContext context) async {
               SizedBox(
                   height: 500,
                   width: 750,
-                  // child: Expanded(
-                  child: StreamBuilder(
-                      stream: Api.onMessage,
-                      initialData: null,
-                      builder: (context, snapshot) {
-                        return ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: Api.messageQueue.length,
-                          itemBuilder: (context, index) {
-                            MapEntry<DateTime, String> entry =
-                                Api.messageQueue.elementAt(index);
-                            return Row(children: [
-                              Text('[${entry.key}] ',
-                                  style: TextStyle(color: theme.buttonColor)),
-                              Text(entry.value,
-                                  style: TextStyle(color: theme.primaryColor))
-                            ]);
-                          },
-                        );
-                      })
-                  // )
-                  )
+                  child: Padding(
+                      padding: EdgeInsets.fromLTRB(24, 20, 24, 24),
+                      child: StreamBuilder(
+                          stream: Api.onMessage,
+                          initialData: null,
+                          builder: (context, snapshot) {
+                            return ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: Api.messageQueue.length,
+                              itemBuilder: (context, index) {
+                                MapEntry<DateTime, String> entry =
+                                    Api.messageQueue.elementAt(index);
+                                return Row(children: [
+                                  Text('[${entry.key}] ',
+                                      style:
+                                          TextStyle(color: theme.buttonColor)),
+                                  Flexible(
+                                      child: Text(entry.value,
+                                          style: TextStyle(
+                                              color: theme.primaryColor)))
+                                ]);
+                              },
+                            );
+                          })))
             ]
             //   Api.messageQueue.map<Widget>((text) {
             //     return SimpleDialogOption(
