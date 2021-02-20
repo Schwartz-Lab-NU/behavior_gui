@@ -406,11 +406,10 @@ class Api {
     'transports': ['websocket']
   });
 
-  static final StreamController<MapEntry<DateTime, String>> _changeController =
-      StreamController<MapEntry<DateTime, String>>.broadcast();
+  static final StreamController<void> _changeController =
+      StreamController<void>.broadcast();
   static bool _hasSetupMessage = false;
-  static Queue<MapEntry<DateTime, String>> messageQueue =
-      Queue<MapEntry<DateTime, String>>();
+  static List<MapEntry<DateTime, String>> messageQueue = [];
 
   static Stream<MapEntry<DateTime, String>> get onMessage {
     if (!Api._hasSetupMessage) {
@@ -418,7 +417,7 @@ class Api {
         MapEntry<DateTime, String> entry =
             MapEntry<DateTime, String>(DateTime.now(), message);
         Api.messageQueue.add(entry);
-        Api._changeController.add(entry);
+        Api._changeController.add(null);
       });
       Api._hasSetupMessage = true;
     }
