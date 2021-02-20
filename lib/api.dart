@@ -406,16 +406,19 @@ class Api {
     'transports': ['websocket']
   });
 
-  static final StreamController<String> _changeController =
-      StreamController<String>.broadcast();
+  static final StreamController<MapEntry<DateTime, String>> _changeController =
+      StreamController<MapEntry<DateTime, String>>.broadcast();
   static bool _hasSetupMessage = false;
-  static Queue<String> messageQueue = Queue<String>();
+  static Queue<MapEntry<DateTime, String>> messageQueue =
+      Queue<MapEntry<DateTime, String>>();
 
-  static Stream<String> get onMessage {
+  static Stream<MapEntry<DateTime, String>> get onMessage {
     if (!Api._hasSetupMessage) {
       Api._socket.on('message', (message) {
-        Api.messageQueue.add(message);
-        Api._changeController.add(message);
+        MapEntry<DateTime, String> entry =
+            MapEntry<DateTime, String>(DateTime.now(), message);
+        Api.messageQueue.add(entry);
+        Api._changeController.add(entry);
       });
       Api._hasSetupMessage = true;
     }
