@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:async';
 // import 'package:http/http.dart' as http;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:flutter/material.dart' show IconData;
 
 const String socketHostname = 'http://localhost:5001';
 // const String mainHostname = 'http://localhost:5000';
@@ -287,6 +288,119 @@ class RigStatusMap extends MapBase<String, RigStatusItem> {
   }
 }
 
+class ProcessTag {
+  final String name;
+  final String description;
+  final IconData icon;
+  ProcessTag(Map<String, dynamic> tags)
+      : name = tags['name'],
+        description = tags['description'],
+        icon = IconData(tags['icon'], fontFamily: 'MaterialIcons');
+}
+
+class ProcessingStatus extends UnmodifiableListView {
+  //Member variables
+  static final ProcessingStatus _instance = ProcessingStatus._singleton();
+  static final List<MapEntry<String, List<List<bool>>>> _list = [];
+  static final List<String> columns = [];
+  static List<List<ProcessTag>> processTags = [];
+
+  // static bool _isInitialized = false;
+  static final StreamController<bool> _initializationController =
+      StreamController<bool>.broadcast();
+  static Stream<bool> get onInitialization => _initializationController.stream;
+
+  static final StreamController<ProcessingStatus> _changeController =
+      StreamController<ProcessingStatus>.broadcast();
+  static Stream<ProcessingStatus> get onChange => _changeController.stream;
+
+  //constructors
+  factory ProcessingStatus() {
+    return _instance;
+  }
+
+  ProcessingStatus._singleton() : super(_list) {
+    _initializationController.add(false);
+    Api._socket.onDisconnect((_) => _teardown());
+    // Api._socket.onDisconnect((_) => _list.clear());
+    Api._socket.onConnect((_) => _instantiate());
+    // Api._socket.onConnect((_) => _list.clear());
+    Api._socket.on('processed', (data) => _update(data));
+  }
+
+  void _teardown() {
+    _list.clear();
+    _changeController.add(ProcessingStatus());
+    _initializationController.add(false);
+  }
+
+  _instantiate() async {
+    Future.wait([
+      Api._get('processing categories').then(_updateColumns),
+      next(15).then((_) => _changeController.add(ProcessingStatus()))
+    ]).then((_) => _initializationController.add(true));
+  }
+
+  static Future<ProcessingStatus> next(int n) async {
+    return Api._get(['processing', _list.length, n]).then((json) {
+      return _fromJSON(json);
+    });
+  }
+
+  static ProcessingStatus _fromJSON(Map<String, dynamic> json) {
+    int index = json['first'];
+    int count = json['sessions'].length;
+    int excess = index + count - _list.length;
+    print(
+        'currently at ${_list.length} items. Adding $count from $index (excess of $excess)');
+    if (excess > 0) {
+      _list.addAll(
+          List.filled(excess, MapEntry<String, List<List<bool>>>(null, null)));
+    }
+    for (int i = 0; i < count; i++) {
+      Map<String, dynamic> session = json['sessions'][i];
+      _list[index++] = MapEntry(
+          session['name'],
+          session['status'].map<List<bool>>((column) {
+            return (column as List).map<bool>((done) => done as bool).toList();
+          }).toList());
+    }
+    ProcessingStatus ret = ProcessingStatus();
+    _changeController.add(ret);
+    return ret;
+  }
+
+  static void _updateColumns(Map<String, dynamic> json) {
+    columns.clear();
+    columns.addAll(json['headers'].map<String>((header) {
+      return (header as String).toUpperCase();
+    }));
+
+    processTags = (json['info'] as List).map<List<ProcessTag>>((processTags) {
+      return (processTags as List)
+          .map<ProcessTag>(
+              (processTag) => ProcessTag(processTag as Map<String, dynamic>))
+          .toList();
+    }).toList();
+  }
+
+  static void _update(Map<String, dynamic> json) {
+    int index = json['index'];
+    if (index == -1) {
+      _list.insert(
+          0,
+          MapEntry<String, List<List<bool>>>(
+              json['session'],
+              processTags
+                  .map<List<bool>>((processTag) =>
+                      processTag.map<bool>((_) => false).toList())
+                  .toList()));
+    } else {
+      _list[index].value[json['column']][json['item']] = json['status'];
+    }
+  }
+}
+
 class Api {
   static final IO.Socket _socket = IO.io(socketHostname, <String, dynamic>{
     'transports': ['websocket']
@@ -316,38 +430,39 @@ class Api {
     return c.future;
   }
 
-  static Future<Map<String, dynamic>> _get(String message) async {
+  static Future<Map<String, dynamic>> _get(dynamic message) async {
     Completer<Map<String, dynamic>> c = Completer<Map<String, dynamic>>();
     _socket.emitWithAck('get', message, ack: (data) {
       c.complete(data);
     });
     return c.future;
   }
-
-  // static Future<http.StreamedResponse> video(int id) async {
-  //   http.MultipartRequest request =
-  //       new http.MultipartRequest('GET', Uri.parse('$mainHostname/video/$id'));
-  //   return request.send();
-  // }
 }
 
 void main() async {
-  print('awaiting connection');
-  RigStatusMap dynamicmap = RigStatusMap.live();
-  await for (bool init in RigStatusMap.onInitialization) {
+  // print('awaiting connection');
+  // RigStatusMap dynamicmap = RigStatusMap.live();
+  // await for (bool init in RigStatusMap.onInitialization) {
+  //   if (init) break;
+  // }
+  // print('got dynamic map: $dynamicmap');
+
+  // RigStatusMap staticmap = RigStatusMap();
+
+  // staticmap['camera 3'].current['displaying'].current =
+  //     !dynamicmap['camera 3'].current['displaying'].current;
+
+  // // RigStatusMap.onChange
+  // //     .listen((statusmap) => print('got map update: $statusmap'));
+  // RigStatusMap updated = await RigStatusMap.apply(staticmap);
+  // print('got update as return value: $updated');
+
+  var ps = ProcessingStatus();
+  await for (bool init in ProcessingStatus.onInitialization) {
     if (init) break;
   }
-  print('got dynamic map: $dynamicmap');
-
-  RigStatusMap staticmap = RigStatusMap();
-
-  staticmap['camera 3'].current['displaying'].current =
-      !dynamicmap['camera 3'].current['displaying'].current;
-
-  // RigStatusMap.onChange
-  //     .listen((statusmap) => print('got map update: $statusmap'));
-  RigStatusMap updated = await RigStatusMap.apply(staticmap);
-  print('got update as return value: $updated');
+  print('got processing status');
+  print(ps);
 
   return;
 }
