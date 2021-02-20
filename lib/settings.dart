@@ -367,9 +367,9 @@ class StatusBar extends StatefulWidget {
 class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
   DateTime _lastUpdate = DateTime.now();
   // bool _expanded;
-  String _lastMessage = '';
+  MapEntry<DateTime, String> _lastMessage = MapEntry(null, '');
   StreamSubscription<void> statusSub;
-  StreamSubscription<String> messageSub;
+  StreamSubscription<MapEntry<DateTime, String>> messageSub;
 
   AnimationController _controllerStatus;
   Animation<double> _animationStatus;
@@ -480,13 +480,17 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         builder: (BuildContext context) {
           ThemeData theme = Theme.of(context);
           return SimpleDialog(
-            title:
-                Text('Message Log', style: TextStyle(color: theme.buttonColor)),
+            title: Center(
+                child: Text('Message Log',
+                    style: TextStyle(color: theme.buttonColor))),
             children: Api.messageQueue.map<Widget>((text) {
               return SimpleDialogOption(
                   // onPressed: () => Navigator.pop(context),
-                  child:
-                      Text(text, style: TextStyle(color: theme.primaryColor)));
+                  child: Row(children: [
+                Text('[${text.key}]',
+                    style: TextStyle(color: theme.buttonColor)),
+                Text(text.value, style: TextStyle(color: theme.primaryColor))
+              ]));
             }).toList(),
           );
         });
@@ -628,7 +632,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
             SizedBox(
                 width: widget.width,
                 child: Text(
-                  _lastMessage,
+                  _lastMessage.value,
                   style: TextStyle(color: active),
                 )),
           ])),
