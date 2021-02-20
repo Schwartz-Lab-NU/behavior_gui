@@ -24,7 +24,7 @@ void showMessageLog(BuildContext context) async {
                               itemCount: Api.messageQueue.length,
                               itemBuilder: (context, index) {
                                 MapEntry<DateTime, String> entry =
-                                    Api.messageQueue[index];
+                                    Api.messageQueue.elementAt(index);
                                 return Row(children: [
                                   Text('[${entry.key}] ',
                                       style:

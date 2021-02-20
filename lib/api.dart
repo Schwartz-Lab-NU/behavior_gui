@@ -409,14 +409,14 @@ class Api {
   static final StreamController<MapEntry<DateTime, String>> _changeController =
       StreamController<MapEntry<DateTime, String>>.broadcast();
   static bool _hasSetupMessage = false;
-  static List<MapEntry<DateTime, String>> messageQueue = [];
+  static ListQueue<MapEntry<DateTime, String>> messageQueue = [];
 
   static Stream<MapEntry<DateTime, String>> get onMessage {
     if (!Api._hasSetupMessage) {
       Api._socket.on('message', (message) {
         MapEntry<DateTime, String> entry =
             MapEntry<DateTime, String>(DateTime.now(), message);
-        Api.messageQueue.add(entry);
+        Api.messageQueue.addFirst(entry);
         Api._changeController.add(entry);
       });
       Api._hasSetupMessage = true;
