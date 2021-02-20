@@ -77,11 +77,20 @@ Widget _buildRow(String session, BuildContext context,
                 List<Widget> children = List.filled(tagGroup.length, null);
                 for (int j = 0; j < tagGroup.length; j++) {
                   if (completed[i][j] == null) {
-                    children[j] = ShrinkGrow(tagGroup[j].icon, incompleteColor);
+                    children[j] = Tooltip(
+                        waitDuration: Duration(milliseconds: 500),
+                        message:
+                            '${tagGroup[j].name}: ${tagGroup[j].description}',
+                        child: ShrinkGrow(tagGroup[j].icon, incompleteColor));
                   } else {
-                    children[j] = Icon(tagGroup[j].icon,
-                        color:
-                            completed[i][j] ? completeColor : incompleteColor);
+                    children[j] = Tooltip(
+                        waitDuration: Duration(milliseconds: 500),
+                        message:
+                            '${tagGroup[j].name}: ${tagGroup[j].description}',
+                        child: Icon(tagGroup[j].icon,
+                            color: completed[i][j]
+                                ? completeColor
+                                : incompleteColor));
                   }
                 }
                 i += 1;
