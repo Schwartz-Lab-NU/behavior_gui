@@ -647,7 +647,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                       'Top Camera Alignment',
                       'Aligns the top camera to the arena by detecting the location of the fixed calibration markers.',
                       [0],
-                      CalibrationType.extrinsic,
+                      CalibrationType.alignment,
                       _doCalibration)),
               SizedBox(width: 10),
               Container(
@@ -735,7 +735,7 @@ class _CalibrationBox extends StatelessWidget {
   }
 }
 
-enum CalibrationType { intrinsic, extrinsic }
+enum CalibrationType { intrinsic, alignment,extrinsic }
 
 void main() async {
   RigStatusMap.live();
@@ -768,7 +768,7 @@ void main() async {
                             'Top Camera Alignment',
                             'Aligns the top camera to the arena by detecting the location of the fixed calibration markers.',
                             [0],
-                            CalibrationType.extrinsic,
+                            CalibrationType.alignment,
                             (ind, type) =>
                                 print('setting camera $ind to $type'))),
                     SizedBox(width: 10),

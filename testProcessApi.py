@@ -13,7 +13,7 @@ def getRandomItem():
     return True  # indicates done
 
 
-def getRandomStatus():
+def getRandomStatus(rootfilename):
   return [
       [getRandomItem(), getRandomItem(), getRandomItem(), getRandomItem()],
       [getRandomItem()],
@@ -51,36 +51,7 @@ def parse_request(request_type, *args):
   # if request_type == 'processed':
   #   return {'index': -1, 'session': 'testMouseABC'}
 
-  if request_type == 'processing categories':
-    return {
-        'headers': ['session', 'calibration', 'deepsqueak', 'deeplabcut', 'migration'],
-        'info': [
-            [{'name': 'Session name',
-              'description': 'Set by the root file name during the recording', 'icon': None}],
-            [
-                {'name': 'Configuration file',
-                 'description': 'Copies the configuration file to the session directory', 'icon': 59181},
-                {'name': 'Undistortion',
-                    'description': 'Uses the most recent calibration to correct for lens distortion', 'icon': 58868},
-                {'name': 'Coordinate extraction',
-                    'description': 'Uses the arena-mounted markers to detect the location of the aerna', 'icon': 58950},
-                {'name': '3D alignment', 'description': 'Uses the extrinsic calibration data to extract the position of the cameras relative to the arena', 'icon': 59735}
-            ],
-            [{'name': 'DeepSqueak', 'description': 'Parses the microphone data for squeaks',
-              'icon': 59288}],
-            [
-                {'name': 'DeepLabCut', 'description': 'Extracts 2D pose estimates of mice in the arena',
-                 'icon': 59813},
-                {'name': '3D pose estimation',
-                    'description': 'Transforms the DeepLabCut results into 3D coordinates using the calibration data', 'icon': 60097}
-            ],
-            [
-                {'name': 'Upload', 'description': 'Uploads the data to the Schwartz Lab server',
-                 'icon': 58981},
-                {'name': 'HDD', 'description': 'Transfers the data to long-term storage on this computer', 'icon': 59809}
-            ]
-        ]
-    }
+
 
 
 if __name__ == "__main__":
