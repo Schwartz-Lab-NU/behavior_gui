@@ -453,6 +453,12 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     });
   }
 
+  void _toggleAnalyze() {
+    RigStatusMap rigStatus = RigStatusMap();
+    rigStatus['analyzing'].current = !rigStatus['analyzing'].current;
+    RigStatusMap.apply(rigStatus);
+  }
+
   void _doCalibration(int ind, CalibrationType type) {
     RigStatusMap rigStatus = RigStatusMap();
     rigStatus['calibration'].current['is calibrating'].current = true;
@@ -562,7 +568,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
             : (arg) => _toggleCalibrate());
 
     Widget processButton = _buildButtonColumn(widget.width / 4, true, context,
-        Icons.leaderboard, 'ANALYSIS', callback);
+        Icons.leaderboard, 'ANALYSIS', (data) => _toggleAnalyze());
 
     Widget logsButton = _buildButtonColumn(widget.width / 4, true, context,
         Icons.info, 'LOGS', (arg) => showMessageLog(context));
@@ -735,7 +741,7 @@ class _CalibrationBox extends StatelessWidget {
   }
 }
 
-enum CalibrationType { intrinsic, alignment,extrinsic }
+enum CalibrationType { intrinsic, alignment, extrinsic }
 
 void main() async {
   RigStatusMap.live();
