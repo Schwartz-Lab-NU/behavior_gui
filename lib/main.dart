@@ -74,11 +74,16 @@ class _LoadedAppState extends State<LoadedApp> {
     });
   }
 
+  // void _toggleRecord(String animalID, String sessiontype, String trialtype, Int trialnum) {
   void _toggleRecord(String rootfilename) {
     //we want to update the state of the status list and the notes when the record button is pushed
 
     RigStatusMap rigStatus = RigStatusMap();
     rigStatus['rootfilename'].current = rootfilename;
+    // rigStatus['animalID'].current = animalID
+    // rigStatus['sessiontype'].current = sessiontype
+    // rigStatus['trialtype'].current = trialtype
+    // rigStatus['trialnum'].current=trialnum
     rigStatus['notes'].current = _text.text;
     rigStatus['recording'].current = (!_rigStatus['recording'].current);
     RigStatusMap.apply(rigStatus);

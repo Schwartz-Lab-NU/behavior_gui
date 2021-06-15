@@ -490,6 +490,10 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
 
   void _showDialog(BuildContext context, doRecording) async {
     String oldText = _text.text;
+    var animalID=['2045','2046','2052','2031','2043','2047','2048','2049'];
+    var sessionType=['testing','experiment','habituation'];
+    var trialType=['dominant','submissive','momandpups'];
+
     await showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -497,19 +501,127 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
           TextStyle buttonStyle = TextStyle(color: theme.buttonColor);
           TextStyle primaryStyle = TextStyle(color: theme.primaryColor);
           return AlertDialog(
-            content: Row(children: [
-              Expanded(
-                  child: TextField(
-                      controller: _text,
-                      style: primaryStyle,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        labelText: 'Input root file name',
-                        // labelStyle: buttonStyle,
-                        hintText: 'e.g., 01012021_mouse666',
-                        // hintStyle: primaryStyle,
-                      )))
-            ]),
+            content:Container(
+              width:300.0,
+              height: 230.0,
+              child:Column(children: [
+                /*
+                Expanded(
+                    child: TextField(
+                        controller: _text,
+                        style: primaryStyle,
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          labelText: 'Input root file name',
+                          // labelStyle: buttonStyle,
+                          hintText: 'e.g., 01012021_mouse666',
+                          // hintStyle: primaryStyle,
+                        ))),
+                        */
+                Text('Filename:',style: TextStyle(color: Colors.lightBlue),),
+                SizedBox(height:10.0),
+                TextField(
+                    controller: _text,
+                    style: TextStyle(color:Colors.lightBlue),
+                    decoration: InputDecoration(
+                      labelText:'Animal ID',
+                      labelStyle: TextStyle(color: Colors.lightBlue),
+                      hintText:'e.g., 2045',
+                      hintStyle: TextStyle(
+                        color:Colors.grey
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                        borderSide:BorderSide(
+                          color:Colors.lightBlue,
+                          style:BorderStyle.solid,
+                        )
+                      ),
+                      suffixIcon: PopupMenuButton<String>(
+                        icon:const Icon(Icons.arrow_drop_down),
+                        onSelected: (String value){
+                          _text.text=value;
+                        },
+                        itemBuilder: (BuildContext context){
+                          return animalID
+                              .map<PopupMenuItem<String>>((String value) {
+                                return new PopupMenuItem(
+                                    child: new Text(value),
+                                    value: value,);
+                              }).toList();
+                        },
+                      )
+                    ),
+                  ),
+                SizedBox(height:10.0),
+                TextField(
+                    controller: _text,
+                    style:TextStyle(color:Colors.lightBlue),
+                    decoration:InputDecoration(
+                      labelText: 'Session Type',
+                      labelStyle: TextStyle(color: Colors.lightBlue),
+                      hintText:'e.g., habituation/experiment/testing',
+                      hintStyle: TextStyle(
+                        color:Colors.grey
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                        borderSide:BorderSide(
+                          color:Colors.amber,
+                          style:BorderStyle.solid,
+                        )
+                      ),
+                      suffixIcon: PopupMenuButton<String>(
+                        icon:const Icon(Icons.arrow_drop_down),
+                        onSelected: (String value){
+                          _text.text=value;
+                        },
+                        itemBuilder: (BuildContext context){
+                          return sessionType
+                              .map<PopupMenuItem<String>>((String value) {
+                                return new PopupMenuItem(
+                                    child: new Text(value),
+                                    value: value,);
+                              }).toList();
+                        },
+                      )
+                    ),
+                ),
+                SizedBox(height:10.0),
+                TextField(
+                    controller:_text,
+                    style:TextStyle(color:Colors.lightBlue),
+                    decoration: InputDecoration(
+                      labelText:'Trial Type',
+                      labelStyle: TextStyle(color: Colors.lightBlue),
+                      hintText:'e.g., dominant/momandpups',
+                      hintStyle: TextStyle(
+                        color:Colors.grey
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                        borderSide:BorderSide(
+                          color:Colors.amber,
+                          style:BorderStyle.solid,
+                        )
+                      ),
+                      suffixIcon: PopupMenuButton<String>(
+                        icon:const Icon(Icons.arrow_drop_down),
+                        onSelected: (String value){
+                          _text.text=value;
+                        },
+                        itemBuilder: (BuildContext context){
+                          return trialType
+                              .map<PopupMenuItem<String>>((String value) {
+                                return new PopupMenuItem(
+                                    child: new Text(value),
+                                    value: value,);
+                              }).toList();
+                        },
+                      )
+                    )
+                ),
+              ]),),
             actions: [
               TextButton(
                   child: Text('CANCEL', style: buttonStyle),
@@ -527,6 +639,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                     Navigator.pop(context);
                   }),
             ],
+            elevation: 25.0,
           );
         });
   }
@@ -679,6 +792,53 @@ Map<String, IconData> icons = {
   'Audio': Icons.mic,
   // 'Post-Processing': Icons.computer
 };
+
+class CustomPopup extends StatefulWidget {
+  CustomPopup({
+    @required this.show,
+    @required this.items,
+    @required this.builderFunction,
+  });
+
+  final bool show;
+  final List<dynamic> items;
+  final Function(BuildContext context, dynamic item) builderFunction;
+
+  @override
+  _CustomPopupState createState() => _CustomPopupState();
+}
+
+class _CustomPopupState extends State<CustomPopup> {
+  @override
+  Widget build(BuildContext context) {
+    return Offstage(
+      offstage: !widget.show,
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        height: widget.show ? MediaQuery.of(context).size.height / 3 : 0,
+        width: MediaQuery.of(context).size.width / 3,
+        child: Card(
+          elevation: 3,
+          child: MediaQuery.removePadding(
+            context: context,
+            removeTop: true,
+            child: ListView.builder(
+              scrollDirection: Axis.vertical,
+              itemCount: widget.items.length,
+              itemBuilder: (context, index) {
+                Widget item = widget.builderFunction(
+                  context,
+                  widget.items[index],
+                );
+                return item;
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _CalibrationBox extends StatelessWidget {
   _CalibrationBox(this.title, this.subtitle, this.cameraIndex,
