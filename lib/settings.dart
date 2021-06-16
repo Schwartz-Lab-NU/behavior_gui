@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'api.dart';
 import 'dart:async';
 import 'messageLog.dart';
+// import 'package:toml/toml.dart';
 
 RigStatusMap _rigStatus = RigStatusMap.live();
 
@@ -493,6 +494,10 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     var animalID=['2045','2046','2052','2031','2043','2047','2048','2049'];
     var sessionType=['testing','experiment','habituation'];
     var trialType=['dominant','submissive','momandpups'];
+    //var document = await TomlDocument.load('assets/namespace/namespace.toml');
+    //var keys=document.toMap();
+    //print(keys.toString());
+
 
     await showDialog(
         context: context,
