@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'api.dart';
 import 'dart:async';
 import 'messageLog.dart';
-// import 'package:toml/toml.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart';
 
 RigStatusMap _rigStatus = RigStatusMap.live();
 
@@ -380,7 +381,12 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
   AnimationController _controllerCalib;
   Animation<double> _animationCalib;
 
-  TextEditingController _text = TextEditingController();
+  TextEditingController _textAnimal = TextEditingController();
+  TextEditingController _textSession = TextEditingController();
+  TextEditingController _textTrial = TextEditingController();
+
+  String path='assets/namespace/namespace.json';
+  Map _nameSpace = {'animalID':[],'sessionType':[],'trialType':[]};
 
   @override
   void initState() {
@@ -388,6 +394,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     // _expanded = _rigStatus['initialization'] == 'initialized';
 
     _prepareAnimations();
+    _readNameSpace(path).whenComplete(() {setState(() {});});
     statusSub = RigStatusMap.onChange.listen((didChange) {
       if (_rigStatus['initialization'].current == 'initialized') {
         _controllerStatus.forward();
@@ -460,6 +467,13 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     RigStatusMap.apply(rigStatus);
   }
 
+  void _toggleLED(){
+    print('turn on/off LED');
+    RigStatusMap rigStatus = RigStatusMap();
+    rigStatus['LED'].current=!rigStatus['LED'].current;
+    RigStatusMap.apply(rigStatus);
+  }
+
   void _doCalibration(int ind, CalibrationType type) {
     RigStatusMap rigStatus = RigStatusMap();
     rigStatus['calibration'].current['is calibrating'].current = true;
@@ -489,14 +503,37 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         CurvedAnimation(parent: _controllerCalib, curve: Curves.fastOutSlowIn);
   }
 
+  Future<void> _readNameSpace(String path) async {
+    var jsonText = await rootBundle.loadString(path);
+    setState(() => _nameSpace = json.decode(jsonText));
+    print(_nameSpace);
+  }
+
+  String _mergeText(List names) {
+
+    String filename='';
+    for (TextEditingController item in names){
+      filename='$filename&${item.text}';
+    }
+    print(filename);
+    return filename;
+  }
+
   void _showDialog(BuildContext context, doRecording) async {
-    String oldText = _text.text;
-    var animalID=['2045','2046','2052','2031','2043','2047','2048','2049'];
-    var sessionType=['testing','experiment','habituation'];
-    var trialType=['dominant','submissive','momandpups'];
-    //var document = await TomlDocument.load('assets/namespace/namespace.toml');
-    //var keys=document.toMap();
-    //print(keys.toString());
+    String oldTextAnimal = _textAnimal.text;
+    String oldTextSession = _textSession.text;
+    String oldTextTrial = _textTrial.text;
+
+
+    // get name space from .json file
+    _readNameSpace(path);
+    List _animalID=_nameSpace['animalID'];
+    List _sessionType = _nameSpace['sessionType'];
+    List _trialType=_nameSpace['trialType'];
+    List<String> animalID= _animalID.map((item){return item.toString();}).toList();
+    List<String> sessionType = _sessionType.map((item){return item.toString();}).toList();
+    List<String> trialType = _trialType.map((item){return item.toString();}).toList();
+
 
 
     await showDialog(
@@ -510,23 +547,10 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
               width:300.0,
               height: 230.0,
               child:Column(children: [
-                /*
-                Expanded(
-                    child: TextField(
-                        controller: _text,
-                        style: primaryStyle,
-                        autofocus: true,
-                        decoration: InputDecoration(
-                          labelText: 'Input root file name',
-                          // labelStyle: buttonStyle,
-                          hintText: 'e.g., 01012021_mouse666',
-                          // hintStyle: primaryStyle,
-                        ))),
-                        */
                 Text('Filename:',style: TextStyle(color: Colors.lightBlue),),
                 SizedBox(height:10.0),
                 TextField(
-                    controller: _text,
+                    controller: _textAnimal,
                     style: TextStyle(color:Colors.lightBlue),
                     decoration: InputDecoration(
                       labelText:'Animal ID',
@@ -545,7 +569,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                       suffixIcon: PopupMenuButton<String>(
                         icon:const Icon(Icons.arrow_drop_down),
                         onSelected: (String value){
-                          _text.text=value;
+                          _textAnimal.text=value;
                         },
                         itemBuilder: (BuildContext context){
                           return animalID
@@ -560,7 +584,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                   ),
                 SizedBox(height:10.0),
                 TextField(
-                    controller: _text,
+                    controller: _textSession,
                     style:TextStyle(color:Colors.lightBlue),
                     decoration:InputDecoration(
                       labelText: 'Session Type',
@@ -579,7 +603,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                       suffixIcon: PopupMenuButton<String>(
                         icon:const Icon(Icons.arrow_drop_down),
                         onSelected: (String value){
-                          _text.text=value;
+                          _textSession.text=value;
                         },
                         itemBuilder: (BuildContext context){
                           return sessionType
@@ -594,7 +618,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                 ),
                 SizedBox(height:10.0),
                 TextField(
-                    controller:_text,
+                    controller:_textTrial,
                     style:TextStyle(color:Colors.lightBlue),
                     decoration: InputDecoration(
                       labelText:'Trial Type',
@@ -613,7 +637,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                       suffixIcon: PopupMenuButton<String>(
                         icon:const Icon(Icons.arrow_drop_down),
                         onSelected: (String value){
-                          _text.text=value;
+                          _textTrial.text=value;
                         },
                         itemBuilder: (BuildContext context){
                           return trialType
@@ -631,7 +655,10 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
               TextButton(
                   child: Text('CANCEL', style: buttonStyle),
                   onPressed: () {
-                    _text.text = oldText;
+                    // TODO: what's the use for the following?
+                    _textAnimal.text=oldTextAnimal;
+                    _textSession.text = oldTextSession;
+                    _textTrial.text=oldTextTrial;
                     Navigator.pop(context);
                   }),
               TextButton(
@@ -639,7 +666,9 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                       style: buttonStyle),
                   onPressed: () {
                     if (doRecording) {
-                      widget.recordCallback(_text.text);
+                      List<TextEditingController> _allText=[_textAnimal,_textSession,_textTrial];
+                      String text = _mergeText(_allText);
+                      widget.recordCallback(text);
                     }
                     Navigator.pop(context);
                   }),
@@ -660,8 +689,10 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     Color active = Theme.of(context).buttonColor;
 
     if (_rigStatus['recording'].current) {
+      List<TextEditingController> _allText=[_textAnimal,_textSession,_textTrial];
+      String text = _mergeText(_allText);
       recordButton = _buildButtonColumn(widget.width / 4, true, context,
-          Icons.pause, 'PAUSE', (data) => widget.recordCallback(_text.text));
+          Icons.pause, 'PAUSE', (data) => widget.recordCallback(text));
     } else {
       recordButton = _buildButtonColumn(
           widget.width / 4,
@@ -675,6 +706,11 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     bool isCalibrating =
         _rigStatus['calibration'].current['is calibrating'].current;
 
+    bool isAnalyzing=
+        _rigStatus['analyzing'].current;
+    bool isLEDing=
+        _rigStatus['LED'].current;
+
     Widget calibrationButton = _buildButtonColumn(
         widget.width / 4,
         _rigStatus['calibration'].mutable,
@@ -685,8 +721,16 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
             ? (arg) => _stopCalibration()
             : (arg) => _toggleCalibrate());
 
-    Widget processButton = _buildButtonColumn(widget.width / 4, true, context,
-        Icons.leaderboard, 'ANALYSIS', (data) => _toggleAnalyze());
+    Widget processButton = _buildButtonColumn(widget.width / 4,
+        true,
+        context,
+        isAnalyzing ? Icons.near_me_outlined: Icons.near_me,
+        isAnalyzing? 'DLC off':'DLC on',
+            (data) => _toggleAnalyze());
+
+    Widget ledButton = _buildButtonColumn(widget.width / 4, true, context,
+        isLEDing ? Icons.light_mode:Icons.light_mode_outlined,
+        isLEDing ? 'LED off':'LED on', (data) => _toggleLED());
 
     Widget logsButton = _buildButtonColumn(widget.width / 4, true, context,
         Icons.info, 'LOGS', (arg) => showMessageLog(context));
@@ -699,6 +743,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
       recordButton,
       calibrationButton,
       processButton,
+      ledButton,
     ];
 
     Widget initButton;
