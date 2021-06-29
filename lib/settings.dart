@@ -382,11 +382,13 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
   Animation<double> _animationCalib;
 
   TextEditingController _textAnimal = TextEditingController();
-  TextEditingController _textSession = TextEditingController();
-  TextEditingController _textTrial = TextEditingController();
+  TextEditingController _textAnimalType = TextEditingController();
+  TextEditingController _textWindowA = TextEditingController();
+  TextEditingController _textWindowB = TextEditingController();
+  TextEditingController _textWindowC = TextEditingController();
 
   String path='assets/namespace/namespace.json';
-  Map _nameSpace = {'animalID':[],'sessionType':[],'trialType':[]};
+  Map _nameSpace = {'animalID':[],'animalType':[],'windowA':[],'windowB':[],'windowC':[]};
 
   @override
   void initState() {
@@ -521,30 +523,29 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
 
   void _showDialog(BuildContext context, doRecording) async {
     String oldTextAnimal = _textAnimal.text;
-    String oldTextSession = _textSession.text;
-    String oldTextTrial = _textTrial.text;
-
+    String oldTextAnimalType = _textAnimalType.text;
+    String oldTextWindowA = _textWindowA.text;
+    String oldTextWindowB = _textWindowB.text;
+    String oldTextWindowC = _textWindowC.text;
 
     // get name space from .json file
     _readNameSpace(path);
     List _animalID=_nameSpace['animalID'];
-    List _sessionType = _nameSpace['sessionType'];
-    List _trialType=_nameSpace['trialType'];
+    List _animalType = _nameSpace['animalType'];
+    List _windows=_nameSpace['windows'];
+
     List<String> animalID= _animalID.map((item){return item.toString();}).toList();
-    List<String> sessionType = _sessionType.map((item){return item.toString();}).toList();
-    List<String> trialType = _trialType.map((item){return item.toString();}).toList();
-
-
+    List<String> animalType = _animalType.map((item){return item.toString();}).toList();
+    List<String> windows = _windows.map((item){return item.toString();}).toList();
 
     await showDialog(
         context: context,
         builder: (BuildContext context) {
           ThemeData theme = Theme.of(context);
           TextStyle buttonStyle = TextStyle(color: theme.buttonColor);
-          TextStyle primaryStyle = TextStyle(color: theme.primaryColor);
           return AlertDialog(
             content:Container(
-              width:300.0,
+              width:600.0,
               height: 230.0,
               child:Column(children: [
                 Text('Filename:',style: TextStyle(color: Colors.lightBlue),),
@@ -584,12 +585,12 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                   ),
                 SizedBox(height:10.0),
                 TextField(
-                    controller: _textSession,
+                    controller: _textAnimalType,
                     style:TextStyle(color:Colors.lightBlue),
                     decoration:InputDecoration(
-                      labelText: 'Session Type',
+                      labelText: 'Test Animal Type',
                       labelStyle: TextStyle(color: Colors.lightBlue),
-                      hintText:'e.g., habituation/experiment/testing',
+                      hintText:'e.g., female/dominant male/unknown male',
                       hintStyle: TextStyle(
                         color:Colors.grey
                       ),
@@ -603,10 +604,10 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                       suffixIcon: PopupMenuButton<String>(
                         icon:const Icon(Icons.arrow_drop_down),
                         onSelected: (String value){
-                          _textSession.text=value;
+                          _textAnimalType.text=value;
                         },
                         itemBuilder: (BuildContext context){
-                          return sessionType
+                          return animalType
                               .map<PopupMenuItem<String>>((String value) {
                                 return new PopupMenuItem(
                                     child: new Text(value),
@@ -617,13 +618,15 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                     ),
                 ),
                 SizedBox(height:10.0),
-                TextField(
-                    controller:_textTrial,
+                Row(children: [
+                  Expanded(child:
+                  TextField(
+                    controller:_textWindowA,
                     style:TextStyle(color:Colors.lightBlue),
                     decoration: InputDecoration(
-                      labelText:'Trial Type',
+                      labelText:'WindowA',
                       labelStyle: TextStyle(color: Colors.lightBlue),
-                      hintText:'e.g., dominant/momandpups',
+                      hintText:'e.g., None/pups/submissive male',
                       hintStyle: TextStyle(
                         color:Colors.grey
                       ),
@@ -637,10 +640,10 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                       suffixIcon: PopupMenuButton<String>(
                         icon:const Icon(Icons.arrow_drop_down),
                         onSelected: (String value){
-                          _textTrial.text=value;
+                          _textWindowA.text=value;
                         },
                         itemBuilder: (BuildContext context){
-                          return trialType
+                          return windows
                               .map<PopupMenuItem<String>>((String value) {
                                 return new PopupMenuItem(
                                     child: new Text(value),
@@ -649,7 +652,78 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                         },
                       )
                     )
-                ),
+                )),
+                  SizedBox(width:5.0),
+                  Expanded(child:
+                  TextField(
+                    controller:_textWindowB,
+                    style:TextStyle(color:Colors.lightBlue),
+                    decoration: InputDecoration(
+                      labelText:'Window B',
+                      labelStyle: TextStyle(color: Colors.lightBlue),
+                      hintText:'e.g., None/pups/submissive male',
+                      hintStyle: TextStyle(
+                        color:Colors.grey
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                        borderSide:BorderSide(
+                          color:Colors.amber,
+                          style:BorderStyle.solid,
+                        )
+                      ),
+                      suffixIcon: PopupMenuButton<String>(
+                        icon:const Icon(Icons.arrow_drop_down),
+                        onSelected: (String value){
+                          _textWindowB.text=value;
+                        },
+                        itemBuilder: (BuildContext context){
+                          return windows
+                              .map<PopupMenuItem<String>>((String value) {
+                                return new PopupMenuItem(
+                                    child: new Text(value),
+                                    value: value,);
+                              }).toList();
+                        },
+                      )
+                    )
+                )),
+                  SizedBox(width:5.0),
+                  Expanded(child:
+                  TextField(
+                    controller:_textWindowC,
+                    style:TextStyle(color:Colors.lightBlue),
+                    decoration: InputDecoration(
+                      labelText:'Window C',
+                      labelStyle: TextStyle(color: Colors.lightBlue),
+                      hintText:'e.g., None/pups/submissive male',
+                      hintStyle: TextStyle(
+                        color:Colors.grey
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                        borderSide:BorderSide(
+                          color:Colors.amber,
+                          style:BorderStyle.solid,
+                        )
+                      ),
+                      suffixIcon: PopupMenuButton<String>(
+                        icon:const Icon(Icons.arrow_drop_down),
+                        onSelected: (String value){
+                          _textWindowC.text=value;
+                        },
+                        itemBuilder: (BuildContext context){
+                          return windows
+                              .map<PopupMenuItem<String>>((String value) {
+                                return new PopupMenuItem(
+                                    child: new Text(value),
+                                    value: value,);
+                              }).toList();
+                        },
+                      )
+                    )
+                )),
+                ],),
               ]),),
             actions: [
               TextButton(
@@ -657,8 +731,10 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                   onPressed: () {
                     // TODO: what's the use for the following?
                     _textAnimal.text=oldTextAnimal;
-                    _textSession.text = oldTextSession;
-                    _textTrial.text=oldTextTrial;
+                    _textAnimalType.text = oldTextAnimalType;
+                    _textWindowA.text=oldTextWindowA;
+                    _textWindowB.text=oldTextWindowB;
+                    _textWindowC.text=oldTextWindowC;
                     Navigator.pop(context);
                   }),
               TextButton(
@@ -666,7 +742,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                       style: buttonStyle),
                   onPressed: () {
                     if (doRecording) {
-                      List<TextEditingController> _allText=[_textAnimal,_textSession,_textTrial];
+                      List<TextEditingController> _allText=[_textAnimal,_textAnimalType,_textWindowA,_textWindowB,_textWindowC];
                       String text = _mergeText(_allText);
                       widget.recordCallback(text);
                     }
@@ -689,7 +765,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     Color active = Theme.of(context).buttonColor;
 
     if (_rigStatus['recording'].current) {
-      List<TextEditingController> _allText=[_textAnimal,_textSession,_textTrial];
+      List<TextEditingController> _allText=[_textAnimal,_textAnimalType,_textWindowA,_textWindowB,_textWindowC];
       String text = _mergeText(_allText);
       recordButton = _buildButtonColumn(widget.width / 4, true, context,
           Icons.pause, 'PAUSE', (data) => widget.recordCallback(text));
@@ -725,12 +801,12 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         true,
         context,
         isAnalyzing ? Icons.near_me_outlined: Icons.near_me,
-        isAnalyzing? 'DLC off':'DLC on',
+        isAnalyzing? 'DLC on':'DLC off',
             (data) => _toggleAnalyze());
 
     Widget ledButton = _buildButtonColumn(widget.width / 4, true, context,
         isLEDing ? Icons.light_mode:Icons.light_mode_outlined,
-        isLEDing ? 'LED off':'LED on', (data) => _toggleLED());
+        isLEDing ? 'LED on':'LED off', (data) => _toggleLED());
 
     Widget logsButton = _buildButtonColumn(widget.width / 4, true, context,
         Icons.info, 'LOGS', (arg) => showMessageLog(context));
