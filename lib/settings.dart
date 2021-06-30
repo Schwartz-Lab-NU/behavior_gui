@@ -3,6 +3,7 @@ import 'api.dart';
 import 'dart:async';
 import 'messageLog.dart';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/services.dart';
 
 RigStatusMap _rigStatus = RigStatusMap.live();
@@ -388,7 +389,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
   TextEditingController _textWindowC = TextEditingController();
 
   String path='assets/namespace/namespace.json';
-  Map _nameSpace = {'animalID':[],'animalType':[],'windowA':[],'windowB':[],'windowC':[]};
+  // Map _nameSpace = {'animalID':[],'animalType':[],'windowA':[],'windowB':[],'windowC':[]};
 
   @override
   void initState() {
@@ -448,7 +449,6 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         (_rigStatus['initialization'].current == 'initialized')
             ? 'deinitialized'
             : 'initialized';
-    debugPrint(rigStatus.toString());
     RigStatusMap.apply(rigStatus);
   }
 
@@ -470,7 +470,6 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
   }
 
   void _toggleLED(){
-    print('turn on/off LED');
     RigStatusMap rigStatus = RigStatusMap();
     rigStatus['LED'].current=!rigStatus['LED'].current;
     RigStatusMap.apply(rigStatus);
@@ -505,10 +504,11 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         CurvedAnimation(parent: _controllerCalib, curve: Curves.fastOutSlowIn);
   }
 
-  Future<void> _readNameSpace(String path) async {
-    var jsonText = await rootBundle.loadString(path);
-    setState(() => _nameSpace = json.decode(jsonText));
-    print(_nameSpace);
+  Future<Map> _readNameSpace(String path) async {
+    // var jsonText = await rootBundle.loadString(path);
+    var jsonText = await File(path).readAsString();
+    return json.decode(jsonText);
+
   }
 
   String _mergeText(List names) {
@@ -517,7 +517,6 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     for (TextEditingController item in names){
       filename='$filename&${item.text}';
     }
-    print(filename);
     return filename;
   }
 
@@ -529,10 +528,11 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     String oldTextWindowC = _textWindowC.text;
 
     // get name space from .json file
-    _readNameSpace(path);
-    List _animalID=_nameSpace['animalID'];
-    List _animalType = _nameSpace['animalType'];
-    List _windows=_nameSpace['windows'];
+    Map nameSpace = await _readNameSpace(path);
+
+    List _animalID=nameSpace['animalID'];
+    List _animalType = nameSpace['animalType'];
+    List _windows=nameSpace['windows'];
 
     List<String> animalID= _animalID.map((item){return item.toString();}).toList();
     List<String> animalType = _animalType.map((item){return item.toString();}).toList();
@@ -756,8 +756,6 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    // debugPrint('rebuilding status bar');
-    // debugPrint(_rigStatus.toString());
     void Function(dynamic) callback = (arg) => debugPrint('registered tap');
 
     Widget recordButton;
@@ -977,7 +975,6 @@ class _CalibrationBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // debugPrint(_rigStatus['camera count'].toString());
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
