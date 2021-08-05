@@ -59,6 +59,7 @@ class _LoadedAppState extends State<LoadedApp> {
   RigStatusMap _rigStatus = RigStatusMap.live();
   bool _isInitialized;
   final TextEditingController _text = TextEditingController();
+  final TextEditingController _textAlert = TextEditingController();
 
   @override
   void initState() {
@@ -87,6 +88,7 @@ class _LoadedAppState extends State<LoadedApp> {
     rigStatus['notes'].current = _text.text;
     rigStatus['recording'].current = (!_rigStatus['recording'].current);
     RigStatusMap.apply(rigStatus);
+    //_textAlert.text=_rigStatus['alert'].current;
     _text.text = '';
   }
 
@@ -106,6 +108,7 @@ class _LoadedAppState extends State<LoadedApp> {
   @override
   void dispose() {
     _text.dispose();
+    _textAlert.dispose();
     super.dispose();
   }
 

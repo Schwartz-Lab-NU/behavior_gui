@@ -18,6 +18,7 @@ class _SettingsListState extends State<SettingsList> {
     'initialization',
     'recording',
     'calibration',
+    'alert',
     'rootfilename',
     'notes'
   ];
@@ -391,9 +392,14 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
   TextEditingController _textWindowA_DJID = TextEditingController();
   TextEditingController _textWindowB_DJID = TextEditingController();
   TextEditingController _textWindowC_DJID = TextEditingController();
+  TextEditingController _textUserName = TextEditingController();
+  TextEditingController _textNotes = TextEditingController();
 
 
   String path='assets/namespace/namespace_test.json';
+
+  bool _showPopup = false;
+  String _lastAlert = _rigStatus['alert'].current;
 
 
   @override
@@ -414,8 +420,17 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         _controllerCalib.reverse(); //TODO: can we do this better?
       }
 
+      //if alert, show dialog
+      debugPrint('lastAlert was: $_lastAlert');
+      debugPrint('newAlert is: ${_rigStatus['alert'].current}');
+
+      bool showPopup = (_rigStatus['alert'].current != _lastAlert) && (_rigStatus['alert'].current != '');
+      debugPrint('showing popup?? $showPopup');
+
       setState(() {
         _lastUpdate = DateTime.now();
+        _showPopup = showPopup;
+        _lastAlert = _rigStatus['alert'].current;
         // _expanded = _rigStatus['initialization'] == 'initialized';
       });
     });
@@ -449,7 +464,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
   }
 
   void _toggleInit() {
-    RigStatusMap rigStatus = RigStatusMap();
+    RigStatusMap rigStatus = RigStatusMap(); //empty
     rigStatus['initialization'].current =
         (_rigStatus['initialization'].current == 'initialized')
             ? 'deinitialized'
@@ -527,12 +542,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
 
     String filename='';
     for (TextEditingController item in names){
-      if (isNumeric(item.text)){
-        filename='$filename&(${item.text})';
-      }
-      else {
-        filename = '$filename&${item.text}';
-      }
+      filename='$filename&${item.text}';
     }
     return filename;
   }
@@ -547,6 +557,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     String oldTextWindowA_DJID = _textWindowA.text;
     String oldTextWindowB_DJID = _textWindowB.text;
     String oldTextWindowC_DJID = _textWindowC.text;
+    String oldTextUserName = _textUserName.text;
 
     bool _allow_windows=true;
     bool _allow_windowA_DJID=true;
@@ -569,6 +580,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     List<String> animalType = _animalType.map((item){return item.toString();}).toList();
     List<String> windows = _windows.map((item){return item.toString();}).toList();
     List<String> experimentType = _experimentType.map((item){return item.toString();}).toList();
+    bool _record=false;
 
     await showDialog(
         context: context,
@@ -580,9 +592,11 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
               width:600.0,
               height: 430.0,
               child:Column(children: [
-                Text('Filename:',style: TextStyle(color: Colors.lightBlue),),
+                Text('Filename and Datajoint Entry',style: TextStyle(color: Colors.lightBlue),),
                 SizedBox(height:10.0),
-                TextField(
+                Row(children: [
+                  Expanded(child:
+                      TextField(
                     controller: _textAnimal,
                     style: TextStyle(color:Colors.lightBlue),
                     decoration: InputDecoration(
@@ -615,6 +629,29 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                       )
                     ),
                   ),
+                  ),
+                  SizedBox(width:100.0),
+                  Expanded(child:
+                  TextField(
+                    controller: _textUserName,
+                    style:TextStyle(color:Colors.lightBlue),
+                    decoration:InputDecoration(
+                      labelText: 'User Name',
+                      labelStyle: TextStyle(color: Colors.lightBlue),
+                      hintText:'Devon',
+                      hintStyle: TextStyle(
+                        color:Colors.grey
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                        borderSide:BorderSide(
+                          color:Colors.amber,
+                          style:BorderStyle.solid,
+                        )
+                      )
+                    ),
+                  ))
+                ],),
                 SizedBox(height:10.0),
                 TextField(
                     controller: _textAnimalType,
@@ -923,6 +960,25 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                     )
                 )),
                 ],),
+                TextField(
+                  controller: _textNotes,
+                  style:TextStyle(color:Colors.lightBlue),
+                  decoration:InputDecoration(
+                      labelText: 'Notes',
+                      labelStyle: TextStyle(color: Colors.lightBlue),
+                      hintText:'no need to put window information ~',
+                      hintStyle: TextStyle(
+                        color:Colors.grey
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                        borderSide:BorderSide(
+                          color:Colors.amber,
+                          style:BorderStyle.solid,
+                        )
+                      ),
+                    ),
+                )
               ]),),
             actions: [
               TextButton(
@@ -938,6 +994,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                     _textWindowA_DJID.text=oldTextWindowA_DJID;
                     _textWindowB_DJID.text=oldTextWindowB_DJID;
                     _textWindowC_DJID.text=oldTextWindowC_DJID;
+                    _textUserName.text=oldTextUserName;
                     Navigator.pop(context);
                   }),
               TextButton(
@@ -951,8 +1008,12 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                         _textExperimentType,
                         _textWindowA,_textWindowA_DJID,
                         _textWindowB,_textWindowB_DJID,
-                        _textWindowC,_textWindowC_DJID];
+                        _textWindowC,_textWindowC_DJID,
+                      _textUserName,_textNotes];
                       String text = _mergeText(_allText);
+                      _record=true;
+                      //String alertText='testing';
+                      //_showAlert(context, alertText);
                       widget.recordCallback(text);
                     }
                     Navigator.pop(context);
@@ -961,10 +1022,48 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
             elevation: 25.0,
           );
         });
+    // if (_record){
+    //     // _showAlert(context);}
+  }
+
+  void _showAlert(BuildContext context) async {
+    //_rigStatus['datajoint_success'].current ?
+    //_rigStatus['dj_error_msg'].current
+    //_rigStatus['dj_event_id'].current //the event id for this session?
+
+    String alertText = _rigStatus['alert'].current; //could get other rig statuses
+    debugPrint('got alert: $alertText');
+    await showDialog(
+      context:context,
+      builder: (BuildContext context) {
+        ThemeData theme= Theme.of(context);
+        TextStyle buttonStyle=TextStyle(color:theme.buttonColor);
+        return AlertDialog(
+          content:Container(
+            width:200.0,
+            height:150.0,
+            child:Center(
+              child:Text(alertText,style:TextStyle(color: Colors.lightBlue,fontSize: 10.0))
+            )
+          ),
+          actions: [
+            TextButton(
+                child:Text('OK',style:buttonStyle),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+            )
+          ],
+        );
+      }
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    //if (_showPopup) _showAlert(context);
+    if (_showPopup) Future.delayed(Duration.zero, () => _showAlert(context));
+
     void Function(dynamic) callback = (arg) => debugPrint('registered tap');
 
     Widget recordButton;
@@ -972,10 +1071,11 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     Color active = Theme.of(context).buttonColor;
 
     if (_rigStatus['recording'].current) {
-      List<TextEditingController> _allText=[_textAnimal,_textAnimalType,_textWindowA,_textWindowB,_textWindowC];
-      String text = _mergeText(_allText);
+      //List<TextEditingController> _allText=[_textAnimal,_textAnimalType,_textWindowA,_textWindowB,_textWindowC];
+      //String text = _mergeText(_allText);
+      // don't know what's the point ot this text
       recordButton = _buildButtonColumn(widget.width / 4, true, context,
-          Icons.pause, 'PAUSE', (data) => widget.recordCallback(text));
+          Icons.pause, 'PAUSE', (data) => widget.recordCallback(''));
     } else {
       recordButton = _buildButtonColumn(
           widget.width / 4,
