@@ -1040,7 +1040,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         TextStyle buttonStyle=TextStyle(color:theme.buttonColor);
         return AlertDialog(
           content:Container(
-            width:200.0,
+            width:300.0,
             height:150.0,
             child:Center(
               child:Text(alertText,style:TextStyle(color: Colors.lightBlue,fontSize: 10.0))
