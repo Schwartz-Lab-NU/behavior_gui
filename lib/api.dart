@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'dart:async';
 // import 'package:http/http.dart' as http;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:flutter/material.dart' show IconData;
+import 'package:flutter/material.dart' show IconData, debugPrint;
 
 const String socketHostname = 'http://localhost:5001';
 // const String mainHostname = 'http://localhost:5000';
@@ -329,6 +329,7 @@ class DatabaseStatus extends MapBase<String, dynamic> {
   remove(Object key) => throw 'Status map cannot be altered.';
 
   DatabaseStatus._singleton() {
+    debugPrint('got to database singleton constructor');
     Api._socket.onDisconnect((_) => _teardown());
     Api._socket.onConnect((_) => _instantiate());
     Api._socket.on('database', (data) => _update(data));
