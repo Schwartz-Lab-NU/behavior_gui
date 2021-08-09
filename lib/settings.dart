@@ -396,7 +396,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
   TextEditingController _textNotes = TextEditingController();
 
   DatabaseStatus _databaseStatus = DatabaseStatus();
-  String path = 'assets/namespace/namespace_test.json';
+  // String path = 'assets/namespace/namespace_test.json';
 
   bool _showPopup = false;
   String _lastAlert = _rigStatus['alert'].current;
@@ -407,9 +407,9 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     // _expanded = _rigStatus['initialization'] == 'initialized';
 
     _prepareAnimations();
-    _readNameSpace(path).whenComplete(() {
-      setState(() {});
-    });
+    // _readNameSpace(path).whenComplete(() {
+    // setState(() {});
+    // });
     statusSub = RigStatusMap.onChange.listen((didChange) {
       if (_rigStatus['initialization'].current == 'initialized') {
         _controllerStatus.forward();
@@ -526,11 +526,11 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         CurvedAnimation(parent: _controllerCalib, curve: Curves.fastOutSlowIn);
   }
 
-  Future<Map> _readNameSpace(String path) async {
-    // var jsonText = await rootBundle.loadString(path);
-    var jsonText = await File(path).readAsString();
-    return json.decode(jsonText);
-  }
+  // Future<Map> _readNameSpace(String path) async {
+  //   // var jsonText = await rootBundle.loadString(path);
+  //   var jsonText = await File(path).readAsString();
+  //   return json.decode(jsonText);
+  // }
 
   bool isNumeric(String s) {
     if (s == null) {
@@ -565,20 +565,25 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     bool _allow_windowC_DJID = true;
 
     // get name space from .json file
-    Map nameSpace = await _readNameSpace(path);
+    // Map nameSpace = await _readNameSpace(path);
 
-    debugPrint(
-        'databaseStatus: animalIds= ${_databaseStatus['recent_animals']}');
+    List _animalID = _databaseStatus['recent_test_animals'];
+    List _stimAnimalID = _databaseStatus['recent_stim_animals'];
+    List _animalType = _databaseStatus['animal_types'];
+    List _windows = _databaseStatus['stimulus_types'];
+    List _experimentType = _databaseStatus['experiment_types'];
 
-    List _animalID = nameSpace['animalID'];
-    List _animalType = nameSpace['animalType'];
-    List _windows = nameSpace['windows'];
-    List _experimentType = nameSpace['experimentType'];
+    // List _animalType = nameSpace['animalType'];
+    // List _windows = nameSpace['windows'];
+    // List _experimentType = nameSpace['experimentType'];
 
     List disabled_experiment = ['habituation'];
     List enabled_window = ['cagemate', 'juvenile', 'stranger'];
 
     List<String> animalID = _animalID.map((item) {
+      return item.toString();
+    }).toList();
+    List<String> stimAnimalID = _stimAnimalID.map((item) {
       return item.toString();
     }).toList();
     List<String> animalType = _animalType.map((item) {
@@ -867,8 +872,9 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                                     _textWindowA_DJID.text = value;
                                   },
                                   itemBuilder: (BuildContext context) {
-                                    return animalID.map<PopupMenuItem<String>>(
-                                        (String value) {
+                                    return stimAnimalID
+                                        .map<PopupMenuItem<String>>(
+                                            (String value) {
                                       return new PopupMenuItem(
                                         child: new Text(value),
                                         value: value,
@@ -899,8 +905,9 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                                     _textWindowB_DJID.text = value;
                                   },
                                   itemBuilder: (BuildContext context) {
-                                    return animalID.map<PopupMenuItem<String>>(
-                                        (String value) {
+                                    return stimAnimalID
+                                        .map<PopupMenuItem<String>>(
+                                            (String value) {
                                       return new PopupMenuItem(
                                         child: new Text(value),
                                         value: value,
@@ -931,8 +938,9 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                                     _textWindowC_DJID.text = value;
                                   },
                                   itemBuilder: (BuildContext context) {
-                                    return animalID.map<PopupMenuItem<String>>(
-                                        (String value) {
+                                    return stimAnimalID
+                                        .map<PopupMenuItem<String>>(
+                                            (String value) {
                                       return new PopupMenuItem(
                                         child: new Text(value),
                                         value: value,
