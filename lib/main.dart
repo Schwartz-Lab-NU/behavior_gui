@@ -7,6 +7,7 @@ import 'videoSection.dart';
 
 void main() {
   RigStatusMap.live();
+  DatabaseStatus();
   //TODO: use plugins:window_size to enforce minimum size
   runApp(MaterialApp(
       home: MyApp(),

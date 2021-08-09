@@ -331,10 +331,15 @@ class DatabaseStatus extends MapBase<String, dynamic> {
   DatabaseStatus._singleton() {
     debugPrint('got to database singleton constructor');
     Api._socket.onDisconnect((_) => _teardown());
-    Api._socket.onConnect((_) => _instantiate());
+    Api._socket.onConnect((_) {
+      debugPrint('instatiating from callback :)');
+      _instantiate();
+    });
     Api._socket.on('database', (data) => _update(data));
-    _map['tested'] = 'done';
-    if (Api._socket.connected) _instantiate();
+    if (Api._socket.connected) {
+      debugPrint('instantiating from constructor :(');
+      _instantiate();
+    }
   }
 
   void _teardown() {
@@ -355,7 +360,10 @@ class DatabaseStatus extends MapBase<String, dynamic> {
   static void _update(Map<String, dynamic> json) {
     print('got database update: ');
     print(json);
-    _map['testing'] = 'tested';
+    _map.clear();
+    json.forEach((key, value) {
+      _map[key] = value;
+    });
   }
 
   factory DatabaseStatus() {
