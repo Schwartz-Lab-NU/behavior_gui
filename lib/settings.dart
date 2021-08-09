@@ -392,15 +392,13 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
   TextEditingController _textWindowA_DJID = TextEditingController();
   TextEditingController _textWindowB_DJID = TextEditingController();
   TextEditingController _textWindowC_DJID = TextEditingController();
-  TextEditingController _textUserName = TextEditingController();
+  TextEditingController _textUserName = TextEditingController(text: 'Devon');
   TextEditingController _textNotes = TextEditingController();
 
-
-  String path='assets/namespace/namespace_test.json';
+  String path = 'assets/namespace/namespace_test.json';
 
   bool _showPopup = false;
   String _lastAlert = _rigStatus['alert'].current;
-
 
   @override
   void initState() {
@@ -408,7 +406,9 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     // _expanded = _rigStatus['initialization'] == 'initialized';
 
     _prepareAnimations();
-    _readNameSpace(path).whenComplete(() {setState(() {});});
+    _readNameSpace(path).whenComplete(() {
+      setState(() {});
+    });
     statusSub = RigStatusMap.onChange.listen((didChange) {
       if (_rigStatus['initialization'].current == 'initialized') {
         _controllerStatus.forward();
@@ -424,7 +424,8 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
       debugPrint('lastAlert was: $_lastAlert');
       debugPrint('newAlert is: ${_rigStatus['alert'].current}');
 
-      bool showPopup = (_rigStatus['alert'].current != _lastAlert) && (_rigStatus['alert'].current != '');
+      bool showPopup = (_rigStatus['alert'].current != _lastAlert) &&
+          (_rigStatus['alert'].current != '');
       debugPrint('showing popup?? $showPopup');
 
       setState(() {
@@ -489,9 +490,9 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     RigStatusMap.apply(rigStatus);
   }
 
-  void _toggleLED(){
+  void _toggleLED() {
     RigStatusMap rigStatus = RigStatusMap();
-    rigStatus['LED'].current=!rigStatus['LED'].current;
+    rigStatus['LED'].current = !rigStatus['LED'].current;
     RigStatusMap.apply(rigStatus);
   }
 
@@ -528,21 +529,19 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     // var jsonText = await rootBundle.loadString(path);
     var jsonText = await File(path).readAsString();
     return json.decode(jsonText);
-
   }
 
   bool isNumeric(String s) {
-   if (s == null) {
-     return false;
-   }
-   return double.tryParse(s) != null;
+    if (s == null) {
+      return false;
+    }
+    return double.tryParse(s) != null;
   }
 
   String _mergeText(List names) {
-
-    String filename='';
-    for (TextEditingController item in names){
-      filename='$filename&${item.text}';
+    String filename = '';
+    for (TextEditingController item in names) {
+      filename = '$filename&${item.text}';
     }
     return filename;
   }
@@ -559,28 +558,35 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     String oldTextWindowC_DJID = _textWindowC.text;
     String oldTextUserName = _textUserName.text;
 
-    bool _allow_windows=true;
-    bool _allow_windowA_DJID=true;
-    bool _allow_windowB_DJID=true;
-    bool _allow_windowC_DJID=true;
-
+    bool _allow_windows = true;
+    bool _allow_windowA_DJID = true;
+    bool _allow_windowB_DJID = true;
+    bool _allow_windowC_DJID = true;
 
     // get name space from .json file
     Map nameSpace = await _readNameSpace(path);
 
-    List _animalID=nameSpace['animalID'];
+    List _animalID = nameSpace['animalID'];
     List _animalType = nameSpace['animalType'];
-    List _windows=nameSpace['windows'];
-    List _experimentType=nameSpace['experimentType'];
+    List _windows = nameSpace['windows'];
+    List _experimentType = nameSpace['experimentType'];
 
-    List disabled_experiment=['habituation'];
-    List enabled_window=['cagemate','juvenile','stranger'];
+    List disabled_experiment = ['habituation'];
+    List enabled_window = ['cagemate', 'juvenile', 'stranger'];
 
-    List<String> animalID= _animalID.map((item){return item.toString();}).toList();
-    List<String> animalType = _animalType.map((item){return item.toString();}).toList();
-    List<String> windows = _windows.map((item){return item.toString();}).toList();
-    List<String> experimentType = _experimentType.map((item){return item.toString();}).toList();
-    bool _record=false;
+    List<String> animalID = _animalID.map((item) {
+      return item.toString();
+    }).toList();
+    List<String> animalType = _animalType.map((item) {
+      return item.toString();
+    }).toList();
+    List<String> windows = _windows.map((item) {
+      return item.toString();
+    }).toList();
+    List<String> experimentType = _experimentType.map((item) {
+      return item.toString();
+    }).toList();
+    bool _record = false;
 
     await showDialog(
         context: context,
@@ -588,413 +594,383 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
           ThemeData theme = Theme.of(context);
           TextStyle buttonStyle = TextStyle(color: theme.buttonColor);
           return AlertDialog(
-            content:Container(
-              width:600.0,
+            content: Container(
+              width: 600.0,
               height: 430.0,
-              child:Column(children: [
-                Text('Filename and Datajoint Entry',style: TextStyle(color: Colors.lightBlue),),
-                SizedBox(height:10.0),
-                Row(children: [
-                  Expanded(child:
-                      TextField(
-                    controller: _textAnimal,
-                    style: TextStyle(color:Colors.lightBlue),
-                    decoration: InputDecoration(
-                      labelText:'Animal ID',
-                      labelStyle: TextStyle(color: Colors.lightBlue),
-                      hintText:'e.g., 2045',
-                      hintStyle: TextStyle(
-                        color:Colors.grey
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide:BorderSide(
-                          color:Colors.lightBlue,
-                          style:BorderStyle.solid,
-                        )
-                      ),
-                      suffixIcon: PopupMenuButton<String>(
-                        icon:const Icon(Icons.arrow_drop_down),
-                        onSelected: (String value){
-                          _textAnimal.text=value;
-                        },
-                        itemBuilder: (BuildContext context){
-                          return animalID
-                              .map<PopupMenuItem<String>>((String value) {
-                                return new PopupMenuItem(
+              child: Column(children: [
+                Text(
+                  'Filename and Datajoint Entry',
+                  style: TextStyle(color: Colors.lightBlue),
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _textAnimal,
+                        style: TextStyle(color: Colors.lightBlue),
+                        decoration: InputDecoration(
+                            labelText: 'Animal ID',
+                            labelStyle: TextStyle(color: Colors.lightBlue),
+                            hintText: 'e.g., 2045',
+                            hintStyle: TextStyle(color: Colors.grey),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(5.0),
+                                borderSide: BorderSide(
+                                  color: Colors.lightBlue,
+                                  style: BorderStyle.solid,
+                                )),
+                            suffixIcon: PopupMenuButton<String>(
+                              icon: const Icon(Icons.arrow_drop_down),
+                              onSelected: (String value) {
+                                _textAnimal.text = value;
+                              },
+                              itemBuilder: (BuildContext context) {
+                                return animalID
+                                    .map<PopupMenuItem<String>>((String value) {
+                                  return new PopupMenuItem(
                                     child: new Text(value),
-                                    value: value,);
-                              }).toList();
-                        },
-                      )
-                    ),
-                  ),
-                  ),
-                  SizedBox(width:100.0),
-                  Expanded(child:
-                  TextField(
-                    controller: _textUserName,
-                    style:TextStyle(color:Colors.lightBlue),
-                    decoration:InputDecoration(
-                      labelText: 'User Name',
-                      labelStyle: TextStyle(color: Colors.lightBlue),
-                      hintText:'Devon',
-                      hintStyle: TextStyle(
-                        color:Colors.grey
+                                    value: value,
+                                  );
+                                }).toList();
+                              },
+                            )),
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide:BorderSide(
-                          color:Colors.amber,
-                          style:BorderStyle.solid,
-                        )
-                      )
                     ),
-                  ))
-                ],),
-                SizedBox(height:10.0),
+                    SizedBox(width: 100.0),
+                    Expanded(
+                        child: TextField(
+                      controller: _textUserName,
+                      style: TextStyle(color: Colors.lightBlue),
+                      decoration: InputDecoration(
+                          labelText: 'User Name',
+                          labelStyle: TextStyle(color: Colors.lightBlue),
+                          hintText: 'Devon',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(5.0),
+                              borderSide: BorderSide(
+                                color: Colors.amber,
+                                style: BorderStyle.solid,
+                              ))),
+                    ))
+                  ],
+                ),
+                SizedBox(height: 10.0),
                 TextField(
-                    controller: _textAnimalType,
-                    style:TextStyle(color:Colors.lightBlue),
-                    decoration:InputDecoration(
+                  controller: _textAnimalType,
+                  style: TextStyle(color: Colors.lightBlue),
+                  decoration: InputDecoration(
                       labelText: 'Test Animal Type',
                       labelStyle: TextStyle(color: Colors.lightBlue),
-                      hintText:'e.g., female/dominant male/unknown male',
-                      hintStyle: TextStyle(
-                        color:Colors.grey
-                      ),
+                      hintText: 'e.g., female/dominant male/unknown male',
+                      hintStyle: TextStyle(color: Colors.grey),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide:BorderSide(
-                          color:Colors.amber,
-                          style:BorderStyle.solid,
-                        )
-                      ),
+                          borderRadius: BorderRadius.circular(5.0),
+                          borderSide: BorderSide(
+                            color: Colors.amber,
+                            style: BorderStyle.solid,
+                          )),
                       suffixIcon: PopupMenuButton<String>(
-                        icon:const Icon(Icons.arrow_drop_down),
-                        onSelected: (String value){
-                          _textAnimalType.text=value;
+                        icon: const Icon(Icons.arrow_drop_down),
+                        onSelected: (String value) {
+                          _textAnimalType.text = value;
                         },
-                        itemBuilder: (BuildContext context){
+                        itemBuilder: (BuildContext context) {
                           return animalType
                               .map<PopupMenuItem<String>>((String value) {
-                                return new PopupMenuItem(
-                                    child: new Text(value),
-                                    value: value,);
-                              }).toList();
+                            return new PopupMenuItem(
+                              child: new Text(value),
+                              value: value,
+                            );
+                          }).toList();
                         },
-                      )
-                    ),
+                      )),
                 ),
-                SizedBox(height:10.0),
+                SizedBox(height: 10.0),
                 TextField(
-                    controller: _textExperimentType,
-                    style:TextStyle(color:Colors.lightBlue),
-                    decoration:InputDecoration(
+                  controller: _textExperimentType,
+                  style: TextStyle(color: Colors.lightBlue),
+                  decoration: InputDecoration(
                       labelText: 'Experiment Type',
                       labelStyle: TextStyle(color: Colors.lightBlue),
-                      hintText:'e.g."cagemate_2_strangers" ',
-                      hintStyle: TextStyle(
-                        color:Colors.grey
-                      ),
+                      hintText: 'e.g."cagemate_2_strangers" ',
+                      hintStyle: TextStyle(color: Colors.grey),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide:BorderSide(
-                          color:Colors.amber,
-                          style:BorderStyle.solid,
-                        )
-                      ),
+                          borderRadius: BorderRadius.circular(5.0),
+                          borderSide: BorderSide(
+                            color: Colors.amber,
+                            style: BorderStyle.solid,
+                          )),
                       suffixIcon: PopupMenuButton<String>(
-                        icon:const Icon(Icons.arrow_drop_down),
-                        onSelected: (String value){
-                          _textExperimentType.text=value;
-                          if (disabled_experiment.contains(value)){
-                            _allow_windows=false;}
-                          else{
-                            _allow_windows=true;
+                        icon: const Icon(Icons.arrow_drop_down),
+                        onSelected: (String value) {
+                          _textExperimentType.text = value;
+                          if (disabled_experiment.contains(value)) {
+                            _allow_windows = false;
+                          } else {
+                            _allow_windows = true;
                           }
                         },
-                        itemBuilder: (BuildContext context){
+                        itemBuilder: (BuildContext context) {
                           return experimentType
                               .map<PopupMenuItem<String>>((String value) {
-                                return new PopupMenuItem(
-                                    child: new Text(value),
-                                    value: value,);
-                              }).toList();
+                            return new PopupMenuItem(
+                              child: new Text(value),
+                              value: value,
+                            );
+                          }).toList();
                         },
-                      )
-                    ),
+                      )),
                 ),
-                SizedBox(height:10.0),
-                Row(children: [
-                  Expanded(child:
-                  TextField(
-                    enabled: _allow_windows,
-                    controller:_textWindowA,
-                    style:TextStyle(color:Colors.lightBlue),
-                    decoration: InputDecoration(
-                      labelText:'WindowA',
-                      labelStyle: TextStyle(color: Colors.lightBlue),
-                      hintText:'',
-                      hintStyle: TextStyle(
-                        color:Colors.grey
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide:BorderSide(
-                          color:Colors.amber,
-                          style:BorderStyle.solid,
-                        )
-                      ),
-                      suffixIcon: PopupMenuButton<String>(
-                        icon:const Icon(Icons.arrow_drop_down),
-                        onSelected: (String value){
-                          _textWindowA.text=value;
-                          if (enabled_window.contains(value)){
-                            _allow_windowA_DJID=true;}
-                          else{
-                            _allow_windowA_DJID=false;
-                          }
-                        },
-                        itemBuilder: (BuildContext context){
-                          return windows
-                              .map<PopupMenuItem<String>>((String value) {
-                                return new PopupMenuItem(
-                                    child: new Text(value),
-                                    value: value,);
-                              }).toList();
-                        },
-                      )
-                    )
-                )),
-                  SizedBox(width:5.0),
-                  Expanded(child:
-                  TextField(
-                    enabled: _allow_windows,
-                    controller:_textWindowB,
-                    style:TextStyle(color:Colors.lightBlue),
-                    decoration: InputDecoration(
-                      labelText:'Window B',
-                      labelStyle: TextStyle(color: Colors.lightBlue),
-                      hintText:'',
-                      hintStyle: TextStyle(
-                        color:Colors.grey
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide:BorderSide(
-                          color:Colors.amber,
-                          style:BorderStyle.solid,
-                        )
-                      ),
-                      suffixIcon: PopupMenuButton<String>(
-                        icon:const Icon(Icons.arrow_drop_down),
-                        onSelected: (String value){
-                          _textWindowB.text=value;
-                          if (enabled_window.contains(value)){
-                            _allow_windowB_DJID=true;}
-                          else{
-                            _allow_windowB_DJID=false;
-                          }
-                        },
-                        itemBuilder: (BuildContext context){
-                          return windows
-                              .map<PopupMenuItem<String>>((String value) {
-                                return new PopupMenuItem(
-                                    child: new Text(value),
-                                    value: value,);
-                              }).toList();
-                        },
-                      )
-                    )
-                )),
-                  SizedBox(width:5.0),
-                  Expanded(child:
-                  TextField(
-                    enabled:_allow_windows,
-                    controller:_textWindowC,
-                    style:TextStyle(color:Colors.lightBlue),
-                    decoration: InputDecoration(
-                      labelText:'Window C',
-                      labelStyle: TextStyle(color: Colors.lightBlue),
-                      hintText:'',
-                      hintStyle: TextStyle(
-                        color:Colors.grey
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide:BorderSide(
-                          color:Colors.amber,
-                          style:BorderStyle.solid,
-                        )
-                      ),
-                      suffixIcon: PopupMenuButton<String>(
-                        icon:const Icon(Icons.arrow_drop_down),
-                        onSelected: (String value){
-                          _textWindowC.text=value;
-                          if (enabled_window.contains(value)){
-                            _allow_windowC_DJID=true;}
-                          else{
-                            _allow_windowC_DJID=false;
-                          }
-                        },
-                        itemBuilder: (BuildContext context){
-                          return windows
-                              .map<PopupMenuItem<String>>((String value) {
-                                return new PopupMenuItem(
-                                    child: new Text(value),
-                                    value: value,);
-                              }).toList();
-                        },
-                      )
-                    )
-                )),
-                ],),
-                SizedBox(height:10.0),
-                Row(children: [
-                  Expanded(child:
-                  TextField(
-                    enabled:_allow_windowA_DJID,
-                    controller:_textWindowA_DJID,
-                    style:TextStyle(color:Colors.lightBlue),
-                    decoration: InputDecoration(
-                      labelText:'DJID',
-                      labelStyle: TextStyle(color: Colors.lightBlue),
-                      hintText:'',
-                      hintStyle: TextStyle(
-                        color:Colors.grey
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide:BorderSide(
-                          color:Colors.amber,
-                          style:BorderStyle.solid,
-                        )
-                      ),
-                      suffixIcon: PopupMenuButton<String>(
-                        icon:const Icon(Icons.arrow_drop_down),
-                        onSelected: (String value){
-                          _textWindowA_DJID.text=value;
-                        },
-                        itemBuilder: (BuildContext context){
-                          return animalID
-                              .map<PopupMenuItem<String>>((String value) {
-                                return new PopupMenuItem(
-                                    child: new Text(value),
-                                    value: value,);
-                              }).toList();
-                        },
-                      )
-                    )
-                )),
-                  SizedBox(width:5.0),
-                  Expanded(child:
-                  TextField(
-                    enabled: _allow_windowB_DJID,
-                    controller:_textWindowB_DJID,
-                    style:TextStyle(color:Colors.lightBlue),
-                    decoration: InputDecoration(
-                      labelText:'DJID',
-                      labelStyle: TextStyle(color: Colors.lightBlue),
-                      hintText:'',
-                      hintStyle: TextStyle(
-                        color:Colors.grey
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide:BorderSide(
-                          color:Colors.amber,
-                          style:BorderStyle.solid,
-                        )
-                      ),
-                      suffixIcon: PopupMenuButton<String>(
-                        icon:const Icon(Icons.arrow_drop_down),
-                        onSelected: (String value){
-                          _textWindowB_DJID.text=value;
-                        },
-                        itemBuilder: (BuildContext context){
-                          return animalID
-                              .map<PopupMenuItem<String>>((String value) {
-                                return new PopupMenuItem(
-                                    child: new Text(value),
-                                    value: value,);
-                              }).toList();
-                        },
-                      )
-                    )
-                )),
-                  SizedBox(width:5.0),
-                  Expanded(child:
-                  TextField(
-                    enabled: _allow_windowC_DJID,
-                    controller:_textWindowC_DJID,
-                    style:TextStyle(color:Colors.lightBlue),
-                    decoration: InputDecoration(
-                      labelText:'DJID',
-                      labelStyle: TextStyle(color: Colors.lightBlue),
-                      hintText:'',
-                      hintStyle: TextStyle(
-                        color:Colors.grey
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                        borderSide:BorderSide(
-                          color:Colors.amber,
-                          style:BorderStyle.solid,
-                        )
-                      ),
-                      suffixIcon: PopupMenuButton<String>(
-                        icon:const Icon(Icons.arrow_drop_down),
-                        onSelected: (String value){
-                          _textWindowC_DJID.text=value;
-                        },
-                        itemBuilder: (BuildContext context){
-                          return animalID
-                              .map<PopupMenuItem<String>>((String value) {
-                                return new PopupMenuItem(
-                                    child: new Text(value),
-                                    value: value,);
-                              }).toList();
-                        },
-                      )
-                    )
-                )),
-                ],),
+                SizedBox(height: 10.0),
+                Row(
+                  children: [
+                    Expanded(
+                        child: TextField(
+                            enabled: _allow_windows,
+                            controller: _textWindowA,
+                            style: TextStyle(color: Colors.lightBlue),
+                            decoration: InputDecoration(
+                                labelText: 'WindowA',
+                                labelStyle: TextStyle(color: Colors.lightBlue),
+                                hintText: '',
+                                hintStyle: TextStyle(color: Colors.grey),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    borderSide: BorderSide(
+                                      color: Colors.amber,
+                                      style: BorderStyle.solid,
+                                    )),
+                                suffixIcon: PopupMenuButton<String>(
+                                  icon: const Icon(Icons.arrow_drop_down),
+                                  onSelected: (String value) {
+                                    _textWindowA.text = value;
+                                    if (enabled_window.contains(value)) {
+                                      _allow_windowA_DJID = true;
+                                    } else {
+                                      _allow_windowA_DJID = false;
+                                    }
+                                  },
+                                  itemBuilder: (BuildContext context) {
+                                    return windows.map<PopupMenuItem<String>>(
+                                        (String value) {
+                                      return new PopupMenuItem(
+                                        child: new Text(value),
+                                        value: value,
+                                      );
+                                    }).toList();
+                                  },
+                                )))),
+                    SizedBox(width: 5.0),
+                    Expanded(
+                        child: TextField(
+                            enabled: _allow_windows,
+                            controller: _textWindowB,
+                            style: TextStyle(color: Colors.lightBlue),
+                            decoration: InputDecoration(
+                                labelText: 'Window B',
+                                labelStyle: TextStyle(color: Colors.lightBlue),
+                                hintText: '',
+                                hintStyle: TextStyle(color: Colors.grey),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    borderSide: BorderSide(
+                                      color: Colors.amber,
+                                      style: BorderStyle.solid,
+                                    )),
+                                suffixIcon: PopupMenuButton<String>(
+                                  icon: const Icon(Icons.arrow_drop_down),
+                                  onSelected: (String value) {
+                                    _textWindowB.text = value;
+                                    if (enabled_window.contains(value)) {
+                                      _allow_windowB_DJID = true;
+                                    } else {
+                                      _allow_windowB_DJID = false;
+                                    }
+                                  },
+                                  itemBuilder: (BuildContext context) {
+                                    return windows.map<PopupMenuItem<String>>(
+                                        (String value) {
+                                      return new PopupMenuItem(
+                                        child: new Text(value),
+                                        value: value,
+                                      );
+                                    }).toList();
+                                  },
+                                )))),
+                    SizedBox(width: 5.0),
+                    Expanded(
+                        child: TextField(
+                            enabled: _allow_windows,
+                            controller: _textWindowC,
+                            style: TextStyle(color: Colors.lightBlue),
+                            decoration: InputDecoration(
+                                labelText: 'Window C',
+                                labelStyle: TextStyle(color: Colors.lightBlue),
+                                hintText: '',
+                                hintStyle: TextStyle(color: Colors.grey),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    borderSide: BorderSide(
+                                      color: Colors.amber,
+                                      style: BorderStyle.solid,
+                                    )),
+                                suffixIcon: PopupMenuButton<String>(
+                                  icon: const Icon(Icons.arrow_drop_down),
+                                  onSelected: (String value) {
+                                    _textWindowC.text = value;
+                                    if (enabled_window.contains(value)) {
+                                      _allow_windowC_DJID = true;
+                                    } else {
+                                      _allow_windowC_DJID = false;
+                                    }
+                                  },
+                                  itemBuilder: (BuildContext context) {
+                                    return windows.map<PopupMenuItem<String>>(
+                                        (String value) {
+                                      return new PopupMenuItem(
+                                        child: new Text(value),
+                                        value: value,
+                                      );
+                                    }).toList();
+                                  },
+                                )))),
+                  ],
+                ),
+                SizedBox(height: 10.0),
+                Row(
+                  children: [
+                    Expanded(
+                        child: TextField(
+                            enabled: _allow_windowA_DJID,
+                            controller: _textWindowA_DJID,
+                            style: TextStyle(color: Colors.lightBlue),
+                            decoration: InputDecoration(
+                                labelText: 'DJID',
+                                labelStyle: TextStyle(color: Colors.lightBlue),
+                                hintText: '',
+                                hintStyle: TextStyle(color: Colors.grey),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    borderSide: BorderSide(
+                                      color: Colors.amber,
+                                      style: BorderStyle.solid,
+                                    )),
+                                suffixIcon: PopupMenuButton<String>(
+                                  icon: const Icon(Icons.arrow_drop_down),
+                                  onSelected: (String value) {
+                                    _textWindowA_DJID.text = value;
+                                  },
+                                  itemBuilder: (BuildContext context) {
+                                    return animalID.map<PopupMenuItem<String>>(
+                                        (String value) {
+                                      return new PopupMenuItem(
+                                        child: new Text(value),
+                                        value: value,
+                                      );
+                                    }).toList();
+                                  },
+                                )))),
+                    SizedBox(width: 5.0),
+                    Expanded(
+                        child: TextField(
+                            enabled: _allow_windowB_DJID,
+                            controller: _textWindowB_DJID,
+                            style: TextStyle(color: Colors.lightBlue),
+                            decoration: InputDecoration(
+                                labelText: 'DJID',
+                                labelStyle: TextStyle(color: Colors.lightBlue),
+                                hintText: '',
+                                hintStyle: TextStyle(color: Colors.grey),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    borderSide: BorderSide(
+                                      color: Colors.amber,
+                                      style: BorderStyle.solid,
+                                    )),
+                                suffixIcon: PopupMenuButton<String>(
+                                  icon: const Icon(Icons.arrow_drop_down),
+                                  onSelected: (String value) {
+                                    _textWindowB_DJID.text = value;
+                                  },
+                                  itemBuilder: (BuildContext context) {
+                                    return animalID.map<PopupMenuItem<String>>(
+                                        (String value) {
+                                      return new PopupMenuItem(
+                                        child: new Text(value),
+                                        value: value,
+                                      );
+                                    }).toList();
+                                  },
+                                )))),
+                    SizedBox(width: 5.0),
+                    Expanded(
+                        child: TextField(
+                            enabled: _allow_windowC_DJID,
+                            controller: _textWindowC_DJID,
+                            style: TextStyle(color: Colors.lightBlue),
+                            decoration: InputDecoration(
+                                labelText: 'DJID',
+                                labelStyle: TextStyle(color: Colors.lightBlue),
+                                hintText: '',
+                                hintStyle: TextStyle(color: Colors.grey),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    borderSide: BorderSide(
+                                      color: Colors.amber,
+                                      style: BorderStyle.solid,
+                                    )),
+                                suffixIcon: PopupMenuButton<String>(
+                                  icon: const Icon(Icons.arrow_drop_down),
+                                  onSelected: (String value) {
+                                    _textWindowC_DJID.text = value;
+                                  },
+                                  itemBuilder: (BuildContext context) {
+                                    return animalID.map<PopupMenuItem<String>>(
+                                        (String value) {
+                                      return new PopupMenuItem(
+                                        child: new Text(value),
+                                        value: value,
+                                      );
+                                    }).toList();
+                                  },
+                                )))),
+                  ],
+                ),
                 TextField(
                   controller: _textNotes,
-                  style:TextStyle(color:Colors.lightBlue),
-                  decoration:InputDecoration(
-                      labelText: 'Notes',
-                      labelStyle: TextStyle(color: Colors.lightBlue),
-                      hintText:'no need to put window information ~',
-                      hintStyle: TextStyle(
-                        color:Colors.grey
-                      ),
-                      border: OutlineInputBorder(
+                  style: TextStyle(color: Colors.lightBlue),
+                  decoration: InputDecoration(
+                    labelText: 'Notes',
+                    labelStyle: TextStyle(color: Colors.lightBlue),
+                    hintText: 'no need to put window information ~',
+                    hintStyle: TextStyle(color: Colors.grey),
+                    border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(5.0),
-                        borderSide:BorderSide(
-                          color:Colors.amber,
-                          style:BorderStyle.solid,
-                        )
-                      ),
-                    ),
+                        borderSide: BorderSide(
+                          color: Colors.amber,
+                          style: BorderStyle.solid,
+                        )),
+                  ),
                 )
-              ]),),
+              ]),
+            ),
             actions: [
               TextButton(
                   child: Text('CANCEL', style: buttonStyle),
                   onPressed: () {
                     // TODO: what's the use for the following?
-                    _textAnimal.text=oldTextAnimal;
+                    _textAnimal.text = oldTextAnimal;
                     _textAnimalType.text = oldTextAnimalType;
                     _textExperimentType.text = oldTextExperimentType;
-                    _textWindowA.text=oldTextWindowA;
-                    _textWindowB.text=oldTextWindowB;
-                    _textWindowC.text=oldTextWindowC;
-                    _textWindowA_DJID.text=oldTextWindowA_DJID;
-                    _textWindowB_DJID.text=oldTextWindowB_DJID;
-                    _textWindowC_DJID.text=oldTextWindowC_DJID;
-                    _textUserName.text=oldTextUserName;
+                    _textWindowA.text = oldTextWindowA;
+                    _textWindowB.text = oldTextWindowB;
+                    _textWindowC.text = oldTextWindowC;
+                    _textWindowA_DJID.text = oldTextWindowA_DJID;
+                    _textWindowB_DJID.text = oldTextWindowB_DJID;
+                    _textWindowC_DJID.text = oldTextWindowC_DJID;
+                    _textUserName.text = oldTextUserName;
                     Navigator.pop(context);
                   }),
               TextButton(
@@ -1002,16 +978,21 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
                       style: buttonStyle),
                   onPressed: () {
                     if (doRecording) {
-                      List<TextEditingController> _allText=[
+                      List<TextEditingController> _allText = [
                         _textAnimal,
                         _textAnimalType,
                         _textExperimentType,
-                        _textWindowA,_textWindowA_DJID,
-                        _textWindowB,_textWindowB_DJID,
-                        _textWindowC,_textWindowC_DJID,
-                      _textUserName,_textNotes];
+                        _textWindowA,
+                        _textWindowA_DJID,
+                        _textWindowB,
+                        _textWindowB_DJID,
+                        _textWindowC,
+                        _textWindowC_DJID,
+                        _textUserName,
+                        _textNotes
+                      ];
                       String text = _mergeText(_allText);
-                      _record=true;
+                      _record = true;
                       //String alertText='testing';
                       //_showAlert(context, alertText);
                       widget.recordCallback(text);
@@ -1031,32 +1012,32 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     //_rigStatus['dj_error_msg'].current
     //_rigStatus['dj_event_id'].current //the event id for this session?
 
-    String alertText = _rigStatus['alert'].current; //could get other rig statuses
+    String alertText =
+        _rigStatus['alert'].current; //could get other rig statuses
     debugPrint('got alert: $alertText');
     await showDialog(
-      context:context,
-      builder: (BuildContext context) {
-        ThemeData theme= Theme.of(context);
-        TextStyle buttonStyle=TextStyle(color:theme.buttonColor);
-        return AlertDialog(
-          content:Container(
-            width:300.0,
-            height:150.0,
-            child:Center(
-              child:Text(alertText,style:TextStyle(color: Colors.lightBlue,fontSize: 10.0))
-            )
-          ),
-          actions: [
-            TextButton(
-                child:Text('OK',style:buttonStyle),
+        context: context,
+        builder: (BuildContext context) {
+          ThemeData theme = Theme.of(context);
+          TextStyle buttonStyle = TextStyle(color: theme.buttonColor);
+          return AlertDialog(
+            content: Container(
+                width: 300.0,
+                height: 150.0,
+                child: Center(
+                    child: Text(alertText,
+                        style: TextStyle(
+                            color: Colors.lightBlue, fontSize: 10.0)))),
+            actions: [
+              TextButton(
+                child: Text('OK', style: buttonStyle),
                 onPressed: () {
                   Navigator.pop(context);
                 },
-            )
-          ],
-        );
-      }
-    );
+              )
+            ],
+          );
+        });
   }
 
   @override
@@ -1089,10 +1070,8 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
     bool isCalibrating =
         _rigStatus['calibration'].current['is calibrating'].current;
 
-    bool isAnalyzing=
-        _rigStatus['analyzing'].current;
-    bool isLEDing=
-        _rigStatus['LED'].current;
+    bool isAnalyzing = _rigStatus['analyzing'].current;
+    bool isLEDing = _rigStatus['LED'].current;
 
     Widget calibrationButton = _buildButtonColumn(
         widget.width / 4,
@@ -1104,16 +1083,21 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
             ? (arg) => _stopCalibration()
             : (arg) => _toggleCalibrate());
 
-    Widget processButton = _buildButtonColumn(widget.width / 4,
+    Widget processButton = _buildButtonColumn(
+        widget.width / 4,
         true,
         context,
-        isAnalyzing ? Icons.near_me_outlined: Icons.near_me,
-        isAnalyzing? 'DLC on':'DLC off',
-            (data) => _toggleAnalyze());
+        isAnalyzing ? Icons.near_me_outlined : Icons.near_me,
+        isAnalyzing ? 'DLC on' : 'DLC off',
+        (data) => _toggleAnalyze());
 
-    Widget ledButton = _buildButtonColumn(widget.width / 4, true, context,
-        isLEDing ? Icons.light_mode:Icons.light_mode_outlined,
-        isLEDing ? 'LED on':'LED off', (data) => _toggleLED());
+    Widget ledButton = _buildButtonColumn(
+        widget.width / 4,
+        true,
+        context,
+        isLEDing ? Icons.light_mode : Icons.light_mode_outlined,
+        isLEDing ? 'LED on' : 'LED off',
+        (data) => _toggleLED());
 
     Widget logsButton = _buildButtonColumn(widget.width / 4, true, context,
         Icons.info, 'LOGS', (arg) => showMessageLog(context));
