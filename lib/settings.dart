@@ -7,7 +7,6 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 
 RigStatusMap _rigStatus = RigStatusMap.live();
-DatabaseStatus _databaseStatus = DatabaseStatus();
 
 class SettingsList extends StatefulWidget {
   _SettingsListState createState() => _SettingsListState();
@@ -435,6 +434,9 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         _lastAlert = _rigStatus['alert'].current;
         // _expanded = _rigStatus['initialization'] == 'initialized';
       });
+
+      DatabaseStatus _databaseStatus = DatabaseStatus();
+      debugPrint(_databaseStatus);
     });
 
     try {
