@@ -333,6 +333,7 @@ class DatabaseStatus extends MapBase<String, dynamic> {
     Api._socket.onDisconnect((_) => _teardown());
     Api._socket.onConnect((_) => _instantiate());
     Api._socket.on('database', (data) => _update(data));
+    _map['tested'] = 'done';
   }
 
   void _teardown() {
@@ -352,9 +353,13 @@ class DatabaseStatus extends MapBase<String, dynamic> {
   static void _update(Map<String, dynamic> json) {
     print('got database update: ');
     print(json);
+    _map['testing'] = 'tested';
   }
 
-  factory DatabaseStatus() => _instance;
+  factory DatabaseStatus() {
+    debugPrint('got to factory method for database');
+    return _instance;
+  }
 }
 
 class ProcessingStatus extends UnmodifiableListView {
