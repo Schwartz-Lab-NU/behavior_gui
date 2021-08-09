@@ -395,6 +395,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
   TextEditingController _textUserName = TextEditingController(text: 'Devon');
   TextEditingController _textNotes = TextEditingController();
 
+  DatabaseStatus _databaseStatus = DatabaseStatus();
   String path = 'assets/namespace/namespace_test.json';
 
   bool _showPopup = false;
@@ -434,9 +435,6 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
         _lastAlert = _rigStatus['alert'].current;
         // _expanded = _rigStatus['initialization'] == 'initialized';
       });
-
-      DatabaseStatus _databaseStatus = DatabaseStatus();
-      debugPrint('Keys are: ${_databaseStatus.keys.first}');
     });
 
     try {
@@ -568,6 +566,9 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
 
     // get name space from .json file
     Map nameSpace = await _readNameSpace(path);
+
+    debugPrint(
+        'databaseStatus: animalIds= ${_databaseStatus['recent_animals']}');
 
     List _animalID = nameSpace['animalID'];
     List _animalType = nameSpace['animalType'];
