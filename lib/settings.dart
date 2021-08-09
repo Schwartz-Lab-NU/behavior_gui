@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 
 RigStatusMap _rigStatus = RigStatusMap.live();
+DatabaseStatus _databaseStatus = DatabaseStatus();
 
 class SettingsList extends StatefulWidget {
   _SettingsListState createState() => _SettingsListState();
