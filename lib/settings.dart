@@ -436,7 +436,7 @@ class _StatusBarState extends State<StatusBar> with TickerProviderStateMixin {
       });
 
       DatabaseStatus _databaseStatus = DatabaseStatus();
-      debugPrint(_databaseStatus);
+      debugPrint(_databaseStatus.keys());
     });
 
     try {
