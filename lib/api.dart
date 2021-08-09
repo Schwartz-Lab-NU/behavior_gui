@@ -298,6 +298,64 @@ class ProcessTag {
         icon = IconData(tags['icon'], fontFamily: 'MaterialIcons');
 }
 
+class DatabaseStatus extends MapBase<String, dynamic> {
+  static final Map<String, dynamic> _map = Map();
+  static final DatabaseStatus _instance = DatabaseStatus._singleton();
+  static final StreamController<DatabaseStatus> _changeController =
+      StreamController<DatabaseStatus>.broadcast();
+  static Stream<DatabaseStatus> get onChange => _changeController.stream;
+
+  //
+  static final StreamController<bool> _initializationController =
+      StreamController<bool>.broadcast();
+  static Stream<bool> get onInitialization => _initializationController.stream;
+
+  @override
+  operator [](Object key) {
+    return _map[key];
+  }
+
+  @override
+  get keys => _map.keys;
+
+  @override
+  operator []=(String key, dynamic value) =>
+      throw 'Database status cannot be altered.';
+
+  @override
+  clear() => throw 'Status map cannot be altered.';
+
+  @override
+  remove(Object key) => throw 'Status map cannot be altered.';
+
+  DatabaseStatus._singleton() {
+    Api._socket.onDisconnect((_) => _teardown());
+    Api._socket.onConnect((_) => _instantiate());
+    Api._socket.on('database', (data) => _update(data));
+  }
+
+  void _teardown() {
+    _map.clear();
+    _changeController.add(DatabaseStatus());
+    _initializationController.add(false);
+  }
+
+  void _instantiate() async {
+    Future.wait([
+      Api._get('database')
+          .then(_update)
+          .then((_) => _changeController.add(DatabaseStatus()))
+    ]).then((_) => _initializationController.add(true));
+  }
+
+  static void _update(Map<String, dynamic> json) {
+    print('got database update: ');
+    print(json);
+  }
+
+  factory DatabaseStatus() => _instance;
+}
+
 class ProcessingStatus extends UnmodifiableListView {
   //Member variables
   static final ProcessingStatus _instance = ProcessingStatus._singleton();
@@ -334,7 +392,7 @@ class ProcessingStatus extends UnmodifiableListView {
     _initializationController.add(false);
   }
 
-  _instantiate() async {
+  void _instantiate() async {
     Future.wait([
       Api._get('processing categories').then(_updateColumns),
       next(15).then((_) => _changeController.add(ProcessingStatus()))
