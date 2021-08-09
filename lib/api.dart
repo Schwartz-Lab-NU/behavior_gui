@@ -334,6 +334,7 @@ class DatabaseStatus extends MapBase<String, dynamic> {
     Api._socket.onConnect((_) => _instantiate());
     Api._socket.on('database', (data) => _update(data));
     _map['tested'] = 'done';
+    if (Api._socket.connected) _instantiate();
   }
 
   void _teardown() {
@@ -343,9 +344,10 @@ class DatabaseStatus extends MapBase<String, dynamic> {
   }
 
   void _instantiate() async {
+    debugPrint('instantiating!');
     Future.wait([
       Api._get('database')
-          .then(_update)
+          .then(_update, onError: (_) => "error getting database entries.")
           .then((_) => _changeController.add(DatabaseStatus()))
     ]).then((_) => _initializationController.add(true));
   }
