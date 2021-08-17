@@ -1320,7 +1320,8 @@ class _CalibrationBox extends StatelessWidget {
                       context,
                       Icons.play_arrow,
                       'CALIBRATE',
-                      (arg) => this.callback(ind, calibrationType)),
+                      (arg) =>
+                          this.callback(cameraIndex[ind], calibrationType)),
                 );
               }),
         )
